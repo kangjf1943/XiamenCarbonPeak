@@ -1,0 +1,32 @@
+---
+title: "Untitled"
+author: "康杰锋"
+date: "5/5/2021"
+output: html_document
+---
+
+在构建分析数据的时候，很多变量是带有特定单位的，但是列名往往只是变量名。比如某一列列名是“人口”，这样的列名并未告诉读者它对应的单位是“千人”还是“万人”。因此想要通过列名备注的形式，将单位信息添加到列名中，就像Excel单元格中的备注（即批注/Note/Comment）那样。
+
+通过`comment()`和`attribute()`函数可以添加和查看列名备注，代码如下：
+
+```{r}
+# 虚拟数据
+my_comment <- c("unit:na", "unit:million", "unit:km")
+my_data <- data.frame("year" = c(2019, 2021), 
+                      "population" = c(5, 7), 
+                      "length" = c(100, 200))
+
+# 添加列名备注
+for (i in c(1: ncol(my_data))) {
+  comment(my_data[, names(my_data)[i]]) <- my_comment[i]
+}
+
+# 查看备注
+attributes(my_data$population)
+attributes(my_data$length)
+```
+
+问题是：
+1. 是否有什么方法可以替代这个代码中的循环结构，批量给所有列名添加备注？比如有没有类似于`comment()`，但能够进行向量化计算的函数？
+2. 跳出局部最优解：要同时反映列名和单位信息的话，是否有其他更好的方法？
+
