@@ -20,6 +20,11 @@ func_looknote <- function(data) {
   notes_df
 }
 
+# 获得变量名称
+func_varname <- function(variable) {
+  deparse(substitute(variable))
+}
+
 # 读取并转化带4列文件头的Excel数据
 func_read_trans <- function(name_subdir, order_sht = 1) {
   data_dir <- "C:/Users/kangj/Documents/OneDrive/Zotero/storage/"
@@ -139,7 +144,7 @@ func_datacomp <- function(var_1, name_source_1, var_2, name_source_2, name_comp)
 }
 
 # 将计算结果统一到一个表头下的函数
-func_supple_colnames <- function(var_output){
+func_supple_colnames <- function(var_output, account_names){
   supple_colnames <- account_names[account_names %in% names(var_output) == FALSE]
   for (i in supple_colnames) {
     var_output[, i] <- ""
@@ -148,6 +153,10 @@ func_supple_colnames <- function(var_output){
   var_output[, c(account_names, 
                  names(var_output)[names(var_output) %in% account_names == FALSE])]
 }
+nrg_names <- c("coal", "coal_product", 
+               "gasoline", "diesel", "kerosene", "residual", "lpg", 
+               "natural_gas", 
+               "electricity")
 
 # 构建插值函数
 func_interp <- function(mydata) {
@@ -628,6 +637,15 @@ comment(proj_trans_act$"水路货运") <- "万吨公里"
 
 # 活动强度
 proj_trans_nrgintst_ls <- vector("list", 9)
+trans_names <- c("常规公交", 
+                 "BRT", 
+                 "出租车", 
+                 "农村客车", 
+                 "轿车", 
+                 "摩托车", 
+                 "航空", 
+                 "水路客运", 
+                 "水路货运")
 names(proj_trans_nrgintst_ls) <- c("常规公交", 
                                    "BRT", 
                                    "出租车", 
@@ -662,13 +680,23 @@ for (i in c(1: (ncol(trans_nrgsum_ls_2[[4]]) - 1))) {
     trans_nrgsum_ls_2[[4]][, names(trans_nrgsum_ls_2[[4]])[i + 1]][4]
 }
 
+proj_trans_nrgintst_ls[["轿车"]] <- data.frame(year = c(2005: 2050))
+proj_trans_nrgintst_ls[["轿车"]]$gasoline <- 
+  func_interp_2(year = c(2005, 2019, 2030, 2050), 
+                value = c(1, 1.1, 1.2, 1.1))$value
+
+proj_trans_nrgintst_ls[["摩托车"]] <- data.frame(year = c(2005: 2050))
+proj_trans_nrgintst_ls[["摩托车"]]$gasoline <- 
+  func_interp_2(year = c(2005, 2019, 2030, 2050), 
+                value = c(0.0663, 0.0663, 0.0663*0.8, 0.0663*0.7))$value
+
 proj_trans_nrgintst_ls[["航空"]] <- 
   func_interp_2(year = c(2005, 2019, 2030, 2050), 
                 value = c(202e4, 202e4, 300e4, 320e4))
 names(proj_trans_nrgintst_ls[["航空"]])[2] <- "kerosene"
 
 proj_trans_nrgintst_ls[["水路客运"]] <- data.frame(year = c(2005: 2050))
-proj_trans_nrgintst_ls[["水路客运"]]$redidual <- 
+proj_trans_nrgintst_ls[["水路客运"]]$residual <- 
   func_interp_2(year = c(2005, 2019, 2030, 2050), 
                 value = c(1.40, 1.40, 1.40*0.85, 1.40*0.80))$value
 proj_trans_nrgintst_ls[["水路客运"]]$diesel <- 
@@ -676,7 +704,7 @@ proj_trans_nrgintst_ls[["水路客运"]]$diesel <-
                 value = c(0.80, 0.80, 0.80*0.85, 0.80*0.80))$value
 
 proj_trans_nrgintst_ls[["水路货运"]] <- data.frame(year = c(2005: 2050))
-proj_trans_nrgintst_ls[["水路货运"]]$redidual <- 
+proj_trans_nrgintst_ls[["水路货运"]]$residual <- 
   func_interp_2(year = c(2005, 2019, 2030, 2050), 
                 value = c(0.04649123, 0.04649123, 0.04649123*0.85, 0.04649123*0.80))$value
 proj_trans_nrgintst_ls[["水路货运"]]$diesel <- 
@@ -1142,3 +1170,107 @@ for (i in c(1:2)) {
 }
 func_show_trend(proj_com_nrgsum_ls[[1]])
 func_show_trend(proj_com_nrgsum_ls[[2]])
+
+## 将结果合并
+names(proj_trans_nrgsum_ls) <- trans_names
+names(proj_ind_nrgsum_ls) <- ind_agg_list
+names(proj_com_nrgsum_ls) <- c("用电", "用气")
+names(proj_other_nrgsum_ls) <- c("household", 
+                                 "household_lpg", 
+                                 "household_natural_gas", 
+                                 "construction_gdp", 
+                                 "agriculture_area")
+
+# 给各个数据框添加部门名称和活动水平名称
+for (i in c(1:length(proj_trans_nrgsum_ls))) {
+  proj_trans_nrgsum_ls[[i]]$act_name <- names(proj_trans_nrgsum_ls)[i]
+  proj_trans_nrgsum_ls[[i]]$sector <- func_varname(proj_trans_nrgsum_ls)
+  proj_trans_nrgsum_ls[[i]] <- func_supple_colnames(proj_trans_nrgsum_ls[[i]], nrg_names)
+}
+
+for (i in c(1:length(proj_ind_nrgsum_ls))) {
+  proj_ind_nrgsum_ls[[i]]$act_name <- names(proj_ind_nrgsum_ls)[i]
+  proj_ind_nrgsum_ls[[i]]$sector <- func_varname(proj_ind_nrgsum_ls)
+  proj_ind_nrgsum_ls[[i]] <- func_supple_colnames(proj_ind_nrgsum_ls[[i]], nrg_names)
+}
+
+for (i in c(1:length(proj_com_nrgsum_ls))) {
+  proj_com_nrgsum_ls[[i]]$act_name <- names(proj_com_nrgsum_ls)[i]
+  proj_com_nrgsum_ls[[i]]$sector <- func_varname(proj_com_nrgsum_ls)
+  proj_com_nrgsum_ls[[i]] <- func_supple_colnames(proj_com_nrgsum_ls[[i]], nrg_names)
+}
+
+for (i in c(1:length(proj_other_nrgsum_ls))) {
+  proj_other_nrgsum_ls[[i]]$act_name <- names(proj_other_nrgsum_ls)[i]
+  proj_other_nrgsum_ls[[i]]$sector <- func_varname(proj_other_nrgsum_ls)
+  proj_other_nrgsum_ls[[i]] <- func_supple_colnames(proj_other_nrgsum_ls[[i]], nrg_names)
+}
+
+# 分部门合并
+# 交通
+proj_trans_nrgsum_df <- proj_trans_nrgsum_ls[[1]]
+for (i in c(2: length(proj_trans_nrgsum_ls))) {
+  proj_trans_nrgsum_df <- rbind(proj_trans_nrgsum_df, proj_trans_nrgsum_ls[[i]])
+}
+for (i in nrg_names) {
+  proj_trans_nrgsum_df[, i] <- as.numeric(proj_trans_nrgsum_df[, i])
+}
+proj_trans_nrgsum_agg_df <- aggregate(proj_trans_nrgsum_df[, nrg_names], 
+                                      by = list(proj_trans_nrgsum_df$year), 
+                                      function(x) {sum(x, na.rm = TRUE)})
+names(proj_trans_nrgsum_agg_df)[1] <- "year"
+func_show_trend(proj_trans_nrgsum_agg_df[, c("year", "diesel")])
+
+# 工业
+proj_ind_nrgsum_df <- proj_ind_nrgsum_ls[[1]]
+for (i in c(2: length(proj_ind_nrgsum_ls))) {
+  proj_ind_nrgsum_df <- rbind(proj_ind_nrgsum_df, proj_ind_nrgsum_ls[[i]])
+}
+for (i in nrg_names) {
+  proj_ind_nrgsum_df[, i] <- as.numeric(proj_ind_nrgsum_df[, i])
+}
+proj_ind_nrgsum_agg_df <- aggregate(proj_ind_nrgsum_df[, nrg_names], 
+                                    by = list(proj_ind_nrgsum_df$year), 
+                                    function(x) {sum(x, na.rm = TRUE)})
+names(proj_ind_nrgsum_agg_df)[1] <- "year"
+func_show_trend(proj_ind_nrgsum_agg_df)
+
+# 服务业
+proj_com_nrgsum_df <- proj_com_nrgsum_ls[[1]]
+for (i in c(2: length(proj_com_nrgsum_ls))) {
+  proj_com_nrgsum_df <- rbind(proj_com_nrgsum_df, proj_com_nrgsum_ls[[i]])
+}
+for (i in nrg_names) {
+  proj_com_nrgsum_df[, i] <- as.numeric(proj_com_nrgsum_df[, i])
+}
+proj_com_nrgsum_agg_df <- aggregate(proj_com_nrgsum_df[, nrg_names], 
+                                    by = list(proj_com_nrgsum_df$year), 
+                                    function(x) {sum(x, na.rm = TRUE)})
+names(proj_com_nrgsum_agg_df)[1] <- "year"
+func_show_trend(proj_com_nrgsum_agg_df)
+
+# 其他
+proj_other_nrgsum_df <- proj_other_nrgsum_ls[[1]]
+for (i in c(2: length(proj_other_nrgsum_ls))) {
+  proj_other_nrgsum_df <- rbind(proj_other_nrgsum_df, proj_other_nrgsum_ls[[i]])
+}
+for (i in nrg_names) {
+  proj_other_nrgsum_df[, i] <- as.numeric(proj_other_nrgsum_df[, i])
+}
+proj_other_nrgsum_agg_df <- aggregate(proj_other_nrgsum_df[, nrg_names], 
+                                      by = list(proj_other_nrgsum_df$year), 
+                                      function(x) {sum(x, na.rm = TRUE)})
+names(proj_other_nrgsum_agg_df)[1] <- "year"
+func_show_trend(proj_other_nrgsum_agg_df)
+
+# 汇总
+proj_total_nrgsum_df <- Reduce(rbind, list(proj_trans_nrgsum_agg_df, 
+                                           proj_ind_nrgsum_agg_df, 
+                                           proj_com_nrgsum_agg_df, 
+                                           proj_other_nrgsum_agg_df))
+proj_total_nrgsum_agg_df <- aggregate(proj_total_nrgsum_df[, nrg_names], 
+                                      by = list(proj_total_nrgsum_df$year), 
+                                      function(x) {sum(x, na.rm = TRUE)})
+names(proj_total_nrgsum_agg_df)[1] <- "year"
+func_show_trend(proj_total_nrgsum_agg_df[names(proj_total_nrgsum_agg_df) %in% c("kerosene") == F])
+
