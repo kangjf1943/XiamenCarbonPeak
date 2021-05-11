@@ -46,7 +46,6 @@ func_read_trans <- function(name_subdir, order_sht = 1) {
   data_trans
 }
 
-
 # 读取特定单元格
 func_read <- function(name_subdir, name_sht, num_row, num_col) {
   data_dir <- "C:/Users/kangj/Documents/OneDrive/Zotero/storage/"
@@ -94,10 +93,6 @@ func_merge_rate <- function(var_1, name_1, var_2, name_2, method,
        main = name_new)
   outcome
 }
-
-func_merge_rate(ind_gdp_agg_prop[, c("year", i)], i, 
-                proj_gdp_ind, "value", 
-                method = "product")
 
 # 计算乘积
 func_merge_product <- function(var_1, name_1, var_2, name_2) {
@@ -151,10 +146,6 @@ func_supple_colnames <- function(var_output, account_names){
   var_output[, c(account_names, 
                  names(var_output)[names(var_output) %in% account_names == FALSE])]
 }
-nrg_names <- c("coal", "coal_product", 
-               "gasoline", "diesel", "kerosene", "residual", "lpg", 
-               "natural_gas", 
-               "electricity")
 
 # 构建插值函数
 func_interp <- function(mydata) {
@@ -174,7 +165,6 @@ func_interp <- function(mydata) {
   plot(total_df$year, total_df$value)
   total_df
 }
-
 func_interp_2 <- function(year, value) {
   total_df <- data.frame(year = c(year[1]: year[length(year)]))
   for (j in c(1:(length(year) - 1))) {
@@ -240,60 +230,50 @@ func_proj <- function(input_ls, itemnames, startyear = 2005, endyear = 2050) {
   out_df
 }
 
+## 常用名称变量
+# 能源类别
+nrg_names <- c("coal", "coal_product", 
+               "gasoline", "diesel", "kerosene", "residual", "lpg", 
+               "natural_gas", 
+               "electricity")
+
 
 ## 全局变量
 ## GDP
 gdp <- func_read_trans("2VHEE264", "GDP")
-func_show_trend(gdp)
-# GDP预测
-mydata <- data.frame(year = c(2005, 2019, 2020, 2025, 2030, 2035, 2050), 
-                     value = c(8, 7.90, 6.00, 6.00, 5.00, 4.00, 3.00))
-proj_gdp_incr_rate <- func_interp(mydata)
-proj_gdp <- func_proj_incr_rate(gdp, "GDP", proj_gdp_incr_rate, "value")
 
-# 工业所占比例（需求：暂时算的是第二产业）
-mydata <- data.frame(year = c(2005, 2019, 2020, 2025, 2030, 2035, 2050), 
-                     value = c(41, 41.60, 41, 30, 26, 23, 19))
-proj_gdp_ind_prop <- func_interp(mydata)
+# GDP预测
+proj_gdp_incr_rate <- func_interp_2(
+  year = c(2005, 2019, 2020, 2025, 2030, 2035, 2050),
+  value = c(8, 7.90, 6.00, 6.00, 5.00, 4.00, 3.00))
+proj_gdp <- func_proj_incr_rate(gdp, "GDP", proj_gdp_incr_rate, "value")
+comment(proj_gdp$value) <- "万元当年价"
+
+# 工业GDP（需求：暂时算的是第二产业）
+proj_gdp_ind_prop <- func_interp_2(
+  year = c(2005, 2019, 2020, 2025, 2030, 2035, 2050), 
+  value = c(41, 41.60, 41, 30, 26, 23, 19))
+comment(proj_gdp_ind_prop$value) <- "%"
 proj_gdp_ind <- data.frame(year = c(2005:2050), 
                            value = proj_gdp$value * 
                              proj_gdp_ind_prop$value / 100)
+comment(proj_gdp_ind$value) <- "万元当年价"
 
 ## 人口
 population <- func_read_trans("2VHEE264")
+# 计算户数
+# 假设2016-2019年家庭规模维持稳定，为2.5人/户
+proj_household <- data.frame(
+  "year" = c(2019:2050),
+  "population" = read.xlsx("temp.xlsx")$Population * 1000/2.5)
+names(proj_household) <- c("year", "population")
+proj_household <- rbind(data.frame(year = c(2005:2018), population = c(0)), 
+                         proj_household)
+comment(proj_household$population) <- "万户"
 
-
-## 家庭和建筑业
-## 备选1：电器拥有量*户数*使用强度
-data_name <- "厦门城乡耐用品数量.xlsx"
-app_urban <- read.xlsx("C:/Users/kangj/Documents/OneDrive/Zotero/storage/CZDN5XJN/厦门城乡耐用品数量.xlsx", sheet = 1, rows = c(2:25))
-year <- colnames(app_urban)[3:ncol(app_urban)]
-col_name <- app_urban$"电器"
-
-app_urban_trans <- t(app_urban[, -c(1,2)])
-app_urban_trans <- as.data.frame(app_urban_trans)
-dim(app_urban_trans)
-app_urban_trans$year <- year
-colnames(app_urban_trans) <- col_name
-
-app_urban_trans_perhouse <- app_urban_trans[, -ncol(app_urban_trans)]/100
-app_urban_trans_perhouse$year <- year
-
-app_urban_trans_perhouse_tar <- app_urban_trans_perhouse[, c("洗衣机", 
-                                                             "电冰箱", 
-                                                             "空调器", 
-                                                             "脱排油烟机", 
-                                                             "微波炉", 
-                                                             "淋浴热水器", 
-                                                             "彩色电视机", 
-                                                             "家用电脑", 
-                                                             "year"
-)]
-app_urban_trans_perhouse_tar_long <- melt(app_urban_trans_perhouse_tar, id = c("year"))
-ggplot(app_urban_trans_perhouse_tar_long) + geom_point(aes(x = year, y = value, color = variable))
-# 结论：在2013年各项突降，感觉数据不太说得通
-
-## 备选2：每户用电量*户数
+## 家庭，建筑业和农业
+# 家庭
+# 每户用电量*户数
 # 全市用电量
 # 能源平衡表：生活用电数据，亿千瓦时
 temp_ls <- vector("list", 1)
@@ -303,8 +283,6 @@ for (i in c(2005:2019)) {
 electricity_living <- data.frame(year = c(2005:2019), 
                                  Electricity = temp_ls[[1]])
 
-# 人口数据：户数等
-# 假设2016-2019年家庭规模维持稳定，为2.5人/户
 population$"调查城镇家庭规模"[which(population$year %in% 
                               c("2016", "2017", "2018", "2019"))] <- 2.5
 # 那么常驻人口户数为
@@ -362,11 +340,10 @@ func_show_trend(ag_ori)
 ## 建模
 # 预测
 # 活动水平
-proj_population <- data.frame("year" = c(2019:2050), 
-                              "population" = read.xlsx("temp.xlsx")$Population * 1000/2.5)
+
 
 proj_other_act <- data.frame(year = c(2005: 2050))
-proj_other_act <- merge(proj_other_act, proj_population, by = "year")
+proj_other_act <- merge(proj_other_act, proj_household, by = "year")
 proj_other_act$population <- proj_other_act$population / 2.5
 names(proj_other_act)[2] <- "household"
 
@@ -810,6 +787,10 @@ ind_gdp_agg_prop[which(ind_gdp_agg_prop$year %in% c(2018, 2019)),
   ind_gdp_agg_prop[which(ind_gdp_agg_prop$year == 2017), 
                    -ncol(ind_gdp_agg_prop)]
 
+func_merge_rate(ind_gdp_agg_prop[, c("year", i)], i, 
+                proj_gdp_ind, "value", 
+                method = "product")
+
 # 那么各年份工业各行业GDP为
 ind_gdp_agg_whole <- ind_gdp_agg_prop
 for (i in names(ind_gdp_agg_whole)) {
@@ -1127,11 +1108,8 @@ func_show_trend(com_nrgintst_ls[[2]])
 ## 预测分析
 # 未来活动水平
 # 补全一下总人口预测的数据
-names(proj_population) <- c("year", "population")
-proj_population <- rbind(data.frame(year = c(2005:2018), population = c(0)), 
-                         proj_population)
 proj_com_act <- data.frame(year = c(2005: 2050))
-proj_com_act$work_pop <- proj_population$population * 
+proj_com_act$work_pop <- proj_household$population * 
   func_interp(data.frame(year = c(2005, 2019, 2030, 2050), 
                          value = c(45, 45, 48, 73)))$value / 100
 proj_com_act$com_gdp <- proj_gdp$value * 
