@@ -18,6 +18,11 @@ func_looknote <- function(data) {
   notes_df
 }
 
+# 合并2个数据框，并且保留所有观察
+func_merge <- function(x, y) {
+  merge(x, y, by = "year", all = TRUE)
+}
+
 # 获得变量名称
 func_varname <- function(variable) {
   deparse(substitute(variable))
@@ -261,6 +266,7 @@ comment(proj_gdp_ind$value) <- "万元当年价"
 
 ## 人口
 population <- func_read_trans("2VHEE264")
+population$household <- population$常住人口 / population$调查城镇家庭规模
 # 计算户数
 # 假设2016-2019年家庭规模维持稳定，为2.5人/户
 proj_household <- data.frame(
@@ -271,28 +277,88 @@ proj_household <- rbind(data.frame(year = c(2005:2018), population = c(0)),
                          proj_household)
 comment(proj_household$population) <- "万户"
 
-## 家庭，建筑业和农业
-# 家庭
-# 每户用电量*户数
-# 全市用电量
-# 能源平衡表：生活用电数据，亿千瓦时
-temp_ls <- vector("list", 1)
-for (i in c(2005:2019)) {
-  temp_ls[[1]] <- c(temp_ls[[1]], func_read("D4J2KVSW", paste(i), 16, 15))
+## 其他部门：家庭，建筑业和农业
+# 构建其他部门活动水平数据框
+# 家庭户数
+ori_other_act_house <- data.frame(year = population$year, 
+                              household = population$常住人口 / 
+                                population$调查城镇家庭规模)
+comment(ori_other_act_house$household) <- "万户"
+
+# 用液化石油气的户数
+ori_other_act_house_lpg <- func_read_trans("S32RZEF7", "瓶装液化气总用户数")
+ori_other_act_house_lpg <- ori_other_act_house_lpg[, c("year", "民用")]
+ori_other_act_house_lpg$民用 <- ori_other_act_house_lpg$民用 / 10000
+ori_other_act_house_lpg <- merge(population[, c("year", "household")],
+                                 ori_other_act_house_lpg, by = "year")
+names(ori_other_act_house_lpg)[2] <- "total_household"
+names(ori_other_act_house_lpg)[3] <- "lpg_user"
+plot(ori_other_act_house_lpg$lpg_user / ori_other_act_house_lpg$total_household)
+
+# 用管道天然气的用户数
+ori_other_act_house_gas <- func_read_trans("S32RZEF7", "管道天然气总用户数")
+ori_other_act_house_gas <- ori_other_act_house_gas[, c("year", "民用")]
+ori_other_act_house_gas$民用 <- ori_other_act_house_gas$民用 / 10000
+ori_other_act_house_gas <- merge(population[, c("year", "household")],
+                                 ori_other_act_house_gas, by = "year")
+names(ori_other_act_house_gas)[2] <- "total_household"
+names(ori_other_act_house_gas)[3] <- "gas_user"
+plot(ori_other_act_house_gas$gas_user / ori_other_act_house_gas$total_household)
+# 比例上：液化石油气下降，管道天然气可能是上升
+
+# 建筑业的GDP
+ori_other_act_construct_gdp <- gdp[, c("year", "##建筑业")]
+
+# 农业的播种面积
+ori_other_agriculture_area <- func_read_trans("4NJ97NS9")
+ori_other_agriculture_area <- 
+  ori_other_agriculture_area[, c("year", "全年农作物总播种面积")]
+ori_other_agriculture_area[, "全年农作物总播种面积"] <- 
+  ori_other_agriculture_area[, "全年农作物总播种面积"]/1500
+ori_other_agriculture_area
+comment(ori_other_agriculture_area$全年农作物总播种面积) <- "平方公里"
+
+# 合并成一个活动强度数据框
+other_act <- Reduce(func_merge, list(ori_other_act_house, 
+                                     ori_other_act_house_lpg[, c("year", "lpg_user")], 
+                                     ori_other_act_house_gas[, c("year", "gas_user")],
+                                     ori_other_act_construct_gdp, 
+                                     ori_other_agriculture_area))
+
+# 构建其他部门的历史能耗列表
+other_nrgsum_ls <- vector("list")
+
+ori_global_electricity <- func_read_trans("2I4DKY2A")
+other_nrgsum_ls[[1]] <- 
+  ori_global_electricity[, c("year", "#城乡居民生活用电")]
+
+ori_other_house_lpg_1 <- func_read_trans("HHKVE85Q", "管道液化气")
+ori_other_house_lpg_1 <- ori_other_house_lpg_1[, c("year", "家庭")]
+ori_other_house_lpg_2 <- func_read_trans("HHKVE85Q", "液化石油气")
+ori_other_house_lpg <- rbind(ori_other_house_lpg_1, ori_other_house_lpg_2)
+rm(ori_other_house_lpg_1, ori_other_house_lpg_2)
+other_nrgsum_ls[[2]] <- ori_other_house_lpg
+
+ori_global_gas <- func_read_trans("HHKVE85Q", "管道天然气")
+other_nrgsum_ls[[3]] <- ori_global_gas[, c("year", "家庭")]
+
+ori_other_construct_electricity <- 
+  func_read_trans("2I4DKY2A", "全市电力消费情况表分具体行业")
+ori_other_construct_electricity <- 
+  ori_other_construct_electricity[, c("year", "建筑业")]
+other_nrgsum_ls[[4]] <- ori_other_construct_electricity
+
+other_nrgsum_ls[[5]] <- ori_global_electricity[, c("year", "##第一产业")]
+
+# 计算各行业用能强度
+other_nrgintst_ls <- vector("list")
+for (i in c(1:5)) {
+  other_nrgintst_ls[[i]] <- func_nrg_intst(other_nrgsum_ls[[i]], other_act, 
+                                           names(other_act)[i + 1])
 }
-electricity_living <- data.frame(year = c(2005:2019), 
-                                 Electricity = temp_ls[[1]])
+func_show_trend(other_nrgintst_ls[[5]])
+# 很多趋势是逐渐升高的
 
-population$"调查城镇家庭规模"[which(population$year %in% 
-                              c("2016", "2017", "2018", "2019"))] <- 2.5
-# 那么常驻人口户数为
-population$Household <- population$"常住人口" / population$"调查城镇家庭规模"
-
-# 计算每户用电量
-electricity_perhouse <- func_merge_rate(electricity_living, "Electricity", 
-                                        population, "Household", 
-                                        method = "product")
-# 结论：逐渐升高
 fit <- lm(electricity_perhouse$Rate ~ electricity_perhouse$year)
 a <- summary(fit)
 abline(fit)
@@ -301,47 +367,16 @@ proj_electricity_perhouse <- data.frame("year" = c(2005:2050))
 proj_electricity_perhouse$Value <- a$coefficients[2,1] * proj_electricity_perhouse$year + a$coefficients[1, 1]
 plot(proj_electricity_perhouse$year, proj_electricity_perhouse$Value)
 
-# 和广州数据比较
+# 和广州家庭用电数据比较
 electricity_living_guangzhou <- func_read_trans("QSPLFZXP", 3)
 population_guangzhou <- func_read_trans("QSPLFZXP")
 func_merge_rate(electricity_living_guangzhou, "#生活用电", 
                 population_guangzhou, "总户数")
 # 单从数据而言，厦门市还是有很大的增长空间的
 
-## 农业
-ag_ori <- func_read_trans("4NJ97NS9")
-func_merge_rate(ag_ori[, c("year", "农用柴油使用量")], "农用柴油使用量", 
-                ag_ori[, c("year", "全年农作物总播种面积")], "全年农作物总播种面积", 
-                method = "product")
-func_merge_rate(ag_ori[, c("year", "农村用电量")], "农村用电量", 
-                ag_ori[, c("year", "全年农作物总播种面积")], "全年农作物总播种面积", 
-                method = product)
-# 农村用电量应该不是农业生产用电量
-# 问题：柴油没有算入清单中，如何处理？
-
-# 读取能源平衡表中的农业用电量
-temp_ls <- vector("list", 1)
-for (i in c(2005:2019)) {
-  temp_ls[[1]] <- c(temp_ls[[1]], func_read("D4J2KVSW", paste(i),9, 15))
-}
-electricity_ag <- data.frame(year = c(2005:2019), 
-                             Electricity = temp_ls[[1]])
-plot(electricity_ag$Electricity)
-
-# 农业用电强度
-ag_elec_intnst <- func_merge_rate(electricity_ag, "Electricity", 
-                                  ag_ori, "全年农作物总播种面积", 
-                                  method = "product")
-
-# 播种面积趋势
-func_show_trend(ag_ori)
-# 问题：农作物播种面积在下降，但用电量是波动的，柴油好像是上升的？
-
 ## 建模
 # 预测
 # 活动水平
-
-
 proj_other_act <- data.frame(year = c(2005: 2050))
 proj_other_act <- merge(proj_other_act, proj_household, by = "year")
 proj_other_act$population <- proj_other_act$population / 2.5
@@ -476,9 +511,7 @@ for (i in c(2:nrow(ori_nonoperation_mileage))) {
     ori_nonoperation_mileagepervehicle[1,-1]
 }
 
-func_merge <- function(x, y) {
-  merge(x, y, by = "year", all = TRUE)
-}
+
 trans_act <- Reduce(func_merge, 
                     list(ori_operation_mileage, 
                          ori_nonoperation_mileage))
