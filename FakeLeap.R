@@ -235,6 +235,23 @@ func_proj <- function(input_ls, itemnames, startyear = 2005, endyear = 2050) {
   out_df
 }
 
+# 根据历史趋势线性外推未来趋势的函数
+func_linear <- function(df_history, col_dependent, endyear) {
+  df_history[, "year"] <- as.numeric(df_history[, "year"])
+  fit <- lm(df_history[, col_dependent] ~ df_history[, "year"])
+  fit_result <- summary(fit)
+  proj_df <- data.frame(year = c((max(df_history[, "year"]) + 1): endyear))
+  proj_df[, col_dependent] <- 
+    fit_result$coefficients[2, 1] * proj_df[, "year"] + 
+    fit_result$coefficients[1, 1]
+  proj_df[, "color"] <- "predicted"
+  df_history[, "color"] <- "history"
+  proj_df <- rbind(df_history, proj_df)
+  ggplot() + geom_point(aes(proj_df[, "year"], proj_df[, col_dependent], 
+                            color = proj_df[, "color"]))
+  proj_df
+}
+
 ## 常用名称变量
 # 能源类别
 nrg_names <- c("coal", "coal_product", 
@@ -318,14 +335,20 @@ ori_other_agriculture_area[, "全年农作物总播种面积"] <-
 ori_other_agriculture_area
 comment(ori_other_agriculture_area$全年农作物总播种面积) <- "平方公里"
 
-# 合并成一个活动强度数据框
+# 合并成一个活动水平数据框
 other_act <- Reduce(func_merge, list(ori_other_act_house, 
                                      ori_other_act_house_lpg[, c("year", "lpg_user")], 
                                      ori_other_act_house_gas[, c("year", "gas_user")],
                                      ori_other_act_construct_gdp, 
                                      ori_other_agriculture_area))
+comment(other_act$household) <- attributes(ori_other_act_house$household)[[1]]
+comment(other_act$lpg_user) <- attributes(ori_other_act_house_lpg$lpg_user)[[1]]
+comment(other_act$gas_user) <- attributes(ori_other_act_house_gas$gas_user)[[1]]
+comment(other_act$"##建筑业") <- attributes(ori_other_act_construct_gdp$"##建筑业")[[1]]
+comment(other_act$全年农作物总播种面积) <- attributes(ori_other_agriculture_area$全年农作物总播种面积)[[1]]
+func_looknote(other_act)
 
-# 构建其他部门的历史能耗列表
+# 构建其他部门的能耗总量列表
 other_nrgsum_ls <- vector("list")
 
 ori_global_electricity <- func_read_trans("2I4DKY2A")
@@ -356,16 +379,8 @@ for (i in c(1:5)) {
   other_nrgintst_ls[[i]] <- func_nrg_intst(other_nrgsum_ls[[i]], other_act, 
                                            names(other_act)[i + 1])
 }
-func_show_trend(other_nrgintst_ls[[5]])
+func_show_trend(other_nrgintst_ls[[3]])
 # 很多趋势是逐渐升高的
-
-fit <- lm(electricity_perhouse$Rate ~ electricity_perhouse$year)
-a <- summary(fit)
-abline(fit)
-
-proj_electricity_perhouse <- data.frame("year" = c(2005:2050))
-proj_electricity_perhouse$Value <- a$coefficients[2,1] * proj_electricity_perhouse$year + a$coefficients[1, 1]
-plot(proj_electricity_perhouse$year, proj_electricity_perhouse$Value)
 
 # 和广州家庭用电数据比较
 electricity_living_guangzhou <- func_read_trans("QSPLFZXP", 3)
@@ -374,8 +389,7 @@ func_merge_rate(electricity_living_guangzhou, "#生活用电",
                 population_guangzhou, "总户数")
 # 单从数据而言，厦门市还是有很大的增长空间的
 
-## 建模
-# 预测
+## 未来预测
 # 活动水平
 proj_other_act <- data.frame(year = c(2005: 2050))
 proj_other_act <- merge(proj_other_act, proj_household, by = "year")
