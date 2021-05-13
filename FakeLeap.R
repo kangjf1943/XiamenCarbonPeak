@@ -64,10 +64,23 @@ func_read <- function(name_subdir, name_sht, num_row, num_col) {
 
 # 查看一个数据框中不同组的变化趋势
 func_show_trend <- function(var_df) {
-  long_df <- melt(var_df, id = "year")
-  ggplot(long_df) + geom_point(aes(year, value, color = variable), 
-                               size = 5, alpha = 0.5)
+  names_var_df <- names(var_df)[names(var_df) %in% "year" == FALSE]
+  names_unit <- 
+    func_looknote(var_df[names_var_df])
+  
+  var_df_ls <- vector("list", length(names_unit))
+  names(var_df_ls) <- unique(names_unit$note)
+  for (i in c(1: length(unique(names_unit$note)))) {
+    var_df_ls[[i]] <- 
+      var_df[, c("year", 
+                 names_unit$colnames[names_unit$note == unique(names_unit$note)[i]])]
+    var_df_ls[[i]] <- melt(var_df_ls[[i]], id = "year")
+    var_df_ls[[i]] <- var_df_ls[[i]][is.na(var_df_ls[[i]]$value) == FALSE,]
+    print(ggplot(var_df_ls[[i]]) + geom_point(aes(year, value, color = variable), na.rm = T,
+                                              size = 5, alpha = 0.5))
+  }
 }
+
 
 # 计算两个系列的比率或乘积：一对一
 # method取值“rate”或者“product”
@@ -354,6 +367,7 @@ other_nrgsum_ls <- vector("list")
 ori_global_electricity <- func_read_trans("2I4DKY2A")
 other_nrgsum_ls[[1]] <- 
   ori_global_electricity[, c("year", "#城乡居民生活用电")]
+names(other_nrgsum_ls)[1] <- "家庭用电"
 
 ori_other_house_lpg_1 <- func_read_trans("HHKVE85Q", "管道液化气")
 ori_other_house_lpg_1 <- ori_other_house_lpg_1[, c("year", "家庭")]
@@ -361,17 +375,22 @@ ori_other_house_lpg_2 <- func_read_trans("HHKVE85Q", "液化石油气")
 ori_other_house_lpg <- rbind(ori_other_house_lpg_1, ori_other_house_lpg_2)
 rm(ori_other_house_lpg_1, ori_other_house_lpg_2)
 other_nrgsum_ls[[2]] <- ori_other_house_lpg
+names(other_nrgsum_ls)[2] <- "家庭液化石油气"
 
 ori_global_gas <- func_read_trans("HHKVE85Q", "管道天然气")
 other_nrgsum_ls[[3]] <- ori_global_gas[, c("year", "家庭")]
+names(other_nrgsum_ls)[3] <- "家庭天然气"
 
 ori_other_construct_electricity <- 
   func_read_trans("2I4DKY2A", "全市电力消费情况表分具体行业")
 ori_other_construct_electricity <- 
   ori_other_construct_electricity[, c("year", "建筑业")]
 other_nrgsum_ls[[4]] <- ori_other_construct_electricity
+names(other_nrgsum_ls)[4] <- "建筑用电"
 
 other_nrgsum_ls[[5]] <- ori_global_electricity[, c("year", "##第一产业")]
+names(other_nrgsum_ls)[5] <- "农业用电"
+
 
 # 计算各行业用能强度
 other_nrgintst_ls <- vector("list")
