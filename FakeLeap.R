@@ -227,20 +227,20 @@ func_interp_2 <- function(year, value) {
 }
 
 # 预测函数：基于增长率
-func_proj_incr_rate <- function(mydatanow, name_mydata, proj_rate, name_rate) {
-  total_df <- data.frame(year = c(2005:2050), 
-                         value = NA)
-  mydatanow <- mydatanow[mydatanow$year %in% total_df$year, ]
-  proj_rate <- proj_rate[proj_rate$year %in% total_df$year, ]
-  total_df$value[total_df$year %in% mydatanow$year] <- mydatanow[, name_mydata]
-  for (i in 
-       mydatanow$year[nrow(mydatanow)]:(proj_rate$year[nrow(proj_rate)] - 1)) {
-    total_df$value[which(total_df$year == (i + 1))] <- 
-      total_df$value[which(total_df$year == i)] * 
-      (1 + proj_rate[, name_rate][which(proj_rate$year == (i + 1))] / 100)
+func_rate <- function(baseyear, basevalue, rate_df) {
+  names(rate_df) <- c("year", "rate")
+  # 先统一年度为基准年到增长率数据框的最后一年
+  rate_df <- rate_df[rate_df$year %in% c(baseyear: max(rate_df$year)), ]
+  # 更改增长率的单位为1
+  rate_df$rate <- rate_df$rate / 100
+  proj_df <- rbind(data.frame(year = baseyear, rate = basevalue), 
+                   rate_df)
+  names(proj_df) <- c("year", "value")
+  for (i in c(2: nrow(proj_df))) {
+    proj_df$value[i] <- proj_df$value[i - 1] * (1 + proj_df$value[i])
   }
-  plot(total_df$value)
-  total_df
+  plot(proj_df$value)
+  proj_df <- proj_df[-1, ]
 }
 
 # 结果计算函数
@@ -303,10 +303,13 @@ nrg_names <- c("coal", "coal_product",
 gdp <- func_read_trans("2VHEE264", "GDP")
 
 # GDP预测
-proj_gdp_incr_rate <- func_interp_2(
+proj_gdp_rate <- func_interp_2(
   year = c(2005, 2019, 2020, 2025, 2030, 2035, 2050),
   value = c(8, 7.90, 6.00, 6.00, 5.00, 4.00, 3.00))
-proj_gdp <- func_proj_incr_rate(gdp, "GDP", proj_gdp_incr_rate, "value")
+proj_gdp <- func_rate(baseyear = 2019, basevalue = 59950422, 
+                      rate_df = proj_gdp_rate)
+names(proj_gdp)[2] <- "GDP"
+func_history_project(gdp, "GDP", proj_gdp, "GDP")
 comment(proj_gdp$value) <- "万元当年价"
 
 # 工业GDP（需求：暂时算的是第二产业）
