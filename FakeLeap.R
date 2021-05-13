@@ -6,7 +6,7 @@ library(reshape2)
 Sys.setlocale("LC_ALL", "chinese")
 
 ## 构建函数
-# 查看列名对应的批注
+# 查看列名对应的批注：数据框版
 func_looknote <- function(data) {
   notes <- character(0)
   for (i in  c(1: ncol(data))) {
@@ -16,6 +16,15 @@ func_looknote <- function(data) {
   }
   notes_df <- data.frame(colnames = names(data), note = notes)
   notes_df
+}
+
+# 查看列名对应的批注：列表版
+func_looknote_ls <- function(var_ls) {
+  for (i in c(1: length(var_ls))) {
+    print(names(var_ls[i]))
+    print(func_looknote(var_ls[[i]]))
+    cat("\n")
+  }
 }
 
 # 合并2个数据框，并且保留所有观察
@@ -363,12 +372,12 @@ func_looknote(other_act)
 
 # 构建其他部门的能耗总量列表
 other_nrgsum_ls <- vector("list")
-
+# 家庭用电部分
 ori_global_electricity <- func_read_trans("2I4DKY2A")
 other_nrgsum_ls[[1]] <- 
   ori_global_electricity[, c("year", "#城乡居民生活用电")]
 names(other_nrgsum_ls)[1] <- "家庭用电"
-
+# 家庭液化石油气部分
 ori_other_house_lpg_1 <- func_read_trans("HHKVE85Q", "管道液化气")
 ori_other_house_lpg_1 <- ori_other_house_lpg_1[, c("year", "家庭")]
 ori_other_house_lpg_2 <- func_read_trans("HHKVE85Q", "液化石油气")
@@ -376,21 +385,22 @@ ori_other_house_lpg <- rbind(ori_other_house_lpg_1, ori_other_house_lpg_2)
 rm(ori_other_house_lpg_1, ori_other_house_lpg_2)
 other_nrgsum_ls[[2]] <- ori_other_house_lpg
 names(other_nrgsum_ls)[2] <- "家庭液化石油气"
-
+# 家庭天然气部分
 ori_global_gas <- func_read_trans("HHKVE85Q", "管道天然气")
 other_nrgsum_ls[[3]] <- ori_global_gas[, c("year", "家庭")]
 names(other_nrgsum_ls)[3] <- "家庭天然气"
-
+# 建筑用电部分
 ori_other_construct_electricity <- 
   func_read_trans("2I4DKY2A", "全市电力消费情况表分具体行业")
 ori_other_construct_electricity <- 
   ori_other_construct_electricity[, c("year", "建筑业")]
 other_nrgsum_ls[[4]] <- ori_other_construct_electricity
 names(other_nrgsum_ls)[4] <- "建筑用电"
-
+# 农业用电部分
 other_nrgsum_ls[[5]] <- ori_global_electricity[, c("year", "##第一产业")]
 names(other_nrgsum_ls)[5] <- "农业用电"
-
+# 检查各部分的单位
+func_looknote_ls(other_nrgsum_ls)
 
 # 计算各行业用能强度
 other_nrgintst_ls <- vector("list")
