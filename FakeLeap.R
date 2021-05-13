@@ -71,7 +71,7 @@ func_read <- function(name_subdir, name_sht, num_row, num_col) {
   data_ori[1, 1]
 }
 
-# 查看一个数据框中不同组的变化趋势
+# 查看一个数据框中不同数据的变化趋势
 func_show_trend <- function(var_df) {
   names_var_df <- names(var_df)[names(var_df) %in% "year" == FALSE]
   names_unit <- 
@@ -443,6 +443,7 @@ func_merge_rate(electricity_living_guangzhou, "#生活用电",
 # 家庭用电部分
 proj_other_act <- proj_household
 func_history_project(population, "household", proj_other_act, "household")
+comment(proj_other_act$household) <- "万户"
 
 # 家庭液化石油气部分
 proj_other_act$lpg_user <- 
@@ -450,6 +451,7 @@ proj_other_act$lpg_user <-
                func_interp_2(year = c(2019, 2030, 2050), value = c(0.30, 0.15, 0.08)), 
                "value")$household
 func_history_project(other_act, "lpg_user", proj_other_act, "lpg_user")
+comment(proj_other_act$lpg_user) <- "万户"
 
 # 家庭天然气部分
 proj_other_act$gas_user <- 
@@ -457,29 +459,28 @@ proj_other_act$gas_user <-
                func_interp_2(year = c(2019, 2030, 2050), value = c(0.35, 0.70, 0.96)), 
                "value")$household
 func_history_project(other_act, "gas_user", proj_other_act, "gas_user")
+comment(proj_other_act$gas_user) <- "万户"
 
 # 建筑物用电部分
 proj_other_act$construction_gdp <- 
   func_nrg_sum(proj_gdp, 
                func_interp_2(year = c(2019,2030,2050), 
-                             value = c(39.05*15.30/100, 
-                                       34.7*15.30/100,
-                                       29.7*5/100)), 
-               "value")$value
-func_history_project(gdp, "##建筑业", proj_other_act, "construction_gdp")
-  proj_gdp$value * 
-  func_interp(data.frame(year = c(2005, 2019,2030,2050), 
-                         value = c(39.05*15.30/100, 
-                                   39.05*15.30/100, 
-                                   34.7*15.30/100,
-                                   29.7*5/100)))$value
+                             value = c(0.10, 
+                                       0.08,
+                                       0.03)), 
+               "value")$GDP
+func_history_project(gdp[gdp$year > 2000, ], "##建筑业", proj_other_act, "construction_gdp")
+comment(proj_other_act$construction_gdp) <- "万元"
 
+# 农业用电部分
 proj_other_act$agriculture_area <- 
-  func_interp(
-    data.frame(year = c(2005, 2019, 2050), 
-               value = c(0, 
-                         ag_ori[nrow(ag_ori), 3], 
-                         ag_ori[nrow(ag_ori), 3] * 0.5)))$value
+  func_interp_2(year = c(2019, 2030, 2050), 
+               value = c(ag_ori[nrow(ag_ori), "全年农作物总播种面积",], 
+                         ag_ori[nrow(ag_ori), "全年农作物总播种面积",] * 0.6, 
+                         ag_ori[nrow(ag_ori), "全年农作物总播种面积",] * 0.5))$value
+func_history_project(ag_ori, "全年农作物总播种面积", 
+                     proj_other_act, "agriculture_area")
+comment(proj_other_act$agriculture_area) <- "平方千米"
 
 func_show_trend(proj_other_act)
 
