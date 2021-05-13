@@ -77,7 +77,7 @@ func_show_trend <- function(var_df) {
   names_unit <- 
     func_looknote(var_df[names_var_df])
   
-  var_df_ls <- vector("list", length(names_unit))
+  var_df_ls <- vector("list", nrow(names_unit))
   names(var_df_ls) <- unique(names_unit$note)
   for (i in c(1: length(unique(names_unit$note)))) {
     var_df_ls[[i]] <- 
