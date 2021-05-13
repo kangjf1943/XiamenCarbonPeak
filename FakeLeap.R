@@ -167,11 +167,14 @@ func_nrg_sum <- function(df.nrg.intst , df.actlvl, name.actlvl) {
 
 # 比较历史数据和预测数据：两个数据框的版本 - 比较某一列
 func_history_project <- function(var_his, name_his, var_proj, name_proj) {
+  var_his <- var_his[, c("year", name_his)]
+  var_proj <- var_proj[, c("year", name_proj)]
   var_his$color <- "history"
   var_proj$color <- "project"
   names(var_his)[names(var_his) == name_his] <- name_proj
   total_df <- rbind(var_his[, c("year", name_proj, "color")], 
                     var_proj[, c("year", name_proj, "color")])
+  total_df <- total_df[is.na(total_df[, name_proj]) == FALSE, ]
   plot <- ggplot(total_df) + 
     geom_point(aes(year, total_df[, name_proj], color = color))
   print(plot)
@@ -187,7 +190,6 @@ func_history_project_df <- function(var_his, var_proj) {
                          var_proj, names_varproj[i])
   }
 }
-
 # 比较历史数据和预测数据：两个格式一致的列表的版本
 func_history_project_ls <- function(ls_his, ls_proj) {
   for (i in c(1: length(ls_his))) {
@@ -355,6 +357,7 @@ comment(proj_gdp_ind$value) <- "万元当年价"
 
 # 人口和户数
 population <- func_read_trans("2VHEE264")
+population
 population$household <- population$"常住人口" / population$"调查城镇家庭规模"
 # 计算户数
 proj_population <- func_interp_2(
@@ -372,6 +375,7 @@ names_other_act <- c("household", "lpg_user", "gas_user",
 names_other_ls <- c("household_electricity", "household_lpg", "household_gas", 
                            "construct_electricity", "agriculture_electricity")
 
+# 历史数据
 # 构建其他部门活动水平数据框
 # 家庭户数
 ori_other_act_house <- data.frame(year = population$year, 
@@ -473,7 +477,7 @@ func_merge_rate(electricity_living_guangzhou, "#生活用电",
                 population_guangzhou, "总户数")
 # 单从数据而言，厦门市还是有很大的增长空间的
 
-## 未来预测
+# 未来预测
 # 活动水平
 # 家庭用电部分
 proj_other_act <- proj_household
@@ -524,7 +528,7 @@ proj_other_nrgintst_ls <- vector("list")
 # 家庭用电部分
 proj_other_nrgintst_ls[[1]] <- 
   func_interp_2(year = c(2019, 2030, 2050), 
-              value = c(637310, 637310*1.2, 637310*1.4))
+              value = c(3033, 3033*1.2, 3033*1.4))
 names(proj_other_nrgintst_ls[[1]])[2] <- "家庭用电强度"
 func_history_project(other_nrgintst_ls[[1]], "#城乡居民生活用电", 
                      proj_other_nrgintst_ls[[1]], "家庭用电强度")
