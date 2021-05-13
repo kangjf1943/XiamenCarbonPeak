@@ -153,6 +153,18 @@ func_nrg_sum <- function(df.nrg.intst , df.actlvl, name.actlvl) {
   total_df
 }
 
+# 比较历史数据和预测数据
+func_history_project <- function(var_his, name_his, var_proj, name_proj) {
+  var_his$color <- "history"
+  var_proj$color <- "project"
+  names(var_his)[names(var_his) == name_his] <- name_proj
+  total_df <- rbind(var_his[, c("year", name_proj, "color")], 
+                    var_proj[, c("year", name_proj, "color")])
+  plot <- ggplot(total_df) + 
+    geom_point(aes(year, total_df[, name_proj], color = color))
+  print(plot)
+}
+
 # 比较两组数据的函数
 func_datacomp <- function(var_1, name_source_1, var_2, name_source_2, name_comp) {
   var_1[, c("Source")] <- name_source_1
@@ -305,16 +317,17 @@ comment(proj_gdp_ind$value) <- "万元当年价"
 
 ## 人口
 population <- func_read_trans("2VHEE264")
-population$household <- population$常住人口 / population$调查城镇家庭规模
+population$household <- population$"常住人口" / population$"调查城镇家庭规模"
 # 计算户数
 # 假设2016-2019年家庭规模维持稳定，为2.5人/户
-proj_household <- data.frame(
-  "year" = c(2019:2050),
-  "population" = read.xlsx("temp.xlsx")$Population * 1000/2.5)
-names(proj_household) <- c("year", "population")
-proj_household <- rbind(data.frame(year = c(2005:2018), population = c(0)), 
-                         proj_household)
-comment(proj_household$population) <- "万户"
+proj_population <- func_interp_2(
+  year = c(2019, 2025, 2030, 2035, 2050), 
+  value = c(population$"常住人口"[population$year == 2019], 
+            550, 737, 730, 800))
+proj_household <- proj_population
+names(proj_household)[2] <- "household"
+proj_household$household <- proj_household$household/2.5
+comment(proj_household$household) <- "万户"
 
 ## 其他部门：家庭，建筑业和农业
 # 构建其他部门活动水平数据框
@@ -420,14 +433,21 @@ func_merge_rate(electricity_living_guangzhou, "#生活用电",
 
 ## 未来预测
 # 活动水平
-proj_other_act <- data.frame(year = c(2005: 2050))
-proj_other_act <- merge(proj_other_act, proj_household, by = "year")
-proj_other_act$population <- proj_other_act$population / 2.5
-names(proj_other_act)[2] <- "household"
+# 家庭用电部分
+proj_other_act <- proj_household
+proj_other_act$color <- "project"
+population$color <- "history"
+proj_other_act <- rbind(population[, c("year", "household", "color")], proj_other_act)
+ggplot(proj_other_act) + geom_point(aes(year, household, color = color))
+proj_other_act <- proj_other_act[names(proj_other_act) %in% "color" == FALSE]
 
-proj_other_act$household_lpg <- 
+# 家庭液化石油气部分
+proj_other_act$lpg_user <- 
   proj_other_act$household * func_interp(data.frame(year = c(2005, 2019, 2030, 2050), 
                                                     value = c(48, 48, 30, 8)))$value
+proj_other_act
+
+
 proj_other_act$household_natural_gas <- 
   proj_other_act$household * func_interp(data.frame(year = c(2005, 2019, 2030, 2050), 
                                                     value = c(52, 52, 70, 96)))$value
