@@ -253,13 +253,18 @@ func_result <- function(var_aclevel, var_int) {
 
 # 通过能源总量和活动水平计算活动强度
 func_nrg_intst <- function(df_nrg_sum, df_actlvl, name) {
-  intersect_year <- intersect(df_nrg_sum$year, df_actlvl$year)
-  df_nrg_sum <- df_nrg_sum[df_nrg_sum$year %in% intersect_year, ]
-  df_actlvl <- df_actlvl[df_actlvl$year %in% intersect_year, ]
+  # 先将年份转换为数字类型
+  df_nrg_sum$year <- as.numeric(df_nrg_sum$year)
+  df_actlvl$year <- as.numeric(df_actlvl$year)
   df_actlvl <- df_actlvl[, c("year", name)]
+  # 统一年份：并集
+  allyear <- union(df_nrg_sum$year, df_actlvl$year)
+  df_nrg_sum <- merge(data.frame(year = allyear), df_nrg_sum, by = "year", all = TRUE)
+  df_actlvl <- merge(data.frame(year = allyear), df_actlvl, by = "year", all = TRUE)
+  # 构建输出数据框
   total_df <- df_nrg_sum
-  for (i in names(total_df[, -1])) {
-    total_df[, i] <- df_nrg_sum[, i] / df_actlvl[, name]
+  for (i in names(total_df)[names(total_df) %in% "year" == FALSE]) {
+    total_df[, i] <- total_df[, i] / df_actlvl[, name]
   }
   total_df
 }
@@ -428,7 +433,7 @@ for (i in c(1:5)) {
   other_nrgintst_ls[[i]] <- func_nrg_intst(other_nrgsum_ls[[i]], other_act, 
                                            names(other_act)[i + 1])
 }
-func_show_trend(other_nrgintst_ls[[2]])
+func_show_trend(other_nrgintst_ls[[1]])
 # 很多趋势是逐渐升高的
 
 # 和广州家庭用电数据比较
@@ -538,10 +543,12 @@ for (i in c(1:5)) {
                                             names(proj_other_act)[i])
 }
 
-func_history_project(other_nrgsum_ls[[1]], "#城乡居民生活用电", 
-                     proj_other_nrgsum_ls[[1]], "家庭用电强度")
+func_history_project(other_nrgsum_ls[[4]], "建筑业", 
+                     proj_other_nrgsum_ls[[4]], "单位建筑GDP用电")
 func_show_trend(proj_other_nrgsum_ls[[5]])
 
+func_history_project(other_nrgintst_ls[[4]], "建筑业", 
+                     proj_other_nrgintst_ls[[4]], "单位建筑GDP用电")
 
 ## 交通
 ## 公路交通
