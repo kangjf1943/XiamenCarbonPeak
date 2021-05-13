@@ -71,7 +71,7 @@ func_read <- function(name_subdir, name_sht, num_row, num_col) {
   data_ori[1, 1]
 }
 
-# 查看一个数据框中不同数据的变化趋势
+# 查看一个数据框中不同数据的变化趋势：数据框版本
 func_show_trend <- function(var_df) {
   names_var_df <- names(var_df)[names(var_df) %in% "year" == FALSE]
   names_unit <- 
@@ -85,8 +85,16 @@ func_show_trend <- function(var_df) {
                  names_unit$colnames[names_unit$note == unique(names_unit$note)[i]])]
     var_df_ls[[i]] <- melt(var_df_ls[[i]], id = "year")
     var_df_ls[[i]] <- var_df_ls[[i]][is.na(var_df_ls[[i]]$value) == FALSE,]
-    print(ggplot(var_df_ls[[i]]) + geom_point(aes(year, value, color = variable), na.rm = T,
-                                              size = 5, alpha = 0.5))
+    plot <- ggplot(var_df_ls[[i]]) + 
+      geom_point(aes(year, value, color = variable), na.rm = T,size = 2, alpha = 0.5)
+    print(plot)
+  }
+}
+
+# 查看一个数据框中不同数据的变化趋势：列表版本
+func_show_trend_ls <- function(var_ls) {
+  for (i in c(1: length(var_ls))) {
+    func_show_trend(var_ls[[i]])
   }
 }
 
@@ -327,11 +335,10 @@ proj_gdp_ind <- data.frame(year = c(2005:2050),
                              proj_gdp_ind_prop$value / 100)
 comment(proj_gdp_ind$value) <- "万元当年价"
 
-## 人口
+# 人口和户数
 population <- func_read_trans("2VHEE264")
 population$household <- population$"常住人口" / population$"调查城镇家庭规模"
 # 计算户数
-# 假设2016-2019年家庭规模维持稳定，为2.5人/户
 proj_population <- func_interp_2(
   year = c(2019, 2025, 2030, 2035, 2050), 
   value = c(population$"常住人口"[population$year == 2019], 
@@ -342,6 +349,11 @@ proj_household$household <- proj_household$household/2.5
 comment(proj_household$household) <- "万户"
 
 ## 其他部门：家庭，建筑业和农业
+names_other_act <- c("household", "lpg_user", "gas_user", 
+                     "construct_gdp", "agriculture_area")
+names_other_ls <- c("household_electricity", "household_lpg", "household_gas", 
+                           "construct_electricity", "agriculture_electricity")
+
 # 构建其他部门活动水平数据框
 # 家庭户数
 ori_other_act_house <- data.frame(year = population$year, 
@@ -549,6 +561,9 @@ func_show_trend(proj_other_nrgsum_ls[[5]])
 
 func_history_project(other_nrgintst_ls[[4]], "建筑业", 
                      proj_other_nrgintst_ls[[4]], "单位建筑GDP用电")
+
+
+
 
 ## 交通
 ## 公路交通
