@@ -90,7 +90,6 @@ func_show_trend <- function(var_df) {
   }
 }
 
-
 # 计算两个系列的比率或乘积：一对一
 # method取值“rate”或者“product”
 func_merge_rate <- function(var_1, name_1, var_2, name_2, method, 
@@ -121,7 +120,7 @@ func_merge_rate <- function(var_1, name_1, var_2, name_2, method,
   outcome
 }
 
-# 计算乘积
+# 计算乘积：可能跟上面的函数重复了
 func_merge_product <- function(var_1, name_1, var_2, name_2) {
   total <- merge(var_1, var_2, by = "year")
   product <- data.frame("year" = total$year, 
@@ -137,20 +136,25 @@ func_merge_product <- function(var_1, name_1, var_2, name_2) {
 # 两个数据框都要带有一个命名为“year”的列
 # 活动水平名称
 func_nrg_sum <- function(df.nrg.intst , df.actlvl, name.actlvl) {
-  # 统一数据框的年份
-  intersect_year <- intersect(df.nrg.intst$year, df.actlvl$year)
-  df.nrg.intst <- df.nrg.intst [df.nrg.intst$year %in% intersect_year, ]
-  df.actlvl <- df.actlvl[df.actlvl$year %in% intersect_year, ]
-  df.actlvl <- df.actlvl[, c("year", name.actlvl)]
-  # 构建输出结果
-  total_df <- df.nrg.intst 
-  for (i in names(total_df)[names(total_df) %in% "year" == FALSE]) {
-    total_df[, i] <- df.nrg.intst [, i] * df.actlvl[, name.actlvl]
+  # 检查数据，如果年份有重复，就输出警告
+  if (sum(duplicated(df.nrg.intst$year)) + sum(duplicated(df.actlvl$year))) {
+    print("warning: 重复数据")
+  } else {
+    # 统一数据框的年份：取交集
+    intersect_year <- intersect(df.nrg.intst$year, df.actlvl$year)
+    df.nrg.intst <- df.nrg.intst [df.nrg.intst$year %in% intersect_year, ]
+    df.actlvl <- df.actlvl[df.actlvl$year %in% intersect_year, ]
+    df.actlvl <- df.actlvl[, c("year", name.actlvl)]
+    # 构建输出结果
+    total_df <- df.nrg.intst 
+    for (i in names(total_df)[names(total_df) %in% "year" == FALSE]) {
+      total_df[, i] <- df.nrg.intst [, i] * df.actlvl[, name.actlvl]
+    }
+    total_df$year <- intersect_year
+    total_df <- total_df[c("year", 
+                           names(total_df)[names(total_df) %in% "year" == FALSE])]
+    total_df
   }
-  total_df$year <- intersect_year
-  total_df <- total_df[c("year", 
-                         names(total_df)[names(total_df) %in% "year" == FALSE])]
-  total_df
 }
 
 # 比较历史数据和预测数据
@@ -435,22 +439,23 @@ func_merge_rate(electricity_living_guangzhou, "#生活用电",
 # 活动水平
 # 家庭用电部分
 proj_other_act <- proj_household
-proj_other_act$color <- "project"
-population$color <- "history"
-proj_other_act <- rbind(population[, c("year", "household", "color")], proj_other_act)
-ggplot(proj_other_act) + geom_point(aes(year, household, color = color))
-proj_other_act <- proj_other_act[names(proj_other_act) %in% "color" == FALSE]
+func_history_project(population, "household", proj_other_act, "household")
 
 # 家庭液化石油气部分
 proj_other_act$lpg_user <- 
-  proj_other_act$household * func_interp(data.frame(year = c(2005, 2019, 2030, 2050), 
-                                                    value = c(48, 48, 30, 8)))$value
-proj_other_act
+  proj_other_act$household * 
+  func_interp_2(year = c(2019, 2030, 2050), value = c(48, 30, 8))$value
+func_history_project(other_act, "lpg_user", proj_other_act, "lpg_user")
 
+func_nrg_sum(proj_other_act, 
+             func_interp_2(year = c(2019, 2030, 2050), value = c(48, 30, 8)), 
+             "value")
 
-proj_other_act$household_natural_gas <- 
-  proj_other_act$household * func_interp(data.frame(year = c(2005, 2019, 2030, 2050), 
-                                                    value = c(52, 52, 70, 96)))$value
+# 家庭天然气部分
+proj_other_act$gas_user <- 
+  proj_other_act$household * 
+  func_interp_2(year = c(2019, 2030, 2050), value = c(52, 52, 70, 96))$value
+
 
 proj_other_act$construction_gdp <- 
   proj_gdp$value * 
