@@ -443,21 +443,27 @@ func_history_project(population, "household", proj_other_act, "household")
 
 # 家庭液化石油气部分
 proj_other_act$lpg_user <- 
-  proj_other_act$household * 
-  func_interp_2(year = c(2019, 2030, 2050), value = c(48, 30, 8))$value
+  func_nrg_sum(proj_other_act[, c("year", "household")], 
+               func_interp_2(year = c(2019, 2030, 2050), value = c(0.30, 0.15, 0.08)), 
+               "value")$household
 func_history_project(other_act, "lpg_user", proj_other_act, "lpg_user")
-
-func_nrg_sum(proj_other_act, 
-             func_interp_2(year = c(2019, 2030, 2050), value = c(48, 30, 8)), 
-             "value")
 
 # 家庭天然气部分
 proj_other_act$gas_user <- 
-  proj_other_act$household * 
-  func_interp_2(year = c(2019, 2030, 2050), value = c(52, 52, 70, 96))$value
+  func_nrg_sum(proj_other_act[, c("year", "household")], 
+               func_interp_2(year = c(2019, 2030, 2050), value = c(0.35, 0.70, 0.96)), 
+               "value")$household
+func_history_project(other_act, "gas_user", proj_other_act, "gas_user")
 
-
+# 建筑物用电部分
 proj_other_act$construction_gdp <- 
+  func_nrg_sum(proj_gdp, 
+               func_interp_2(year = c(2019,2030,2050), 
+                             value = c(39.05*15.30/100, 
+                                       34.7*15.30/100,
+                                       29.7*5/100)), 
+               "value")$value
+func_history_project(gdp, "##建筑业", proj_other_act, "construction_gdp")
   proj_gdp$value * 
   func_interp(data.frame(year = c(2005, 2019,2030,2050), 
                          value = c(39.05*15.30/100, 
