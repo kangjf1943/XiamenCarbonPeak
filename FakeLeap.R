@@ -428,7 +428,7 @@ for (i in c(1:5)) {
   other_nrgintst_ls[[i]] <- func_nrg_intst(other_nrgsum_ls[[i]], other_act, 
                                            names(other_act)[i + 1])
 }
-func_show_trend(other_nrgintst_ls[[3]])
+func_show_trend(other_nrgintst_ls[[2]])
 # 很多趋势是逐渐升高的
 
 # 和广州家庭用电数据比较
@@ -486,30 +486,49 @@ func_show_trend(proj_other_act)
 
 # 活动强度
 proj_other_nrgintst_ls <- vector("list")
+# 家庭用电部分
 proj_other_nrgintst_ls[[1]] <- 
-  data.frame(year = c(2005: 2050),
-             electricity = proj_electricity_perhouse$Value)
+  func_interp_2(year = c(2019, 2030, 2050), 
+              value = c(637310, 637310*1.2, 637310*1.4))
+names(proj_other_nrgintst_ls[[1]])[2] <- "家庭用电强度"
+func_history_project(other_nrgintst_ls[[1]], "#城乡居民生活用电", 
+                     proj_other_nrgintst_ls[[1]], "家庭用电强度")
 
+# 家庭液化天然气部分
 proj_other_nrgintst_ls[[2]] <- 
-  data.frame(year = c(2005: 2050), 
-             lpg = c(588.5))
+  data.frame(year = c(2019: 2050), 
+             lpg = other_nrgintst_ls[[2]]$家庭[nrow(other_nrgintst_ls[[2]])])
+names(proj_other_nrgintst_ls[[2]])[2] <- "每户液化石油气"
+func_history_project(other_nrgintst_ls[[2]], "家庭", 
+                     proj_other_nrgintst_ls[[2]], "每户液化石油气")
 
+# 家庭液化天然气部分
 proj_other_nrgintst_ls[[3]] <- 
-  data.frame(year = c(2005: 2050), 
-             natural_gas = c(74.5))
+  data.frame(year = c(2019: 2050), 
+             natural_gas = other_nrgintst_ls[[3]]$家庭[nrow(other_nrgintst_ls[[3]])])
+names(proj_other_nrgintst_ls[[3]])[2] <- "每户天然气"
+func_history_project(other_nrgintst_ls[[3]], "家庭", 
+                     proj_other_nrgintst_ls[[3]], "每户天然气")
 
-proj_other_nrgintst_ls[[4]] <- data.frame(year = c(2005: 2050), 
-                                          electricity = c(0.09))
+# 建筑业用电部分
+proj_other_nrgintst_ls[[4]] <- 
+  func_interp_2(year = c(2019, 2030, 2050), 
+                value = c(49817, 
+                          49817 * 1.2, 
+                          49817))
+names(proj_other_nrgintst_ls[[4]])[2] <- "单位建筑GDP用电"
+func_history_project(other_nrgintst_ls[[4]], "建筑业", 
+                     proj_other_nrgintst_ls[[4]], "单位建筑GDP用电")
 
+# 农业用电
 proj_other_nrgintst_ls[[5]] <- 
-  data.frame(year = c(2005: 2050),
-             electricity = func_interp(
-               data.frame(year = c(2005, 2019, 2050), 
-                          value = c(0, 
-                                    ag_elec_intnst[1, 2],
-                                    ag_elec_intnst[1, 2] * 0.5)))$value)
-
-func_show_trend(proj_other_nrgintst_ls[[5]])
+  func_interp_2(year = c(2019, 2030, 2050), 
+                value = c(other_nrgintst_ls[[5]]$"##第一产业"[other_nrgintst_ls[[5]]$year == 2019], 
+                          other_nrgintst_ls[[5]]$"##第一产业"[other_nrgintst_ls[[5]]$year == 2019] * 0.8,
+                          other_nrgintst_ls[[5]]$"##第一产业"[other_nrgintst_ls[[5]]$year == 2019] * 0.7))
+names(proj_other_nrgintst_ls[[5]])[2] <- "农业单位面积用电量"
+func_history_project(other_nrgintst_ls[[5]], "##第一产业", 
+                     proj_other_nrgintst_ls[[5]], "农业单位面积用电量")
 
 # 则能耗总量为
 proj_other_nrgsum_ls <- vector("list")
@@ -518,7 +537,9 @@ for (i in c(1:5)) {
                                             proj_other_act, 
                                             names(proj_other_act)[i])
 }
-proj_other_nrgsum_ls
+
+func_history_project(other_nrgsum_ls[[1]], "#城乡居民生活用电", 
+                     proj_other_nrgsum_ls[[1]], "家庭用电强度")
 func_show_trend(proj_other_nrgsum_ls[[5]])
 
 
