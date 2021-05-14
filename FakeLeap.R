@@ -7,6 +7,14 @@ library(ggpubr)
 Sys.setlocale("LC_ALL", "chinese")
 
 ## 构建函数
+# 给数据框添加备注
+func_addnote <- function(data, note) {
+  for (i in c(1: ncol(data))) {
+    comment(data[, names(data)[i]]) <- note[i]
+  }
+  data
+}
+
 # 查看列名对应的批注：数据框版
 func_looknote <- function(data) {
   notes <- character(0)
@@ -36,9 +44,12 @@ func_merge <- function(x, y) {
 # 合并多个数据框
 func_merge_2 <- function(ls_var) {
   df_out <- data.frame(year = ls_var[[1]][, "year"])
+  notes <- character()
   for (i in c(1: length(ls_var))) {
     df_out <- merge(df_out, ls_var[[i]], by = "year", all = TRUE)
+    notes <- c(notes, func_looknote(ls_var[[i]])[, "note"])
   }
+  df_out <- func_addnote(df_out, notes)
   df_out
 }
 
