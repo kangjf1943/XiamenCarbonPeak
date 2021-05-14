@@ -201,7 +201,8 @@ func_history_project_df <- function(var_his, var_proj) {
     plot_ls[[i]] <- func_history_project(var_his, names_varhis[i], 
                                          var_proj, names_varproj[i])
   }
-  ggarrange(plotlist = plot_ls, nrow = 2, ncol = 2, common.legend = TRUE)
+  plot_arrange <- ggarrange(plotlist = plot_ls, nrow = 2, ncol = 2, common.legend = TRUE)
+  print(plot_arrange)
 }
 
 # 比较历史数据和预测数据：两个格式一致的列表的版本
