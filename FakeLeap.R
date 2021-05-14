@@ -279,7 +279,7 @@ func_result <- function(var_aclevel, var_int) {
   total_df
 }
 
-# 通过能源总量和活动水平计算活动强度
+# 通过能源总量和活动水平计算活动强度：数据框对某一列的版本
 func_nrg_intst <- function(df_nrg_sum, df_actlvl, name) {
   # 先将年份转换为数字类型
   df_nrg_sum$year <- as.numeric(df_nrg_sum$year)
@@ -295,6 +295,18 @@ func_nrg_intst <- function(df_nrg_sum, df_actlvl, name) {
     total_df[, i] <- total_df[, i] / df_actlvl[, name]
   }
   total_df
+}
+# 通过能源总量和活动水平计算活动强度：列表对数据框的版本
+# 输入列表的长度应等于数据框列数减1
+# 列表中数据框的排列顺序应和数据框严格对应
+# 计算结果应为一个列表
+func_nrg_intst_ls <- function(ls_nrgsum, df_actlvl) {
+  ls_nrgintst <- vector("list", length(ls_nrgsum))
+  for (i in c(1: length(ls_nrgsum))) {
+    ls_nrgintst[[i]] <- func_nrg_intst(ls_nrgsum[[i]], df_actlvl, 
+                                             names(df_actlvl)[i + 1])
+  }
+  ls_nrgintst
 }
 
 # 生成预测数据的函数
@@ -466,11 +478,7 @@ func_looknote_ls(other_nrgsum_ls)
 func_show_trend_ls(other_nrgsum_ls)
 
 # 计算各行业用能强度
-other_nrgintst_ls <- vector("list")
-for (i in c(1:5)) {
-  other_nrgintst_ls[[i]] <- func_nrg_intst(other_nrgsum_ls[[i]], other_act, 
-                                           names(other_act)[i + 1])
-}
+other_nrgintst_ls <- func_nrg_intst_ls(other_nrgsum_ls, other_act)
 func_show_trend_ls(other_nrgintst_ls)
 
 # 和广州家庭用电数据比较
