@@ -185,6 +185,10 @@ func_history_project <- function(var_his, name_his, var_proj, name_proj) {
   total_df <- rbind(var_his[, c("year", name_proj, "color")], 
                     var_proj[, c("year", name_proj, "color")])
   total_df <- total_df[is.na(total_df[, name_proj]) == FALSE, ]
+  # 将作图数据强制转化为数字，否则可能会出现坐标轴重叠
+  total_df$year <- as.numeric(total_df$year)
+  total_df$水路货运 <- as.numeric(total_df$水路货运)
+  # 作图
   plot <- ggplot(total_df) + 
     geom_point(aes(year, total_df[, name_proj], color = color), alpha = 0.5, size = 3) +
     labs(y = name_his)
@@ -873,6 +877,9 @@ proj_trans_nrgsum_ls <- func_nrg_sum_ls(proj_trans_nrgintst_ls, proj_trans_act)
 func_history_project_df(trans_act, proj_trans_act)
 func_history_project_ls(trans_nrgintst_ls, proj_trans_nrgintst_ls)
 func_history_project_ls(trans_nrgsum_ls, proj_trans_nrgsum_ls)
+
+func_history_project(trans_act, "水路货运周转量", proj_trans_act, "水路货运")
+plot(trans_act$year, trans_act$水路货运周转量)
 
 # 工业用能
 # 活动水平：GDP
