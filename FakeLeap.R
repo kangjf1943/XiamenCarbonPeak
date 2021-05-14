@@ -71,12 +71,20 @@ func_read_trans <- function(name_subdir, order_sht = 1) {
   for (i in c(1: nrow(data_ori))) {
     comment(data_trans[, names(data_trans)[i]]) <- data_ori[i, 2]
   }
-  data_trans <- data_trans[c("year", 
-                             names(data_trans)[names(data_trans) %in% "year" == FALSE])]
+  data_trans <- 
+    data_trans[c("year", names(data_trans)[names(data_trans) %in% "year" == FALSE])]
   rownames(data_trans) <- NULL
+  # 删除列名中的空格
+  columnnames <- gsub(" ", "", names(data_trans))
+  names(data_trans) <- columnnames
+  # 传递备注信息
+  notes <- func_looknote(data_trans)[, "note"]
+  data_trans <- as.data.frame(lapply(data_trans, as.numeric))
+  data_trans <- func_addnote(data_trans, notes)
   func_looknote(data_trans)
   data_trans
 }
+func_read_trans("Y3PGVSR7")
 
 # 读取特定单元格
 func_read <- function(name_subdir, name_sht, num_row, num_col) {
