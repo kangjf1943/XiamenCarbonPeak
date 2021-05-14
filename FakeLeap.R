@@ -187,7 +187,7 @@ func_history_project <- function(var_his, name_his, var_proj, name_proj) {
   total_df <- total_df[is.na(total_df[, name_proj]) == FALSE, ]
   # 将作图数据强制转化为数字，否则可能会出现坐标轴重叠
   total_df$year <- as.numeric(total_df$year)
-  total_df$水路货运 <- as.numeric(total_df$水路货运)
+  total_df[, name_proj] <- as.numeric(total_df[, name_proj])
   # 作图
   plot <- ggplot(total_df) + 
     geom_point(aes(year, total_df[, name_proj], color = color), alpha = 0.5, size = 3) +
@@ -739,17 +739,17 @@ for (i in tbl_read) {
 }
 # 计算能耗总量
 colnames(trans_act)[c(6:13)] <- tbl_read
-trans_nrgsum_ls <- c(trans_nrgsum_ls_2, 
+trans_nrgsum_ls_2 <- c(trans_nrgsum_ls_2, 
                        func_nrg_sum_ls(trans_nrgintst_ls[c(5:12)], 
                                        trans_act[, c("year", tbl_read)]))
-names(trans_nrgsum_ls)[5:12] <- tbl_read
+names(trans_nrgsum_ls_2)[5:12] <- tbl_read
 
 # 航空部分
-trans_nrgsum_ls$"航空" <- func_read_trans("JXG6KGSA")[, c("year", "国内")]
+trans_nrgsum_ls_2$"航空" <- func_read_trans("JXG6KGSA")[, c("year", "国内")]
 
 # 水运部分
-trans_nrgsum_ls$"水路客运" <- func_read_trans("NTNZD6VV", "国内客运")
-trans_nrgsum_ls$"水路货运" <- func_read_trans("NTNZD6VV", "国内货运")
+trans_nrgsum_ls_2$"水路客运" <- func_read_trans("NTNZD6VV", "国内客运")
+trans_nrgsum_ls_2$"水路货运" <- func_read_trans("NTNZD6VV", "国内货运")
 
 ## 预测未来
 # 活动水平
@@ -780,30 +780,35 @@ proj_trans_act$"摩托车" <-
                 value = c(trans_act$摩托车[which(trans_act$year == 2019)], 
                           trans_act$摩托车[which(trans_act$year == 2019)]*1.05, 
                           trans_act$摩托车[which(trans_act$year == 2019)]*1.07*1.01))$value
+func_history_project(trans_act, "摩托车", proj_trans_act, "摩托车")
 
 proj_trans_act$"轿车" <- 
   func_interp_2(year = c(2019, 2030, 2050), 
                 value = c(trans_act$轿车[which(trans_act$year == 2019)], 
                           trans_act$轿车[which(trans_act$year == 2019)]*1.05, 
                           trans_act$轿车[which(trans_act$year == 2019)]*1.07*1.01))$value
+func_history_project(trans_act, "轿车", proj_trans_act, "轿车")
 
 proj_trans_act$"轻型客车" <- 
   func_interp_2(year = c(2019, 2030, 2050), 
                 value = c(trans_act$轻型客车[which(trans_act$year == 2019)], 
                           trans_act$轻型客车[which(trans_act$year == 2019)]*1.05, 
                           trans_act$轻型客车[which(trans_act$year == 2019)]*1.07*1.01))$value
+func_history_project(trans_act, "轻型客车", proj_trans_act, "轻型客车")
 
 proj_trans_act$"大型客车"  <- 
   func_interp_2(year = c(2019, 2030, 2050), 
                 value = c(trans_act$大型客车[which(trans_act$year == 2019)], 
                           trans_act$大型客车[which(trans_act$year == 2019)]*1.05, 
                           trans_act$大型客车[which(trans_act$year == 2019)]*1.07*1.01))$value
+func_history_project(trans_act, "大型客车", proj_trans_act, "大型客车")
 
 proj_trans_act$"轻型货车" <- 
   func_interp_2(year = c(2019, 2030, 2050), 
                 value = c(trans_act$轻型货车[which(trans_act$year == 2019)], 
                           trans_act$轻型货车[which(trans_act$year == 2019)]*1.05, 
                           trans_act$轻型货车[which(trans_act$year == 2019)]*1.07*1.01))$value
+func_history_project(trans_act, "轻型货车", proj_trans_act, "轻型货车")
 
 proj_trans_act$"中型货车" <- 
   func_interp_2(year = c(2019, 2030, 2050), 
@@ -832,8 +837,9 @@ comment(proj_trans_act$"水路客运") <- "万人公里"
 
 proj_trans_act$"水路货运" <- 
   func_interp_2(year = c(2019, 2030, 2050), 
-                value = c(14247920, 15000000, 22000000))$value
+                value = c(21538635, 21538635*1.5, 21538635*2.0))$value
 comment(proj_trans_act$"水路货运") <- "万吨公里"
+func_history_project(trans_act, "水路货运周转量", proj_trans_act, "水路货运")
 
 # 活动强度
 proj_trans_nrgintst_ls <- vector("list", 12)
