@@ -84,7 +84,6 @@ func_read_trans <- function(name_subdir, order_sht = 1) {
   func_looknote(data_trans)
   data_trans
 }
-func_read_trans("Y3PGVSR7")
 
 # 读取特定单元格
 func_read <- function(name_subdir, name_sht, num_row, num_col) {
