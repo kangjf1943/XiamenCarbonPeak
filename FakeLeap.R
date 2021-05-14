@@ -186,7 +186,7 @@ func_history_project <- function(var_his, name_his, var_proj, name_proj) {
                     var_proj[, c("year", name_proj, "color")])
   total_df <- total_df[is.na(total_df[, name_proj]) == FALSE, ]
   plot <- ggplot(total_df) + 
-    geom_point(aes(year, total_df[, name_proj], color = color)) +
+    geom_point(aes(year, total_df[, name_proj], color = color), alpha = 0.5, size = 3) +
     labs(y = name_his)
   print(plot)
 }
