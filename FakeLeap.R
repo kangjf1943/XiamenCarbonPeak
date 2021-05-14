@@ -16,7 +16,7 @@ func_looknote <- function(data) {
     notes <- c(notes, note)
   }
   notes_df <- data.frame(colnames = names(data), note = notes)
-  notes_df
+  print(notes_df)
 }
 
 # 查看列名对应的批注：列表版
@@ -31,6 +31,15 @@ func_looknote_ls <- function(var_ls) {
 # 合并2个数据框，并且保留所有观察
 func_merge <- function(x, y) {
   merge(x, y, by = "year", all = TRUE)
+}
+
+# 合并多个数据框
+func_merge_2 <- function(ls_var) {
+  df_out <- data.frame(year = ls_var[[1]][, "year"])
+  for (i in c(1: length(ls_var))) {
+    df_out <- merge(df_out, ls_var[[i]], by = "year", all = TRUE)
+  }
+  df_out
 }
 
 # 获得变量名称
@@ -54,10 +63,7 @@ func_read_trans <- function(name_subdir, order_sht = 1) {
   data_trans <- data_trans[c("year", 
                              names(data_trans)[names(data_trans) %in% "year" == FALSE])]
   rownames(data_trans) <- NULL
-  for (i in names(data_trans)) {
-    print(i)
-    print(attributes(data_trans[, i]))
-  }
+  func_looknote(data_trans)
   data_trans
 }
 
