@@ -164,6 +164,15 @@ func_nrg_sum <- function(df.nrg.intst , df.actlvl, name.actlvl) {
     total_df
   }
 }
+# 基于活动水平和活动强度计算活动总量：列表版
+func_nrg_sum_ls <- function(ls_nrgintst, df_actlvl) {
+  ls_nrgsum <- vector("list", length(ls_nrgintst))
+  for (i in c(1: (length(ls_nrgintst)))) {
+    ls_nrgsum[[i]] <- func_nrg_sum(ls_nrgintst[[i]], 
+                                   df_actlvl, names(df_actlvl)[i + 1])
+  }
+  ls_nrgsum
+}
 
 # 比较历史数据和预测数据：两个数据框的版本 - 比较某一列
 func_history_project <- function(var_his, name_his, var_proj, name_proj) {
@@ -574,12 +583,8 @@ func_history_project(other_nrgintst_ls[[5]], "agriculture_electricity",
                      proj_other_nrgintst_ls[[5]], "农业单位面积用电量")
 
 # 则能耗总量为
-proj_other_nrgsum_ls <- vector("list")
-for (i in c(1:5)) {
-  proj_other_nrgsum_ls[[i]] <- func_nrg_sum(proj_other_nrgintst_ls[[i]], 
-                                            proj_other_act, 
-                                            names(proj_other_act)[i + 1])
-}
+proj_other_nrgsum_ls <- func_nrg_sum_ls(proj_other_nrgintst_ls, proj_other_act)
+
 func_history_project_ls(other_nrgintst_ls, proj_other_nrgintst_ls)
 func_history_project_df(other_act, proj_other_act)
 func_history_project_ls(other_nrgsum_ls, proj_other_nrgsum_ls)
