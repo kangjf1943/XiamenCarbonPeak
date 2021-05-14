@@ -357,7 +357,10 @@ comment(proj_gdp_ind$value) <- "万元当年价"
 
 # 人口和户数
 population <- func_read_trans("2VHEE264")
-population
+population$year <- as.numeric(population$year)
+# 假设2016-2017的城镇家庭户数和2015年一致
+population$调查城镇家庭规模[population$year > 2015] <- 
+  population$调查城镇家庭规模[population$year == 2015]
 population$household <- population$"常住人口" / population$"调查城镇家庭规模"
 # 计算户数
 proj_population <- func_interp_2(
@@ -381,6 +384,7 @@ names_other_ls <- c("household_electricity", "household_lpg", "household_gas",
 ori_other_act_house <- data.frame(year = population$year, 
                               household = population$常住人口 / 
                                 population$调查城镇家庭规模)
+plot(ori_other_act_house$year, ori_other_act_house$household)
 comment(ori_other_act_house$household) <- "万户"
 
 # 用液化石油气的户数
@@ -428,38 +432,38 @@ comment(other_act$gas_user) <- attributes(ori_other_act_house_gas$gas_user)[[1]]
 comment(other_act$"##建筑业") <- attributes(ori_other_act_construct_gdp$"##建筑业")[[1]]
 comment(other_act$全年农作物总播种面积) <- attributes(ori_other_agriculture_area$全年农作物总播种面积)[[1]]
 func_looknote(other_act)
+func_show_trend(other_act)
 
 # 构建其他部门的能耗总量列表
-other_nrgsum_ls <- vector("list")
+other_nrgsum_ls <- vector("list", 5)
 # 家庭用电部分
-ori_global_electricity <- func_read_trans("2I4DKY2A")
-other_nrgsum_ls[[1]] <- 
-  ori_global_electricity[, c("year", "#城乡居民生活用电")]
 names(other_nrgsum_ls)[1] <- "家庭用电"
+other_nrgsum_ls[[1]] <- func_read_trans("2I4DKY2A")
+other_nrgsum_ls[[1]] <- other_nrgsum_ls[[1]][, c("year", "#城乡居民生活用电")]
+names(other_nrgsum_ls[[1]]) <- c("year", "household_electricity")
 # 家庭液化石油气部分
-ori_other_house_lpg_1 <- func_read_trans("HHKVE85Q", "管道液化气")
-ori_other_house_lpg_1 <- ori_other_house_lpg_1[, c("year", "家庭")]
-ori_other_house_lpg_2 <- func_read_trans("HHKVE85Q", "液化石油气")
-ori_other_house_lpg <- rbind(ori_other_house_lpg_1, ori_other_house_lpg_2)
-rm(ori_other_house_lpg_1, ori_other_house_lpg_2)
-other_nrgsum_ls[[2]] <- ori_other_house_lpg
 names(other_nrgsum_ls)[2] <- "家庭液化石油气"
+other_nrgsum_ls[[2]] <- func_read_trans("HHKVE85Q", "瓶装液化气")
+other_nrgsum_ls[[2]] <- other_nrgsum_ls[[2]][, c("year", "家庭")]
+names(other_nrgsum_ls[[2]]) <- c("year", "household_lpg")
 # 家庭天然气部分
-ori_global_gas <- func_read_trans("HHKVE85Q", "管道天然气")
-other_nrgsum_ls[[3]] <- ori_global_gas[, c("year", "家庭")]
 names(other_nrgsum_ls)[3] <- "家庭天然气"
+other_nrgsum_ls[[3]] <- func_read_trans("HHKVE85Q", "管道天然气")
+other_nrgsum_ls[[3]] <- other_nrgsum_ls[[3]][, c("year", "家庭")]
+names(other_nrgsum_ls[[3]]) <- c("year", "household_gas")
 # 建筑用电部分
-ori_other_construct_electricity <- 
-  func_read_trans("2I4DKY2A", "全市电力消费情况表分具体行业")
-ori_other_construct_electricity <- 
-  ori_other_construct_electricity[, c("year", "建筑业")]
-other_nrgsum_ls[[4]] <- ori_other_construct_electricity
 names(other_nrgsum_ls)[4] <- "建筑用电"
+other_nrgsum_ls[[4]] <- func_read_trans("2I4DKY2A", "全市电力消费情况表分具体行业")
+other_nrgsum_ls[[4]] <- other_nrgsum_ls[[4]][, c("year", "建筑业")]
+names(other_nrgsum_ls[[4]]) <- c("year", "construct_electricity")
 # 农业用电部分
-other_nrgsum_ls[[5]] <- ori_global_electricity[, c("year", "##第一产业")]
 names(other_nrgsum_ls)[5] <- "农业用电"
+other_nrgsum_ls[[5]] <- ori_global_electricity[, c("year", "##第一产业")]
+names(other_nrgsum_ls[[5]]) <- c("year", "agriculture_electricity")
+
 # 检查各部分的单位
 func_looknote_ls(other_nrgsum_ls)
+func_show_trend_ls(other_nrgsum_ls)
 
 # 计算各行业用能强度
 other_nrgintst_ls <- vector("list")
@@ -467,8 +471,7 @@ for (i in c(1:5)) {
   other_nrgintst_ls[[i]] <- func_nrg_intst(other_nrgsum_ls[[i]], other_act, 
                                            names(other_act)[i + 1])
 }
-func_show_trend(other_nrgintst_ls[[1]])
-# 很多趋势是逐渐升高的
+func_show_trend_ls(other_nrgintst_ls)
 
 # 和广州家庭用电数据比较
 electricity_living_guangzhou <- func_read_trans("QSPLFZXP", 3)
@@ -477,13 +480,11 @@ func_merge_rate(electricity_living_guangzhou, "#生活用电",
                 population_guangzhou, "总户数")
 # 单从数据而言，厦门市还是有很大的增长空间的
 
-# 未来预测
-# 活动水平
-# 家庭用电部分
+# 未来活动水平
+# 家庭用电
 proj_other_act <- proj_household
 func_history_project(population, "household", proj_other_act, "household")
 comment(proj_other_act$household) <- "万户"
-
 # 家庭液化石油气部分
 proj_other_act$lpg_user <- 
   func_nrg_sum(proj_other_act[, c("year", "household")], 
@@ -491,7 +492,6 @@ proj_other_act$lpg_user <-
                "value")$household
 func_history_project(other_act, "lpg_user", proj_other_act, "lpg_user")
 comment(proj_other_act$lpg_user) <- "万户"
-
 # 家庭天然气部分
 proj_other_act$gas_user <- 
   func_nrg_sum(proj_other_act[, c("year", "household")], 
@@ -499,7 +499,6 @@ proj_other_act$gas_user <-
                "value")$household
 func_history_project(other_act, "gas_user", proj_other_act, "gas_user")
 comment(proj_other_act$gas_user) <- "万户"
-
 # 建筑物用电部分
 proj_other_act$construction_gdp <- 
   func_nrg_sum(proj_gdp, 
@@ -510,15 +509,12 @@ proj_other_act$construction_gdp <-
                "value")$GDP
 func_history_project(gdp[gdp$year > 2000, ], "##建筑业", proj_other_act, "construction_gdp")
 comment(proj_other_act$construction_gdp) <- "万元"
-
 # 农业用电部分
 proj_other_act$agriculture_area <- 
   func_interp_2(year = c(2019, 2030, 2050), 
-               value = c(ag_ori[nrow(ag_ori), "全年农作物总播种面积",], 
-                         ag_ori[nrow(ag_ori), "全年农作物总播种面积",] * 0.6, 
-                         ag_ori[nrow(ag_ori), "全年农作物总播种面积",] * 0.5))$value
-func_history_project(ag_ori, "全年农作物总播种面积", 
-                     proj_other_act, "agriculture_area")
+               value = c(221, 
+                         221 * 0.6, 
+                         221 * 0.5))$value
 comment(proj_other_act$agriculture_area) <- "平方千米"
 
 func_show_trend(proj_other_act)
@@ -528,45 +524,45 @@ proj_other_nrgintst_ls <- vector("list")
 # 家庭用电部分
 proj_other_nrgintst_ls[[1]] <- 
   func_interp_2(year = c(2019, 2030, 2050), 
-              value = c(3033, 3033*1.2, 3033*1.4))
+              value = c(3900, 3900*1.2, 3900*1.4))
 names(proj_other_nrgintst_ls[[1]])[2] <- "家庭用电强度"
-func_history_project(other_nrgintst_ls[[1]], "#城乡居民生活用电", 
+func_history_project(other_nrgintst_ls[[1]], "household_electricity", 
                      proj_other_nrgintst_ls[[1]], "家庭用电强度")
 
-# 家庭液化天然气部分
+# 家庭液化石油气部分
 proj_other_nrgintst_ls[[2]] <- 
   data.frame(year = c(2019: 2050), 
-             lpg = other_nrgintst_ls[[2]]$家庭[nrow(other_nrgintst_ls[[2]])])
+             lpg = 588.52)
 names(proj_other_nrgintst_ls[[2]])[2] <- "每户液化石油气"
-func_history_project(other_nrgintst_ls[[2]], "家庭", 
+func_history_project(other_nrgintst_ls[[2]], "household_lpg", 
                      proj_other_nrgintst_ls[[2]], "每户液化石油气")
 
-# 家庭液化天然气部分
+# 家庭天然气部分
 proj_other_nrgintst_ls[[3]] <- 
   data.frame(year = c(2019: 2050), 
-             natural_gas = other_nrgintst_ls[[3]]$家庭[nrow(other_nrgintst_ls[[3]])])
+             natural_gas = 74.50)
 names(proj_other_nrgintst_ls[[3]])[2] <- "每户天然气"
-func_history_project(other_nrgintst_ls[[3]], "家庭", 
+func_history_project(other_nrgintst_ls[[3]], "household_gas", 
                      proj_other_nrgintst_ls[[3]], "每户天然气")
 
 # 建筑业用电部分
 proj_other_nrgintst_ls[[4]] <- 
   func_interp_2(year = c(2019, 2030, 2050), 
-                value = c(49817, 
-                          49817 * 1.2, 
-                          49817))
+                value = c(0.0081, 
+                          0.0081 * 1.2, 
+                          0.0081))
 names(proj_other_nrgintst_ls[[4]])[2] <- "单位建筑GDP用电"
-func_history_project(other_nrgintst_ls[[4]], "建筑业", 
+func_history_project(other_nrgintst_ls[[4]], "construct_electricity", 
                      proj_other_nrgintst_ls[[4]], "单位建筑GDP用电")
 
 # 农业用电
 proj_other_nrgintst_ls[[5]] <- 
   func_interp_2(year = c(2019, 2030, 2050), 
-                value = c(other_nrgintst_ls[[5]]$"##第一产业"[other_nrgintst_ls[[5]]$year == 2019], 
-                          other_nrgintst_ls[[5]]$"##第一产业"[other_nrgintst_ls[[5]]$year == 2019] * 0.8,
-                          other_nrgintst_ls[[5]]$"##第一产业"[other_nrgintst_ls[[5]]$year == 2019] * 0.7))
+                value = c(59, 
+                          59 * 0.8,
+                          59 * 0.7))
 names(proj_other_nrgintst_ls[[5]])[2] <- "农业单位面积用电量"
-func_history_project(other_nrgintst_ls[[5]], "##第一产业", 
+func_history_project(other_nrgintst_ls[[5]], "agriculture_electricity", 
                      proj_other_nrgintst_ls[[5]], "农业单位面积用电量")
 
 # 则能耗总量为
@@ -574,18 +570,11 @@ proj_other_nrgsum_ls <- vector("list")
 for (i in c(1:5)) {
   proj_other_nrgsum_ls[[i]] <- func_nrg_sum(proj_other_nrgintst_ls[[i]], 
                                             proj_other_act, 
-                                            names(proj_other_act)[i])
+                                            names(proj_other_act)[i + 1])
 }
-
-func_history_project(other_nrgsum_ls[[4]], "建筑业", 
-                     proj_other_nrgsum_ls[[4]], "单位建筑GDP用电")
-func_show_trend(proj_other_nrgsum_ls[[5]])
-
-func_history_project(other_nrgintst_ls[[4]], "建筑业", 
-                     proj_other_nrgintst_ls[[4]], "单位建筑GDP用电")
-
-
-
+func_history_project_ls(other_nrgintst_ls, proj_other_nrgintst_ls)
+func_history_project_df(other_act, proj_other_act)
+func_history_project_ls(other_nrgsum_ls, proj_other_nrgsum_ls)
 
 ## 交通
 ## 公路交通
