@@ -58,6 +58,41 @@ func_merge_2 <- function(ls_var) {
   }
 }
 
+# 构建列表分类方式转换的函数：类别1到类别2
+# 比如将按照能源类别分的各部门能耗列表转换为按照部门分的各类能耗列表
+# 前提：原列表的每个数据框都要命名 - 即类别1
+# 目标列表的各数据框名称来自原列表的各个数据框的列名 - 即类别2
+func_ls_transition <- function(ls_ori) {
+  # 提取类别2的名称
+  class_trans <- character()
+  for (k in names(ls_ori)) {
+    class_trans <- c(class_trans, names(ls_ori[[k]]))
+  }
+  class_trans <- class_trans[class_trans %in% "year" == FALSE]
+  class_trans <- unique(class_trans)
+  # 构建目标列表
+  ls_trans <- vector("list", length(class_trans))
+  names(ls_trans) <- class_trans
+  for (i in names(ls_trans)) {
+    # 构建一个列表，由和能源类型等长度数量的数据框组成
+    temp_ls <- vector("list", length(ls_ori))
+    names(temp_ls) <- names(ls_ori)
+    # 遍历每个按能源类型分类的各类车能耗数据框
+    # 如果包含所需车型，则提取出年份和该车型列所组成的数据框
+    # 最后将这些数据框组合，即得到目标车型的各类能源消费数据框
+    for (j in names(ls_ori)) {
+      if (i %in% names(ls_ori[[j]])) {
+        temp_ls[[j]] <- ls_ori[[j]][c("year", i)]
+        names(temp_ls[[j]])[2] <- j
+      } else {
+        temp_ls[[j]] <- NULL
+      }
+    }
+    ls_trans[[i]] <- func_merge_2(temp_ls)
+  }
+  ls_trans
+}
+
 # 获得变量名称
 func_varname <- function(variable) {
   deparse(substitute(variable))
