@@ -98,12 +98,18 @@ func_varname <- function(variable) {
   deparse(substitute(variable))
 }
 
-# 读取并转化带4列文件头的Excel数据
-func_read_trans <- function(name_subdir, order_sht = 1) {
+# 读取普通表格
+func_read_data <- function(name_subdir, order_sht = 1) {
   data_dir <- "C:/Users/kangj/Documents/OneDrive/Zotero/storage/"
   data_name <- list.files(paste0(data_dir, "/", name_subdir, "/"))
   path <- paste0(data_dir, "/", name_subdir, "/", data_name)
-  data_ori <- read.xlsx(path, sheet = order_sht)
+  data <- read.xlsx(path, sheet = order_sht)
+  data
+}
+
+# 读取并转化带4列文件头的Excel数据
+func_read_trans <- function(name_subdir, order_sht = 1) {
+  data_ori <- func_read_data(name_subdir, order_sht = 1)
   data_ori <- data_ori[, -c(1,2)]
   data_trans <- as.data.frame(t(data_ori[, -c(1,2)]))
   colnames(data_trans) <- data_ori[, 1]
