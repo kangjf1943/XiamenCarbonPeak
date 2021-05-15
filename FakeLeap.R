@@ -7,6 +7,13 @@ library(ggpubr)
 Sys.setlocale("LC_ALL", "chinese")
 
 ## 构建函数
+# 取一列数据最后一个非零非NA的数值
+func_lastone <- function(numbers) {
+  numbers <- numbers[numbers != 0]
+  numbers <- numbers[is.na(numbers) == FALSE]
+  numbers <- tail(numbers, 1)
+}
+
 # 给数据框添加备注
 func_addnote <- function(data, note) {
   for (i in c(1: ncol(data))) {
