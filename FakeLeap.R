@@ -43,14 +43,19 @@ func_merge <- function(x, y) {
 
 # 合并多个数据框
 func_merge_2 <- function(ls_var) {
-  df_out <- data.frame(year = ls_var[[1]][, "year"])
-  notes <- c("nounit")
-  for (i in c(1: length(ls_var))) {
-    df_out <- merge(df_out, ls_var[[i]], by = "year", all = TRUE)
-    notes <- c(notes, func_looknote(ls_var[[i]])[-1, "note"])
+  # 如果输入列表为空则输出为NULL
+  if (length(ls_var) == 0) {
+    NULL
+  } else {
+    df_out <- data.frame(year = ls_var[[1]][, "year"])
+    notes <- c("nounit")
+    for (i in c(1: length(ls_var))) {
+      df_out <- merge(df_out, ls_var[[i]], by = "year", all = TRUE)
+      notes <- c(notes, func_looknote(ls_var[[i]])[-1, "note"])
+    }
+    df_out <- func_addnote(df_out, notes)
+    df_out
   }
-  df_out <- func_addnote(df_out, notes)
-  df_out
 }
 
 # 获得变量名称
