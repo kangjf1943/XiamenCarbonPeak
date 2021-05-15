@@ -143,7 +143,7 @@ func_read <- function(name_subdir, name_sht, num_row, num_col) {
 
 # 转化列表中所有数据为数字
 func_ls_asnumber <- function(ls) {
-  for (i in length(ls)) {
+  for (i in c(1: length(ls))) {
     ls[[i]] <- as.data.frame(lapply(ls[[i]], as.numeric))
   }
   ls
