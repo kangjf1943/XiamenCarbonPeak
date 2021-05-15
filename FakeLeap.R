@@ -388,6 +388,7 @@ func_nrg_intst_ls <- function(ls_nrgsum, df_actlvl) {
   for (i in c(1: length(ls_nrgsum))) {
     ls_nrgintst[[i]] <- func_nrg_intst(ls_nrgsum[[i]], df_actlvl, 
                                              names(df_actlvl)[i + 1])
+    names(ls_nrgintst)[i] <- names(df_actlvl)[i + 1]
   }
   ls_nrgintst
 }
