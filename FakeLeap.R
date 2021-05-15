@@ -130,7 +130,6 @@ func_read_trans <- function(name_subdir, order_sht = 1) {
   func_looknote(data_trans)
   data_trans
 }
-
 # 读取特定单元格
 func_read <- function(name_subdir, name_sht, num_row, num_col) {
   data_dir <- "C:/Users/kangj/Documents/OneDrive/Zotero/storage/"
@@ -140,6 +139,14 @@ func_read <- function(name_subdir, name_sht, num_row, num_col) {
                         rows = num_row, cols = num_col, 
                         colNames = FALSE)
   data_ori[1, 1]
+}
+
+# 转化列表中所有数据为数字
+func_ls_asnumber <- function(ls) {
+  for (i in length(ls)) {
+    ls[[i]] <- as.data.frame(lapply(ls[[i]], as.numeric))
+  }
+  ls
 }
 
 # 查看一个数据框中不同数据的变化趋势：数据框版本
