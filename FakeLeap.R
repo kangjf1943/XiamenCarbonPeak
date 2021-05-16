@@ -278,7 +278,7 @@ func_history_project <- function(var_his, name_his, var_proj, name_proj,
   plot_data <- ggplot(total_df) + 
     geom_point(aes(year, total_df[, name_proj], color = color), alpha = 0.5, size = 3) +
     labs(y = name_his)
-  if (figureout = TRUE) {print(plot_data)} else {plot_data}
+  if (figureout == TRUE) {print(plot_data)} else {plot_data}
 }
 
 # 比较历史数据和预测数据：两个数据框的版本 - 比较每一列
