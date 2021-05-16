@@ -12,6 +12,7 @@ func_lastone <- function(numbers) {
   numbers <- numbers[numbers != 0]
   numbers <- numbers[is.na(numbers) == FALSE]
   numbers <- tail(numbers, 1)
+  numbers
 }
 
 # 给数据框添加备注
