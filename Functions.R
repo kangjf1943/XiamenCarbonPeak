@@ -7,10 +7,17 @@ library(ggpubr)
 Sys.setlocale("LC_ALL", "chinese")
 
 ## 构建函数
-# 取一列数据最后一个非零非NA的数值
+# 取一列数据最后一个有效数值
 func_lastone <- function(numbers) {
+  # 去除零值
   numbers <- numbers[numbers != 0]
+  # 去除NA
   numbers <- numbers[is.na(numbers) == FALSE]
+  # 去除NaN
+  numbers <- numbers[is.nan(numbers) == FALSE]
+  # 去除Inf
+  numbers <- numbers[is.infinite(numbers) == FALSE]
+  # 取最后一个值
   numbers <- tail(numbers, 1)
   numbers
 }
