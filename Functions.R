@@ -117,7 +117,7 @@ func_read_data <- function(name_subdir, order_sht = 1) {
 
 # 读取并转化带4列文件头的Excel数据
 func_read_trans <- function(name_subdir, order_sht = 1) {
-  data_ori <- func_read_data(name_subdir, order_sht = 1)
+  data_ori <- func_read_data(name_subdir, order_sht = order_sht)
   data_ori <- data_ori[, -c(1,2)]
   data_trans <- as.data.frame(t(data_ori[, -c(1,2)]))
   colnames(data_trans) <- data_ori[, 1]
