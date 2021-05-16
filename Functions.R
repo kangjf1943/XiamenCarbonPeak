@@ -290,7 +290,7 @@ func_history_project <- function(var_his, name_his, var_proj, name_proj,
 # 比较历史数据和预测数据：两个数据框的版本 - 比较每一列
 # 要保证输入两个数据框列数一致
 func_history_project_df <- function(var_his, var_proj, 
-                                    commontitle = FALSE) {
+                                    commontitle = NULL) {
   names_varhis <- names(var_his)[names(var_his) %in% "year" == FALSE]
   names_varproj <- names(var_proj)[names(var_proj) %in% "year" == FALSE]
   plot_ls <- vector("list")
