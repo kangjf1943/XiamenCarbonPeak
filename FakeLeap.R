@@ -280,10 +280,10 @@ func_history_project <- function(var_his, name_his, var_proj, name_proj,
     labs(y = name_his)
   if (figureout == TRUE) {print(plot_data)} else {plot_data}
 }
-
 # 比较历史数据和预测数据：两个数据框的版本 - 比较每一列
 # 要保证输入两个数据框列数一致
-func_history_project_df <- function(var_his, var_proj) {
+func_history_project_df <- function(var_his, var_proj, 
+                                    commontitle = FALSE) {
   names_varhis <- names(var_his)[names(var_his) %in% "year" == FALSE]
   names_varproj <- names(var_proj)[names(var_proj) %in% "year" == FALSE]
   plot_ls <- vector("list")
@@ -292,14 +292,20 @@ func_history_project_df <- function(var_his, var_proj) {
                                          var_proj, names_varproj[i],
                                          figureout = FALSE)
   }
-  plot_arrange <- ggarrange(plotlist = plot_ls, nrow = 2, ncol = 2, common.legend = TRUE)
+  plot_arrange <- ggarrange(plotlist = plot_ls, 
+                            nrow = 3, ncol = 2, 
+                            common.legend = TRUE)
+  # 设置拼图共同标题
+  if (is.null(commontitle) == FALSE) {
+    plot_arrange <- annotate_figure(plot_arrange, text_grob(commontitle))
+  }
   print(plot_arrange)
 }
-
 # 比较历史数据和预测数据：两个格式一致的列表的版本
 func_history_project_ls <- function(ls_his, ls_proj) {
   for (i in c(1: length(ls_his))) {
-    func_history_project_df(ls_his[[i]], ls_proj[[i]])
+    func_history_project_df(ls_his[[i]], ls_proj[[i]], 
+                            commontitle = names(ls_his[i]))
   }
 }
 
