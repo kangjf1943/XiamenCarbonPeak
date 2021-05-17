@@ -125,24 +125,25 @@ func_read_data <- function(name_subdir, order_sht = 1) {
 # 读取并转化带4列文件头的Excel数据
 func_read_trans <- function(name_subdir, order_sht = 1) {
   data_ori <- func_read_data(name_subdir, order_sht = order_sht)
+  # 删去前两列，即数据来源和数据备注
   data_ori <- data_ori[, -c(1,2)]
-  data_trans <- as.data.frame(t(data_ori[, -c(1,2)]))
-  colnames(data_trans) <- data_ori[, 1]
-  data_trans$year <- colnames(data_ori)[3:ncol(data_ori)]
-  for (i in c(1: nrow(data_ori))) {
+  # 组合不含标头的数据，第一列为年份，其他列为数据
+  data_trans <- cbind(colnames(data_ori)[3:ncol(data_ori)], 
+                      as.data.frame(t(data_ori[, -c(1,2)])))
+  # 将所有数据转换成数字类型
+  data_trans <- as.data.frame(lapply(data_trans, as.numeric))
+  # 设置列名，并删除列名中的空格
+  colnames(data_trans) <- c("year", gsub(" ", "", data_ori[, 1]))
+  # 传递备注单位信息
+  comment(data_trans$year) <- "year"
+  for (i in c(2: nrow(data_ori))) {
     comment(data_trans[, names(data_trans)[i]]) <- data_ori[i, 2]
   }
-  data_trans <- 
-    data_trans[c("year", names(data_trans)[names(data_trans) %in% "year" == FALSE])]
   rownames(data_trans) <- NULL
-  # 删除列名中的空格
-  columnnames <- gsub(" ", "", names(data_trans))
-  names(data_trans) <- columnnames
-  # 传递备注信息
-  notes <- func_looknote(data_trans)[, "note"]
-  data_trans <- as.data.frame(lapply(data_trans, as.numeric))
-  data_trans <- func_addnote(data_trans, notes)
+  # 输出的时候查看对应单位
   func_looknote(data_trans)
+  cat("\n")
+  # 输出结果
   data_trans
 }
 # 读取特定单元格
