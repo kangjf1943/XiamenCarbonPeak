@@ -464,10 +464,45 @@ func_linear <- function(df_history, col_dependent, endyear) {
   proj_df
 }
 
+# 合并各部门能耗列表为数据框的函数
+func_nrgsum_ls_to_df <- function(nrgsum_ls) {
+  # 如果输入列表的各元素名称不全，则输出警告
+  if (length(names(nrgsum_ls)) != length(nrgsum_ls)) {
+    print("warning: not enought list names") 
+  } else {
+    # 收集列表各数据框的列名并判断它们是否都属于”year“或能耗名称
+    all_colnames <- character()
+    for (i in names(nrgsum_ls)) {
+      all_colnames <- c(all_colnames, names(nrgsum_ls[[i]]))
+    }
+    if (sum(all_colnames %in% c("year", nrg_names) == FALSE) > 0) {
+      cat("warning:", all_colnames[all_colnames %in% c("year", nrg_names) == FALSE])
+    } else {
+      # 给各个数据框添加部门名称和活动水平名称
+      for (i in names(nrgsum_ls)) {
+        
+        nrgsum_ls[[i]] <- func_supple_colnames(nrgsum_ls[[i]], nrg_names)
+      }
+      # 将列表各元素数据框组成一个大数据框
+      nrgsum_df <- Reduce(rbind, nrgsum_ls)
+      # 将大数据框各列转换为数字类型
+      nrgsum_df[, c("year", nrg_names)] <- 
+        lapply(nrgsum_df[, c("year", nrg_names)], as.numeric)
+      # 根据年份进行加和
+      nrgsum_df <- aggregate(nrgsum_df[, nrg_names], by = list(nrgsum_df$year), 
+                             function(x) {sum(x, na.rm = TRUE)})
+      names(nrgsum_df)[1] <- "year"
+      # 对数据框各列重新排序
+      nrgsum_df <- nrgsum_df[c("year", nrg_names)]
+      nrgsum_df
+    }
+  }
+}
+
 ## 常用名称变量
 # 能源类别
-nrg_names <- c("coal", "coal_product", 
+nrg_names <- c("coal", "coalproduct", 
                "gasoline", "diesel", "kerosene", "residual", "lpg", 
-               "natural_gas", 
+               "gas", 
                "electricity")
 
