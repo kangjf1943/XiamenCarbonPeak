@@ -278,8 +278,7 @@ func_nrg_sum_ls <- function(ls_nrgintst, df_actlvl) {
 }
 
 # 比较历史数据和预测数据：两个数据框的版本 - 比较某一列
-func_history_project <- function(var_his, name_his, var_proj, name_proj, 
-                                 figureout = TRUE) {
+func_history_project <- function(var_his, name_his, var_proj, name_proj) {
   var_his <- var_his[, c("year", name_his)]
   var_proj <- var_proj[, c("year", name_proj)]
   var_his$color <- "history"
@@ -295,7 +294,7 @@ func_history_project <- function(var_his, name_his, var_proj, name_proj,
   plot_data <- ggplot(total_df) + 
     geom_point(aes(year, total_df[, name_proj], color = color), alpha = 0.5, size = 3) +
     labs(y = name_his)
-  if (figureout == TRUE) {print(plot_data)} else {plot_data}
+  plot_data
 }
 # 比较历史数据和预测数据：两个数据框的版本 - 比较每一列
 # 要保证输入两个数据框列数一致
@@ -307,14 +306,13 @@ func_history_project_df <- function(var_his, var_proj,
   names_varproj <- names(var_proj)[names(var_proj) %in% "year" == FALSE]
   plot_ls <- vector("list")
   for (i in c(1: length(names_varhis))) {
-    plot_ls[[i]] <- func_history_project(var_his, names_varhis[i], 
-                                         var_proj, names_varproj[i],
-                                         figureout = FALSE)
+    plot_ls[[i]] <- invisible(func_history_project(var_his, names_varhis[i], 
+                                                   var_proj, names_varproj[i]))
   }
   plot_arrange <- ggarrange(plotlist = plot_ls, 
                             nrow = 3, ncol = 2, 
                             common.legend = TRUE, labels = commontitle)
-  print(plot_arrange)
+  plot_arrange
 }
 # 比较历史数据和预测数据：两个格式一致的列表的版本
 ls_his <- ind_nrgintst_ls
