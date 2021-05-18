@@ -309,9 +309,9 @@ func_history_project_df <- function(var_his, var_proj,
     plot_ls[[i]] <- invisible(func_history_project(var_his, names_varhis[i], 
                                                    var_proj, names_varproj[i]))
   }
-  plot_arrange <- ggarrange(plotlist = plot_ls, 
-                            nrow = 3, ncol = 2, 
-                            common.legend = TRUE, labels = commontitle)
+  plot_arrange <- invisible(ggarrange(plotlist = plot_ls, 
+                                      nrow = 3, ncol = 2, 
+                                      common.legend = TRUE, labels = commontitle))
   plot_arrange
 }
 # 比较历史数据和预测数据：两个格式一致的列表的版本
@@ -319,8 +319,8 @@ ls_his <- ind_nrgintst_ls
 ls_proj <- proj_ind_nrgintst_ls
 func_history_project_ls <- function(ls_his, ls_proj) {
   for (i in c(1: length(ls_his))) {
-    func_history_project_df(ls_his[[i]], ls_proj[[i]], 
-                            commontitle = names(ls_his[i]))
+    print(func_history_project_df(ls_his[[i]], ls_proj[[i]], 
+                                  commontitle = names(ls_his[i])))
   }
 }
 
