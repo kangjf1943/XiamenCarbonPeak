@@ -170,6 +170,7 @@ func_ls_asnumber <- function(ls) {
 }
 
 # 查看一个数据框中不同数据的变化趋势：数据框版本
+var_df <- com_act
 func_show_trend <- function(var_df) {
   names_var_df <- names(var_df)[names(var_df) %in% "year" == FALSE]
   names_unit <- 
@@ -177,22 +178,26 @@ func_show_trend <- function(var_df) {
   
   var_df_ls <- vector("list", nrow(names_unit))
   names(var_df_ls) <- unique(names_unit$note)
+  # 构建列表以储存图像数据
+  plot_ls <- vector("list")
   for (i in c(1: length(unique(names_unit$note)))) {
     var_df_ls[[i]] <- 
       var_df[, c("year", 
                  names_unit$colnames[names_unit$note == unique(names_unit$note)[i]])]
     var_df_ls[[i]] <- melt(var_df_ls[[i]], id = "year")
     var_df_ls[[i]] <- var_df_ls[[i]][is.na(var_df_ls[[i]]$value) == FALSE,]
-    plot <- ggplot(var_df_ls[[i]]) + 
-      geom_point(aes(year, value, color = variable), na.rm = T,size = 2, alpha = 0.5)
-    print(plot)
+    plot_ls[[i]] <- ggplot(var_df_ls[[i]]) + 
+      geom_point(aes(year, value, color = variable), na.rm = T, 
+                              size = 2, alpha = 0.5)
   }
+  plot <- ggarrange(plotlist = plot_ls, nrow = 2, ncol = 2)
+  plot
 }
 
 # 查看一个数据框中不同数据的变化趋势：列表版本
 func_show_trend_ls <- function(var_ls) {
   for (i in c(1: length(var_ls))) {
-    func_show_trend(var_ls[[i]])
+    print(func_show_trend(var_ls[[i]]))
   }
 }
 
