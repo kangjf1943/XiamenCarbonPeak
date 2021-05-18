@@ -123,6 +123,8 @@ func_read_data <- function(name_subdir, order_sht = 1) {
 }
 
 # 读取并转化带4列文件头的Excel数据
+name_subdir <- "2VHEE264"
+order_sht <- "GDP"
 func_read_trans <- function(name_subdir, order_sht = 1) {
   data_ori <- func_read_data(name_subdir, order_sht = order_sht)
   # 删去前两列，即数据来源和数据备注
@@ -135,9 +137,11 @@ func_read_trans <- function(name_subdir, order_sht = 1) {
   # 设置列名，并删除列名中的空格
   colnames(data_trans) <- c("year", gsub(" ", "", data_ori[, 1]))
   # 传递备注单位信息
+  # 年份的单位设置为“year”
   comment(data_trans$year) <- "year"
-  for (i in c(2: nrow(data_ori))) {
-    comment(data_trans[, names(data_trans)[i]]) <- data_ori[i, 2]
+  # 其他列单位则来自所读取的数据表
+  for (i in c(1: nrow(data_ori))) {
+    comment(data_trans[, (i + 1)]) <- data_ori[i, 2]
   }
   rownames(data_trans) <- NULL
   # 输出的时候查看对应单位
@@ -290,6 +294,8 @@ func_history_project <- function(var_his, name_his, var_proj, name_proj,
 }
 # 比较历史数据和预测数据：两个数据框的版本 - 比较每一列
 # 要保证输入两个数据框列数一致
+var_his <- ls_his[[i]]
+var_proj <- ls_proj[[i]]
 func_history_project_df <- function(var_his, var_proj, 
                                     commontitle = NULL) {
   names_varhis <- names(var_his)[names(var_his) %in% "year" == FALSE]
@@ -302,14 +308,12 @@ func_history_project_df <- function(var_his, var_proj,
   }
   plot_arrange <- ggarrange(plotlist = plot_ls, 
                             nrow = 3, ncol = 2, 
-                            common.legend = TRUE)
-  # 设置拼图共同标题
-  if (is.null(commontitle) == FALSE) {
-    plot_arrange <- annotate_figure(plot_arrange, text_grob(commontitle))
-  }
+                            common.legend = TRUE, labels = commontitle)
   print(plot_arrange)
 }
 # 比较历史数据和预测数据：两个格式一致的列表的版本
+ls_his <- ind_nrgintst_ls
+ls_proj <- proj_ind_nrgintst_ls
 func_history_project_ls <- function(ls_his, ls_proj) {
   for (i in c(1: length(ls_his))) {
     func_history_project_df(ls_his[[i]], ls_proj[[i]], 
@@ -356,7 +360,7 @@ func_interp <- function(mydata) {
   plot(total_df$year, total_df$value)
   total_df
 }
-func_interp_2 <- function(year, value) {
+func_interp_2 <- function(year, value, name_value = "value") {
   total_df <- data.frame(year = c(year[1]: year[length(year)]))
   for (j in c(1:(length(year) - 1))) {
     start_year <- year[j]
@@ -370,7 +374,8 @@ func_interp_2 <- function(year, value) {
         (end_year - start_year)
     }
   }
-  plot(total_df$year, total_df$value)
+  names(total_df)[2] <- name_value
+  plot(total_df$year, total_df[, name_value])
   total_df
 }
 
