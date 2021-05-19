@@ -123,8 +123,6 @@ func_read_data <- function(name_subdir, order_sht = 1) {
 }
 
 # 读取并转化带4列文件头的Excel数据
-name_subdir <- "2VHEE264"
-order_sht <- "GDP"
 func_read_trans <- function(name_subdir, order_sht = 1) {
   data_ori <- func_read_data(name_subdir, order_sht = order_sht)
   # 删去前两列，即数据来源和数据备注
@@ -144,9 +142,6 @@ func_read_trans <- function(name_subdir, order_sht = 1) {
     comment(data_trans[, (i + 1)]) <- data_ori[i, 2]
   }
   rownames(data_trans) <- NULL
-  # 输出的时候查看对应单位
-  func_looknote(data_trans)
-  cat("\n")
   # 输出结果
   data_trans
 }
@@ -503,6 +498,7 @@ func_nrgsum_ls_to_df <- function(nrgsum_ls) {
 # 基于两个数据框计算碳排放的函数
 # 所输入的两个数据框除了“year”外列名要一致
 func_emissum <- function(nrgsum_df, emisfac_df) {
+  emissum_df <- data.frame(year = nrgsum_df[, "year"])
   emissum_ls <- vector("list", nrow(emisfac_df))
   # 将排放列表各元素命名为各类温室气体
   names(emissum_ls) <- emisfac_df[, 1]
@@ -511,18 +507,11 @@ func_emissum <- function(nrgsum_df, emisfac_df) {
     # 先将计算结果存储在另一个列表中，然后合并成数据框
     emissum_subls <- 
       apply(nrgsum_df[names(nrgsum_df) %in% "year" == FALSE], 1, 
-            function(x) {x*emisfac_df[names(nrgsum_df) %in% "year" == FALSE][1, ]})
+            function(x) {
+              x * emisfac_df[emisfac_df[, "year"] == i, ][nrg_names]})
     emissum_ls[[i]] <- Reduce(rbind, emissum_subls)
-    emissum_ls[[i]][, "year"] <- nrgsum_df$year
-    emissum_ls[[i]] <- emissum_ls[[i]][c("year", nrg_names)]
+    emissum_df[, i] <- rowSums(emissum_ls[[i]])
   }
-  emissum_ls
+  emissum_df
 }
-
-## 常用名称变量
-# 能源类别
-nrg_names <- c("coal", "coalproduct", 
-               "gasoline", "diesel", "kerosene", "residual", "lpg", 
-               "gas", 
-               "electricity")
 
