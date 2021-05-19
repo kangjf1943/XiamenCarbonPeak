@@ -500,6 +500,25 @@ func_nrgsum_ls_to_df <- function(nrgsum_ls) {
   }
 }
 
+# 基于两个数据框计算碳排放的函数
+# 所输入的两个数据框除了“year”外列名要一致
+func_emissum <- function(nrgsum_df, emisfac_df) {
+  emissum_ls <- vector("list", nrow(emisfac_df))
+  # 将排放列表各元素命名为各类温室气体
+  names(emissum_ls) <- emisfac_df[, 1]
+  # 对每种温室气体排放进行计算
+  for (i in names(emissum_ls)) {
+    # 先将计算结果存储在另一个列表中，然后合并成数据框
+    emissum_subls <- 
+      apply(nrgsum_df[names(nrgsum_df) %in% "year" == FALSE], 1, 
+            function(x) {x*emisfac_df[names(nrgsum_df) %in% "year" == FALSE][1, ]})
+    emissum_ls[[i]] <- Reduce(rbind, emissum_subls)
+    emissum_ls[[i]][, "year"] <- nrgsum_df$year
+    emissum_ls[[i]] <- emissum_ls[[i]][c("year", nrg_names)]
+  }
+  emissum_ls
+}
+
 ## 常用名称变量
 # 能源类别
 nrg_names <- c("coal", "coalproduct", 
