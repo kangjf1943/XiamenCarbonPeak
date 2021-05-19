@@ -188,7 +188,8 @@ func_show_trend <- function(var_df) {
     var_df_ls[[i]] <- var_df_ls[[i]][is.na(var_df_ls[[i]]$value) == FALSE,]
     plot_ls[[i]] <- ggplot(var_df_ls[[i]]) + 
       geom_point(aes(year, value, color = variable), na.rm = T, 
-                              size = 2, alpha = 0.5)
+                              size = 2, alpha = 0.5) + 
+      scale_color_brewer(palette = "Set1")
   }
   plot <- ggarrange(plotlist = plot_ls, nrow = 2, ncol = 2)
   plot
