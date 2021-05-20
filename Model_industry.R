@@ -70,8 +70,7 @@ ind_subsector <- c("食品饮料及烟草制造业",
                    "石油及炼焦", "化学工业", "医药制造业",
                    "非金属矿物制品业", "金属加工制造业",   
                    "设备制造业", 
-                   "电子电气制造业", "其他制造业",
-                   "电力、热力生产和供应业")
+                   "电子电气制造业", "其他制造业")
 ind_nrgclass <- c("coal", "coalproduct", 
                "gasoline", "diesel", "residual", "lpg", 
                "gas", "electricity")
@@ -80,6 +79,8 @@ ind_nrgclass <- c("coal", "coalproduct",
 # 活动水平：各行业GDP
 ind_act <- func_read_trans("7TP7UDE6", "工业GDP")
 ind_act <- func_ind_agg(ind_act)
+# 去除电力、热力生产和供应业
+ind_act <- ind_act[c("year", ind_subsector)]
 # 测试
 # 问题：有些部门从2014年后有所下降
 # func_show_trend(ind_act)
@@ -99,6 +100,8 @@ for (i in c(1: 8)) {
 names(ind_ori_nrgsum_ls) <- ind_nrgclass
 # 转化为按行业分的能耗总量
 ind_nrgsum_ls <- func_ls_transition(ind_ori_nrgsum_ls)
+# 并且删除电力、热力生产和供应业
+ind_nrgsum_ls <- ind_nrgsum_ls[ind_subsector]
 # 活动强度：单位GDP能耗
 ind_nrgintst_ls <- func_nrg_intst_ls(ind_nrgsum_ls, ind_act)
 # 测试
