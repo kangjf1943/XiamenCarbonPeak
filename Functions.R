@@ -363,6 +363,19 @@ func_emissum <- function(nrgsum_df, emisfac_df) {
   emissum_df
 }
 
+## 对部门进行加和合并
+func_secagg <- function(input_df, tbl_lookup) {
+  new_df <- data.frame(year = input_df[, "year"])
+  ind_subsector <- unique(tbl_lookup$ind_agg)
+  for (i in c(1:length(ind_subsector))) {
+    name_ind_agg <- ind_subsector[i]
+    name_ind_ori <- tbl_lookup$ind_ori[tbl_lookup$ind_agg == name_ind_agg]
+    new_df[, name_ind_agg] <- 
+      rowSums(input_df[names(input_df) %in% name_ind_ori], na.rm = TRUE)
+  }
+  new_df
+}
+
 ## 合并各部门能耗列表为数据框的函数
 # 输入的列表应满足：
 # 列表各元素有独特的名称
