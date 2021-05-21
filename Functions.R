@@ -165,8 +165,7 @@ func_ls_asnumber <- function(ls) {
 }
 
 # 查看一个数据框中不同数据的变化趋势：数据框版本
-var_df <- com_act
-func_show_trend <- function(var_df) {
+func_show_trend <- function(var_df, commontitle = NULL) {
   names_var_df <- names(var_df)[names(var_df) %in% "year" == FALSE]
   names_unit <- 
     func_looknote(var_df[names_var_df])
@@ -186,14 +185,14 @@ func_show_trend <- function(var_df) {
                               size = 2, alpha = 0.5) + 
       scale_color_brewer(palette = "Set1")
   }
-  plot <- ggarrange(plotlist = plot_ls, nrow = 2, ncol = 2)
+  plot <- ggarrange(plotlist = plot_ls, nrow = 2, ncol = 2, labels = commontitle)
   plot
 }
 
 # 查看一个数据框中不同数据的变化趋势：列表版本
 func_show_trend_ls <- function(var_ls) {
   for (i in c(1: length(var_ls))) {
-    print(func_show_trend(var_ls[[i]]))
+    print(func_show_trend(var_ls[[i]], commontitle = names(var_ls)[i]))
   }
 }
 
@@ -266,6 +265,8 @@ func_nrg_sum <- function(df.nrg.intst , df.actlvl, name.actlvl) {
 # 基于活动水平和活动强度计算活动总量：列表版
 func_nrg_sum_ls <- function(ls_nrgintst, df_actlvl) {
   ls_nrgsum <- vector("list", length(ls_nrgintst))
+  # 如果原来的列表各元素有名称，则继承名称
+  names(ls_nrgsum) <- names(ls_nrgintst)
   for (i in c(1: (length(ls_nrgintst)))) {
     ls_nrgsum[[i]] <- func_nrg_sum(ls_nrgintst[[i]], 
                                    df_actlvl, names(df_actlvl)[i + 1])
@@ -294,8 +295,6 @@ func_history_project <- function(var_his, name_his, var_proj, name_proj) {
 }
 # 比较历史数据和预测数据：两个数据框的版本 - 比较每一列
 # 要保证输入两个数据框列数一致
-var_his <- ls_his[[i]]
-var_proj <- ls_proj[[i]]
 func_history_project_df <- function(var_his, var_proj, 
                                     commontitle = NULL) {
   names_varhis <- names(var_his)[names(var_his) %in% "year" == FALSE]
@@ -444,11 +443,14 @@ func_proj <- function(input_ls, itemnames, startyear = 2005, endyear = 2050) {
 }
 
 # 根据历史趋势线性外推未来趋势的函数
-func_linear <- function(df_history, col_dependent, endyear) {
+func_linear <- function(df_history, col_dependent, startyear, endyear) {
+  # 保留目标数据
+  df_history <- df_history[c("year", col_dependent)]
   df_history[, "year"] <- as.numeric(df_history[, "year"])
+  # 拟合：因变量中有NA也可以计算
   fit <- lm(df_history[, col_dependent] ~ df_history[, "year"])
   fit_result <- summary(fit)
-  proj_df <- data.frame(year = c((max(df_history[, "year"]) + 1): endyear))
+  proj_df <- data.frame(year = c(startyear: endyear))
   proj_df[, col_dependent] <- 
     fit_result$coefficients[2, 1] * proj_df[, "year"] + 
     fit_result$coefficients[1, 1]
@@ -471,25 +473,25 @@ func_nrgsum_ls_to_df <- function(nrgsum_ls) {
     for (i in names(nrgsum_ls)) {
       all_colnames <- c(all_colnames, names(nrgsum_ls[[i]]))
     }
-    if (sum(all_colnames %in% c("year", nrg_names) == FALSE) > 0) {
-      cat("warning:", all_colnames[all_colnames %in% c("year", nrg_names) == FALSE])
+    if (sum(all_colnames %in% c("year", global_nrg_class) == FALSE) > 0) {
+      cat("warning:", all_colnames[all_colnames %in% c("year", global_nrg_class) == FALSE])
     } else {
       # 给各个数据框添加部门名称和活动水平名称
       for (i in names(nrgsum_ls)) {
         
-        nrgsum_ls[[i]] <- func_supple_colnames(nrgsum_ls[[i]], nrg_names)
+        nrgsum_ls[[i]] <- func_supple_colnames(nrgsum_ls[[i]], global_nrg_class)
       }
       # 将列表各元素数据框组成一个大数据框
       nrgsum_df <- Reduce(rbind, nrgsum_ls)
       # 将大数据框各列转换为数字类型
-      nrgsum_df[, c("year", nrg_names)] <- 
-        lapply(nrgsum_df[, c("year", nrg_names)], as.numeric)
+      nrgsum_df[, c("year", global_nrg_class)] <- 
+        lapply(nrgsum_df[, c("year", global_nrg_class)], as.numeric)
       # 根据年份进行加和
-      nrgsum_df <- aggregate(nrgsum_df[, nrg_names], by = list(nrgsum_df$year), 
+      nrgsum_df <- aggregate(nrgsum_df[, global_nrg_class], by = list(nrgsum_df$year), 
                              function(x) {sum(x, na.rm = TRUE)})
       names(nrgsum_df)[1] <- "year"
       # 对数据框各列重新排序
-      nrgsum_df <- nrgsum_df[c("year", nrg_names)]
+      nrgsum_df <- nrgsum_df[c("year", global_nrg_class)]
       nrgsum_df
     }
   }
@@ -508,7 +510,7 @@ func_emissum <- function(nrgsum_df, emisfac_df) {
     emissum_subls <- 
       apply(nrgsum_df[names(nrgsum_df) %in% "year" == FALSE], 1, 
             function(x) {
-              x * emisfac_df[emisfac_df[, "year"] == i, ][nrg_names]})
+              x * emisfac_df[emisfac_df[, "year"] == i, ][global_nrg_class]})
     emissum_ls[[i]] <- Reduce(rbind, emissum_subls)
     emissum_df[, i] <- rowSums(emissum_ls[[i]])
   }
