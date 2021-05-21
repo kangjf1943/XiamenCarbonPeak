@@ -423,15 +423,12 @@ trans_nrgsum_df <- func_nrgsum_ls_to_df(trans_nrgsum_ls)
 ind_nrgsum_df <- func_nrgsum_ls_to_df(ind_nrgsum_ls)
 com_nrgsum_df <- func_nrgsum_ls_to_df(com_nrgsum_ls)
 other_nrgsum_df <- func_nrgsum_ls_to_df(other_nrgsum_ls)
-
+# 合并各部门能耗
 total_nrgsum_ls <- list(trans_nrgsum_df, ind_nrgsum_df, 
                         com_nrgsum_df, other_nrgsum_df)
 names(total_nrgsum_ls) <- c("trans", "ind", "com", "other")
-total_nrgsum_df2 <- func_nrgsum_ls_to_df(total_nrgsum_ls)
+total_nrgsum_df <- func_nrgsum_ls_to_df(total_nrgsum_ls)
 func_show_trend(total_nrgsum_df)
-for (i in global_nrg_class) {
-  print(func_show_trend(total_nrgsum_df[, c("year", i)]))
-}
 
 ## 各部门排放和总二氧化碳排放
 # 构建排放因子列表
@@ -444,13 +441,10 @@ ind_emissum_df <- func_emissum(ind_nrgsum_df, emisfac_df)
 com_emissum_df <- func_emissum(com_nrgsum_df, emisfac_df)
 other_emissum_df <- func_emissum(other_nrgsum_df, emisfac_df)
 # 汇总
-total_emissum_df <- 
-  Reduce(rbind, list(trans_emissum_df, ind_emissum_df, 
-                     com_emissum_df, other_emissum_df))
-total_emissum_df <- aggregate(total_emissum_df[global_emis_class], 
-                              by = list(total_emissum_df$year), 
-                              function(x) {sum(x, na.rm = TRUE)})
-names(total_emissum_df)[1] <- "year"
+total_emissum_ls <- list(trans_emissum_df, ind_emissum_df, 
+                         com_emissum_df, other_emissum_df)
+names(total_emissum_ls) <- c("trans", "ind", "com", "other")
+total_emissum_df <- func_nrgsum_ls_to_df(total_emissum_ls)
 
 func_show_trend(trans_emissum_df)
 func_show_trend(ind_emissum_df)
