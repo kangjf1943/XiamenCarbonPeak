@@ -1,3 +1,4 @@
+### 能源需求模块
 ## 交通部门
 # 子部门
 trans_subsector <- c("常规公交", "快速公交", "出租车", "农村客车", 
@@ -405,3 +406,12 @@ other_nrgintst_ls <- func_nrg_intst_ls(other_nrgsum_ls, other_act)
 # 测试
 # func_show_trend_ls(other_nrgintst_ls)
 
+
+### 能源转换模块
+# 本地发电量
+elec_powergen <- func_read_trans("2I4DKY2A", "全市发电量")
+# 数据框：用电量，本地发电量，外调电量
+elec_nrgsum <- func_merge_2(list(total_nrgsum_df[c("year", "electricity")], 
+                                 elec_powergen[c("year", "合计")]))
+names(elec_nrgsum) <- c("year", "elecuse", "localelec")
+elec_nrgsum$importelec <- elec_nrgsum$elecuse - elec_nrgsum$localelec
