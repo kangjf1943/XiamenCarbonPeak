@@ -56,6 +56,7 @@ func_read_multitable <- function(name_subdir, names_tbl, names_ls) {
     out_ls[[i]] <- func_read_trans(name_subdir, names_tbl[i])
   }
   names(out_ls) <- names_ls
+  out_ls
 }
 
 
