@@ -364,6 +364,7 @@ func_emissum <- function(nrgsum_df, emisfac_df) {
 }
 
 ## 对部门进行加和合并
+# 数据框版本
 func_secagg <- function(input_df, tbl_lookup) {
   new_df <- data.frame(year = input_df[, "year"])
   ind_subsector <- unique(tbl_lookup$ind_agg)
@@ -374,6 +375,15 @@ func_secagg <- function(input_df, tbl_lookup) {
       rowSums(input_df[names(input_df) %in% name_ind_ori], na.rm = TRUE)
   }
   new_df
+}
+# 列表版本
+func_secagg_ls <- function(input_ls, tbl_lookup) {
+  new_ls <- vector("list")
+  for (i in length(input_ls)) {
+    new_ls[[i]] <- func_secagg(input_ls, tbl_lookup)
+  }
+  names(new_ls) <- names(input_ls)
+  new_ls
 }
 
 ## 合并各部门能耗列表为数据框的函数
