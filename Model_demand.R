@@ -7,7 +7,6 @@ trans_subsector <- c("常规公交", "快速公交", "出租车", "农村客车"
                      "农用运输车", 
                      "航空", "水路客运", "水路货运")
 
-## 历史数据
 ## 活动水平
 # 营运车辆里程数：需求：没有2018-2019年的营运车辆里程数数据
 trans_act_operation <- func_read_trans("IZM9FWIY", "里程数")
@@ -327,4 +326,82 @@ com_nrgintst_ls <- func_nrg_intst_ls(com_nrgsum_ls, com_act)
 # func_show_trend_ls(com_nrgsum_ls)
 # func_show_trend_ls(com_nrgintst_ls)
 
+
+## 其他部门：家庭，建筑业和农业
+other_subsector <- c("household_electricity", "household_lpg", "household_gas", 
+                     "construct_electricity", "agriculture_electricity")
+
+## 历史数据
+## 活动水平
+# 家庭户数
+ori_other_act_house <- global_population[c("year", "household")]
+# 用液化石油气的户数
+ori_other_act_house_lpg <- func_read_trans("S32RZEF7", "瓶装液化气总用户数")
+ori_other_act_house_lpg <- ori_other_act_house_lpg[, c("year", "民用")]
+names(ori_other_act_house_lpg)[2] <- "lpg"
+ori_other_act_house_lpg$lpg <- ori_other_act_house_lpg$lpg/10000
+# 用管道天然气的用户数
+ori_other_act_house_gas <- func_read_trans("S32RZEF7", "管道天然气总用户数")
+ori_other_act_house_gas <- ori_other_act_house_gas[, c("year", "民用")]
+names(ori_other_act_house_gas)[2] <- "gas"
+ori_other_act_house_gas$gas <- ori_other_act_house_gas$gas/10000
+# 建筑业的GDP
+ori_other_act_construct_gdp <- global_gdp[, c("year", "##建筑业")]
+names(ori_other_act_construct_gdp)[2] <- "construct"
+# 农业的播种面积
+ori_other_agriculture_area <- func_read_trans("4NJ97NS9")
+ori_other_agriculture_area <- 
+  ori_other_agriculture_area[, c("year", "全年农作物总播种面积")]
+names(ori_other_agriculture_area)[2] <- "agriculture"
+ori_other_agriculture_area$agriculture <- 
+  ori_other_agriculture_area$agriculture/1500
+comment(ori_other_agriculture_area$agriculture) <- "平方公里"
+# 合并成一个活动水平数据框
+other_act <- func_merge_2(list(ori_other_act_house, 
+                               ori_other_act_house_lpg, 
+                               ori_other_act_house_gas,
+                               ori_other_act_construct_gdp, 
+                               ori_other_agriculture_area))
+other_act <- func_addnote(other_act, 
+                          c("year", "万户", "万户", "万户", "万元当年价", "平方千米"))
+func_looknote(other_act)
+# 测试：
+# 问题：农业播种面积在2016年后陡降
+# func_show_trend(other_act)
+
+## 能耗总量
+other_nrgsum_ls <- vector("list", 5)
+names(other_nrgsum_ls) <- other_subsector
+# 家庭用电部分
+names(other_nrgsum_ls)[1] <- "家庭用电"
+other_nrgsum_ls[[1]] <- func_read_trans("2I4DKY2A")
+other_nrgsum_ls[[1]] <- other_nrgsum_ls[[1]][, c("year", "#城乡居民生活用电")]
+names(other_nrgsum_ls[[1]]) <- c("year", "electricity")
+# 家庭液化石油气部分
+names(other_nrgsum_ls)[2] <- "家庭液化石油气"
+other_nrgsum_ls[[2]] <- func_read_trans("HHKVE85Q", "瓶装液化气")
+other_nrgsum_ls[[2]] <- other_nrgsum_ls[[2]][, c("year", "家庭")]
+names(other_nrgsum_ls[[2]]) <- c("year", "lpg")
+# 家庭天然气部分
+names(other_nrgsum_ls)[3] <- "家庭天然气"
+other_nrgsum_ls[[3]] <- func_read_trans("HHKVE85Q", "管道天然气")
+other_nrgsum_ls[[3]] <- other_nrgsum_ls[[3]][, c("year", "家庭")]
+names(other_nrgsum_ls[[3]]) <- c("year", "gas")
+# 建筑用电部分
+names(other_nrgsum_ls)[4] <- "建筑用电"
+other_nrgsum_ls[[4]] <- func_read_trans("2I4DKY2A", "全市电力消费情况表分具体行业")
+other_nrgsum_ls[[4]] <- other_nrgsum_ls[[4]][, c("year", "建筑业")]
+names(other_nrgsum_ls[[4]]) <- c("year", "electricity")
+# 农业用电部分
+names(other_nrgsum_ls)[5] <- "农业用电"
+other_nrgsum_ls[[5]] <- func_read_trans("2I4DKY2A")
+other_nrgsum_ls[[5]] <- other_nrgsum_ls[[5]][, c("year", "##第一产业")]
+names(other_nrgsum_ls[[5]]) <- c("year", "electricity")
+# 测试
+# func_looknote_ls(other_nrgsum_ls)
+# func_show_trend_ls(other_nrgsum_ls)
+# 用能强度
+other_nrgintst_ls <- func_nrg_intst_ls(other_nrgsum_ls, other_act)
+# 测试
+# func_show_trend_ls(other_nrgintst_ls)
 
