@@ -379,8 +379,8 @@ func_secagg <- function(input_df, tbl_lookup) {
 # 列表版本
 func_secagg_ls <- function(input_ls, tbl_lookup) {
   new_ls <- vector("list")
-  for (i in length(input_ls)) {
-    new_ls[[i]] <- func_secagg(input_ls, tbl_lookup)
+  for (i in c(1:length(input_ls))) {
+    new_ls[[i]] <- func_secagg(input_ls[[i]], tbl_lookup)
   }
   names(new_ls) <- names(input_ls)
   new_ls
