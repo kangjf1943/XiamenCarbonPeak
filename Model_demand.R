@@ -457,6 +457,9 @@ other_nrgintst_ls <- func_nrg_intst_ls(other_nrgsum_ls, other_act)
 
 
 ### 能源转换模块
+# 本地发电耗能
+powergen_nrgsum <- ind_ori_nrgsum_scale_ls[["电力、热力生产和供应业"]]
+powergen_emissum_df <- func_emissum(powergen_nrgsum, emisfac_df)
 # 本地发电量
 elec_powergen <- func_read_trans("2I4DKY2A", "全市发电量")
 # 数据框：用电量，本地发电量，外调电量
@@ -491,8 +494,8 @@ com_emissum_df <- func_emissum(com_nrgsum_df, emisfac_df)
 other_emissum_df <- func_emissum(other_nrgsum_df, emisfac_df)
 # 汇总
 total_emissum_ls <- list(trans_emissum_df, ind_emissum_df, 
-                         com_emissum_df, other_emissum_df)
-names(total_emissum_ls) <- c("trans", "ind", "com", "other")
+                         com_emissum_df, other_emissum_df, powergen_emissum_df)
+names(total_emissum_ls) <- c("trans", "ind", "com", "other", "powergen")
 total_emissum_df <- func_nrgsum_ls_to_df(total_emissum_ls)
 
 func_show_trend(trans_emissum_df)
