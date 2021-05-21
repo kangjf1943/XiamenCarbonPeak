@@ -2,17 +2,23 @@
 com_subsector <- c("electricity", "lpg_and_gas")
 
 ## 历史数据
-# 活动水平：服务业从业人口和GDP
+## 活动水平：服务业从业人口和GDP
+# 服务业从业人口
 com_act <- func_read_trans("2VHEE264", "从业人口")
 com_act <- com_act[, c("year", "第三产业")]
 names(com_act)[2] <- "com_employee"
+# 补全2015-2019年数据：假设线性外推
+com_act[which(com_act$year %in% c(2015:2019)), "com_employee"] <- 
+  func_linear(com_act, "com_employee", startyear = 2015, endyear = 2019)$com_employee[16:20]
+# 服务业GDP
 com_act$com_employee <- com_act$com_employee/10000
 comment(com_act$com_employee) <- "万人"
 com_act <- merge(com_act, global_gdp[c("year", "#第三产业")], by = "year")
 names(com_act)[3] <- "com_gdp"
 # 测试
 # func_show_trend(com_act)
-# 能耗总量
+
+## 能耗总量
 com_nrgsum_ls <- vector("list", 2)
 names(com_nrgsum_ls) <- com_subsector
 # 读取厦门市用电数据
@@ -21,6 +27,8 @@ names(com_nrgsum_ls[[1]])[2] <- "electricity"
 # 读取厦门市服务业用能
 com_nrgsum_ls[[2]] <- func_read_trans("HV4JBQTQ")
 names(com_nrgsum_ls[[2]])[2:3] <- c("lpg", "gas")
+com_nrgsum_ls[[2]]$gas <- com_nrgsum_ls[[2]]$gas*10000
+comment(com_nrgsum_ls[[2]]$gas) <- "万立方米"
 # 活动强度
 com_nrgintst_ls <- func_nrg_intst_ls(com_nrgsum_ls, com_act)
 # 测试
