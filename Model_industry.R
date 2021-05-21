@@ -64,6 +64,15 @@ func_ind_agg <- function(input_df) {
 }
 
 # 聚合成的能源大类和行业大类
+# 剔除电力、热力生产和供应业
+ind_ori_subsector <- c("食品饮料及烟草制造业", 
+                       "纺织及服装制造业", "木材及家具制造业", 
+                       "造纸及印刷", "文体工美用品制造业",    
+                       "石油及炼焦", "化学工业", "医药制造业",
+                       "非金属矿物制品业", "金属加工制造业",   
+                       "设备制造业", 
+                       "电子电气制造业", "其他制造业", 
+                       "电力、热力生产和供应业")
 ind_subsector <- c("食品饮料及烟草制造业", 
                    "纺织及服装制造业", "木材及家具制造业", 
                    "造纸及印刷", "文体工美用品制造业",    
@@ -75,20 +84,38 @@ ind_nrgclass <- c("coal", "coalproduct",
                "gasoline", "diesel", "residual", "lpg", 
                "gas", "electricity")
 
-# 历史分析
-# 活动水平：各行业GDP
-ind_act <- func_read_trans("7TP7UDE6", "工业GDP")
-ind_act <- func_ind_agg(ind_act)
-# 去除电力、热力生产和供应业
+# 历史数据
+## 活动水平
+# 读取规上工业各行业GDP
+ind_ori_act_scale <- func_read_trans("7TP7UDE6", "工业GDP")
+ind_ori_act_scale <- func_ind_agg(ind_ori_act_scale)
+
+# 计算规上工业各行业所占比例
+ind_ori_act_prop <- ind_ori_act_scale[, -1]/rowSums(ind_ori_act_scale[, -1])*100
+ind_ori_act_prop$year <- ind_ori_act_scale$year
+# 假设2018-2019年规上工业各行业比例同2017年
+ind_ori_act_prop[ind_ori_act_prop$year %in% c(2018, 2019),][ind_ori_subsector] <- 
+  ind_ori_act_prop[ind_ori_act_prop$year == 2017,][ind_ori_subsector]
+
+# 补全2018-2019年规上工业各行业GDP
+# 根据网上资料，厦门市2018年规上工业增加值1611.35亿元，2019年1749.93亿元
+ind_ori_act_scale[ind_ori_act_scale$year == 2018,][ind_ori_subsector] <- 
+  1611.35 * 10000 * ind_ori_act_prop[ind_ori_act_prop$year == 2018,][ind_ori_subsector]/100
+ind_ori_act_scale[ind_ori_act_scale$year == 2019,][ind_ori_subsector] <- 
+  1749.93 * 10000 * ind_ori_act_prop[ind_ori_act_prop$year == 2019,][ind_ori_subsector]/100
+
+# 计算规上工业的总GDP
+ind_ori_indgdp_scale <- data.frame(year = ind_ori_act_scale$year)
+ind_ori_indgdp_scale$GDP <- 
+  rowSums(ind_ori_act_scale[names(ind_ori_act_scale) %in% "year" == FALSE])
+
+# 活动强度为全市工业各行业GDP：剔除电力、热力生产和供应业
+ind_act <- func_nrg_sum(ind_ori_act_prop, global_gdp, "##工业")
 ind_act <- ind_act[c("year", ind_subsector)]
-# 测试
-# 问题：有些部门从2014年后有所下降
-# func_show_trend(ind_act)
-# 计算各子部门所占比例
-ind_ori_act_prop <- ind_act[, -1]/rowSums(ind_act[, -1])*100
-ind_ori_act_prop$year <- ind_act$year
-ind_ori_act_prop <- ind_ori_act_prop[c("year", ind_subsector)]
-# 读取各行业各类能耗总量
+ind_act[ind_subsector] <- ind_act[ind_subsector]/100
+
+## 能耗强度
+# 读取规上工业各行业各类能耗总量
 # 原本的数据是按能源分类的
 ind_ori_nrgsum_ls <- vector("list", 8)
 for (i in c(1: 8)) {
@@ -96,17 +123,17 @@ for (i in c(1: 8)) {
     func_read_trans("7TP7UDE6", c("煤", "煤制品", "汽油", "柴油", "燃料油", "液化石油气", 
                                   "天然气", "电力")[i])                                           
   ind_ori_nrgsum_ls[[i]] <- func_ind_agg(ind_ori_nrgsum_ls[[i]])
+  # 并且删除电力、热力生产和供应业
+  ind_ori_nrgsum_ls[[i]] <- ind_ori_nrgsum_ls[[i]][c("year", ind_subsector)]
 }
 names(ind_ori_nrgsum_ls) <- ind_nrgclass
 # 转化为按行业分的能耗总量
-ind_nrgsum_ls <- func_ls_transition(ind_ori_nrgsum_ls)
-# 并且删除电力、热力生产和供应业
-ind_nrgsum_ls <- ind_nrgsum_ls[ind_subsector]
-# 活动强度：单位GDP能耗
-ind_nrgintst_ls <- func_nrg_intst_ls(ind_nrgsum_ls, ind_act)
-# 测试
-# func_show_trend_ls(ind_nrgsum_ls)
-# func_show_trend_ls(ind_nrgintst_ls)
+ind_ori_nrgsum_scale_ls <- func_ls_transition(ind_ori_nrgsum_ls)
+# 基于规上工业能耗总量和规上工业GDP算出单位GDP能耗
+ind_nrgintst_ls <- func_nrg_intst_ls(ind_ori_nrgsum_scale_ls, ind_ori_act_scale)
+
+## 能耗总量
+ind_nrgsum_ls <- func_nrg_sum_ls(ind_nrgintst_ls, ind_act)
 
 # 预测未来
 # 活动水平
