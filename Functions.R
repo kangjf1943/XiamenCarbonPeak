@@ -213,6 +213,30 @@ func_merge_rate <- function(var_1, name_1, var_2, name_2, method,
        main = name_new)
   outcome
 }
+# 升级版
+# 输入：两个时间序列数据框
+func_cross <- function(df1, df2) {
+  # 判断是否包含“year”列
+  if ("year" %in% names(df1) & "year" %in% names(df2) == FALSE) {
+    print("warning: no year data in the dataframe.")
+  } else {
+    # 取出第一个数据框除了“year”外的列名作为输出列名
+    dfout_names <- names(df1)[names(df1) %in% "year" == FALSE]
+    # 先重命名输入的数据框以避免同名冲突
+    df1_names <- paste0(1, c(1: (length(df1)-1)))
+    df2_names <- paste0(2, c(1: (length(df2)-1)))
+    names(df1) <- c("year", df1_names)
+    names(df2) <- c("year", df2_names)
+    # 基于year列合并数据框，作为储存结果的数据框
+    dfout <- merge(df1, df2, by = "year")
+    for (i in c(1: length(dfout_names))) {
+      dfout[, dfout_names[i]] <- dfout[, df1_names[i]] * dfout[, df2_names[i]]
+    }
+    dfout <- dfout[c("year", dfout_names)]
+    dfout
+  }
+}
+
 
 ## 构建插值函数
 func_interp_2 <- function(year, value, name_value = "value") {
