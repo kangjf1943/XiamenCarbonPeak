@@ -216,67 +216,56 @@ trans_nrgintst_ls[trans_subsector[13:15]] <-
 ## 工业部门
 # 用于聚合工业各行业的函数
 # 问题：如何强制转化为数字以避免计算错误
-func_ind_agg <- function(input_df) {
-  new_df <- data.frame(year = input_df[, "year"])
-  ind_lookup <- 
-    Reduce(rbind, 
-           list(data.frame(ind_agg = c("食品饮料及烟草制造业"), 
-                           ind_ori = c("非金属矿采选业", 
-                                       "农副食品加工业", 
-                                       "食品制造业", 
-                                       "酒、饮料和精制茶制造业", 
-                                       "烟草制品业")),
-                data.frame(ind_agg = c("纺织及服装制造业"), 
-                           ind_ori = c("纺织业", 
-                                       "纺织服装、服饰业", 
-                                       "皮革、毛皮、羽毛及其制品和制鞋业")),
-                data.frame(ind_agg = c("木材及家具制造业"), 
-                           ind_ori = c("木材加工和木、竹、藤、棕、草制品业", 
-                                       "家具制造业")), 
-                data.frame(ind_agg = c("造纸及印刷"), 
-                           ind_ori = c("造纸和纸制品业", 
-                                       "印刷和记录媒介复制业")), 
-                data.frame(ind_agg = c("文体工美用品制造业"), 
-                           ind_ori = c("文教、工美、体育和娱乐用品制造业")), 
-                data.frame(ind_agg = c("石油及炼焦"), 
-                           ind_ori = c("石油加工、炼焦和核燃料加工业")), 
-                data.frame(ind_agg = c("化学工业"), 
-                           ind_ori = c("化学原料和化学制品制造业", 
-                                       "化学纤维制造业", 
-                                       "橡胶和塑料制品业")), 
-                data.frame(ind_agg = c("医药制造业"), 
-                           ind_ori = c("医药制造业")), 
-                data.frame(ind_agg = c("非金属矿物制品业"), 
-                           ind_ori = c("非金属矿物制品业")), 
-                data.frame(ind_agg = c("金属加工制造业"), 
-                           ind_ori = c("黑色金属冶炼和压延加工业", 
-                                       "有色金属冶炼和压延加工业", 
-                                       "金属制品业")), 
-                data.frame(ind_agg = c("设备制造业"), 
-                           ind_ori = c("通用设备制造业", 
-                                       "专用设备制造业", 
-                                       "交通运输设备制造业")), 
-                data.frame(ind_agg = c("电子电气制造业"), 
-                           ind_ori = c("电气机械和器材制造业", 
-                                       "计算机、通信和其他电子设备制造业", 
-                                       "仪器仪表制造业")), 
-                data.frame(ind_agg = c("其他制造业"), 
-                           ind_ori = c("其他制造业", 
-                                       "废弃资源综合利用业", 
-                                       "金属制品、机械和设备修理业", 
-                                       "燃气生产和供应业", 
-                                       "水的生产和供应业")), 
-                data.frame(ind_agg = c("电力、热力生产和供应业"), 
-                           ind_ori = c("电力、热力生产和供应业"))))
-  ind_subsector <- unique(ind_lookup$ind_agg)
-  for (i in c(1:length(ind_subsector))) {
-    name_ind_agg <- ind_subsector[i]
-    name_ind_ori <- ind_lookup$ind_ori[ind_lookup$ind_agg == name_ind_agg]
-    new_df[, name_ind_agg] <- 
-      rowSums(input_df[names(input_df) %in% name_ind_ori], na.rm = TRUE)
-  }
-  new_df
-}
+ind_lookup <- 
+  Reduce(rbind, 
+         list(data.frame(ind_agg = c("食品饮料及烟草制造业"), 
+                         ind_ori = c("非金属矿采选业", 
+                                     "农副食品加工业", 
+                                     "食品制造业", 
+                                     "酒、饮料和精制茶制造业", 
+                                     "烟草制品业")),
+              data.frame(ind_agg = c("纺织及服装制造业"), 
+                         ind_ori = c("纺织业", 
+                                     "纺织服装、服饰业", 
+                                     "皮革、毛皮、羽毛及其制品和制鞋业")),
+              data.frame(ind_agg = c("木材及家具制造业"), 
+                         ind_ori = c("木材加工和木、竹、藤、棕、草制品业", 
+                                     "家具制造业")), 
+              data.frame(ind_agg = c("造纸及印刷"), 
+                         ind_ori = c("造纸和纸制品业", 
+                                     "印刷和记录媒介复制业")), 
+              data.frame(ind_agg = c("文体工美用品制造业"), 
+                         ind_ori = c("文教、工美、体育和娱乐用品制造业")), 
+              data.frame(ind_agg = c("石油及炼焦"), 
+                         ind_ori = c("石油加工、炼焦和核燃料加工业")), 
+              data.frame(ind_agg = c("化学工业"), 
+                         ind_ori = c("化学原料和化学制品制造业", 
+                                     "化学纤维制造业", 
+                                     "橡胶和塑料制品业")), 
+              data.frame(ind_agg = c("医药制造业"), 
+                         ind_ori = c("医药制造业")), 
+              data.frame(ind_agg = c("非金属矿物制品业"), 
+                         ind_ori = c("非金属矿物制品业")), 
+              data.frame(ind_agg = c("金属加工制造业"), 
+                         ind_ori = c("黑色金属冶炼和压延加工业", 
+                                     "有色金属冶炼和压延加工业", 
+                                     "金属制品业")), 
+              data.frame(ind_agg = c("设备制造业"), 
+                         ind_ori = c("通用设备制造业", 
+                                     "专用设备制造业", 
+                                     "交通运输设备制造业")), 
+              data.frame(ind_agg = c("电子电气制造业"), 
+                         ind_ori = c("电气机械和器材制造业", 
+                                     "计算机、通信和其他电子设备制造业", 
+                                     "仪器仪表制造业")), 
+              data.frame(ind_agg = c("其他制造业"), 
+                         ind_ori = c("其他制造业", 
+                                     "废弃资源综合利用业", 
+                                     "金属制品、机械和设备修理业", 
+                                     "燃气生产和供应业", 
+                                     "水的生产和供应业")), 
+              data.frame(ind_agg = c("电力、热力生产和供应业"), 
+                         ind_ori = c("电力、热力生产和供应业"))))
 
 # 聚合成的能源大类和行业大类
 # 剔除电力、热力生产和供应业
@@ -303,7 +292,7 @@ ind_nrgclass <- c("coal", "coalproduct",
 ## 活动水平
 # 读取规上工业各行业GDP
 ind_ori_act_scale <- func_read_trans("7TP7UDE6", "工业GDP")
-ind_ori_act_scale <- func_ind_agg(ind_ori_act_scale)
+ind_ori_act_scale <- func_secagg(ind_ori_act_scale, ind_lookup)
 
 # 计算规上工业各行业所占比例
 ind_ori_act_prop <- ind_ori_act_scale[, -1]/rowSums(ind_ori_act_scale[, -1])*100
@@ -332,20 +321,18 @@ ind_act[ind_subsector] <- ind_act[ind_subsector]/100
 ## 能耗强度
 # 读取规上工业各行业各类能耗总量
 # 原本的数据是按能源分类的
-ind_ori_nrgsum_ls <- vector("list", 8)
-for (i in c(1: 8)) {
-  ind_ori_nrgsum_ls[[i]] <- 
-    func_read_trans("7TP7UDE6", c("煤", "煤制品", "汽油", "柴油", "燃料油", "液化石油气", 
-                                  "天然气", "电力")[i])                                           
-  ind_ori_nrgsum_ls[[i]] <- func_ind_agg(ind_ori_nrgsum_ls[[i]])
-  # 并且删除电力、热力生产和供应业
-  ind_ori_nrgsum_ls[[i]] <- ind_ori_nrgsum_ls[[i]][c("year", ind_subsector)]
-}
-names(ind_ori_nrgsum_ls) <- ind_nrgclass
+ind_ori_nrgsum_ls <- 
+  func_read_multitable("7TP7UDE6", 
+    names_tbl = c("煤", "煤制品", "汽油", "柴油", "燃料油", "液化石油气", "天然气", "电力"), 
+    names_ls = ind_nrgclass)
+ind_ori_nrgsum_ls <- func_secagg_ls(ind_ori_nrgsum_ls, ind_lookup)
+
 # 转化为按行业分的能耗总量
 ind_ori_nrgsum_scale_ls <- func_ls_transition(ind_ori_nrgsum_ls)
 # 基于规上工业能耗总量和规上工业GDP算出单位GDP能耗
-ind_nrgintst_ls <- func_nrg_intst_ls(ind_ori_nrgsum_scale_ls, ind_ori_act_scale)
+ind_ori_nrgintst_ls <- func_nrg_intst_ls(ind_ori_nrgsum_scale_ls, ind_ori_act_scale)
+# 剔除电力热力供应业
+ind_nrgintst_ls <- ind_ori_nrgintst_ls[ind_subsector]
 
 ## 能耗总量
 ind_nrgsum_ls <- func_nrg_sum_ls(ind_nrgintst_ls, ind_act)
