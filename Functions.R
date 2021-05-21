@@ -440,6 +440,27 @@ func_nrgsum_ls_to_df <- function(nrgsum_ls) {
     nrgsum_df
   }
 }
+# 升级版
+func_ls2df <- function(ls, names_column) {
+  # 如果输入列表的各元素名称不全或有重复名称，则输出警告
+  if (length(unique(names(nrgsum_ls))) != length(nrgsum_ls)) {
+    print("warning: not enough list names.") 
+  } else {
+    # 将列表各元素放入统一的列名下
+    for (i in c(1: length(ls))) {
+      ls[[i]] <- func_supple_colnames(ls[[i]], names_column)
+    }
+    # 合并列表各元素数据框
+    df <- Reduce(rbind, ls)
+    # 将各列转化为数字类型
+    df[names_column] <- lapply(df[names_column], as.numeric)
+    # 按照年份合并
+    df <- aggregate(df[, names_column], by = list(df$year), 
+                    function(x) {sum(x, na.rm = TRUE)})
+    names(df)[1] <- "year"
+    df
+  }
+}
 
 ## 比较历史数据和预测数据
 # 比较数据框的两列版本
