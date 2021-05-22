@@ -71,10 +71,11 @@ trans_subsector <- c("常规公交", "快速公交", "出租车", "农村客车"
                      "轻型客车", "大型客车", 
                      "轻型货车", "中型货车", "重型货车", 
                      "农用运输车", 
-                     "航空", "水路客运", "水路货运")
+                     "水路客运", "水路货运")
 
 ## Activity level ----
-# 营运车辆里程数：需求：没有2018-2019年的营运车辆里程数数据
+# 营运车辆里程数：
+# 需求：没有2018-2019年的营运车辆里程数数据
 trans_act_operation <- func_read_trans("IZM9FWIY", "里程数")
 trans_act_operation <- 
   trans_act_operation[, c("year", "常规公交", "BRT", "出租车", "农村客车")]
@@ -83,13 +84,10 @@ names(trans_act_operation) <- c("year", trans_subsector[1: 4])
 trans_act_nonoperation <- func_read_trans("Y3PGVSR7")
 trans_act_nonoperation <- 
   trans_act_nonoperation[, c("year", trans_subsector[5:12])]
-# 航空活动水平
-trans_act_aviation <- data.frame(year = c(2005: 2019), 航空 = c(1))
-comment(trans_act_aviation$航空) <- "nounit"
 # 水路客运周转量和水路货运周转量
 trans_act_water <- func_read_trans("P6KQQFUP")
 trans_act_water <- trans_act_water[, c("year", "客运周转量", "货运周转量")]
-names(trans_act_water) <- c("year", trans_subsector[14:15])
+names(trans_act_water) <- c("year", trans_subsector[13:14])
 # 合并为活动水平数据框
 trans_act <- 
   func_merge_2(list(trans_act_operation, trans_act_nonoperation, 
@@ -108,13 +106,10 @@ trans_act <-
 # 营运车辆部分先输入总量后算强度，非营运车辆则相反
 # 营运车辆部分能耗总量和能耗强度
 # 营运车辆能耗总量
-trans_nrgsum_ls_ori <- vector("list")
-# 各类车总能耗：按能源类型分
-for (i in c(1: 3)) {
-  trans_nrgsum_ls_ori[[i]] <- 
-    func_read_trans("IZM9FWIY", c("汽油消费量", "柴油消费量", "天然气消费量")[i])
-}
-names(trans_nrgsum_ls_ori) <- c("gasoline", "diesel", "gas")
+trans_nrgsum_ls_ori <- 
+  func_read_multitable("IZM9FWIY", 
+                       c("汽油消费量", "柴油消费量", "天然气消费量"), 
+                       c("gasoline", "diesel", "gas"))
 # 筛选和计算数据
 # 汽油消费量
 trans_nrgsum_ls_ori[[1]] <- 
@@ -138,10 +133,9 @@ func_looknote(trans_nrgsum_ls_ori[[3]])
 trans_nrgsum_ls_ori[[3]] <- 
   trans_nrgsum_ls_ori[[3]][c("year", "公交合计", "出租车合计")]
 names(trans_nrgsum_ls_ori[[3]]) <- c("year", "常规公交", "出租车")
-# 转化为按车辆类型分的能耗量列表
+# 转化为按车辆类型分的能耗量列表并整理各元素顺序
 trans_nrgsum_ls <- func_ls_transition(trans_nrgsum_ls_ori)
 trans_nrgsum_ls <- trans_nrgsum_ls[trans_subsector[1: 4]]
-rm(trans_nrgsum_ls_ori)
 # 营运性车辆的能耗强度
 trans_nrgintst_ls <- 
   func_nrg_intst_ls(trans_nrgsum_ls, 
@@ -188,16 +182,14 @@ trans_nrgsum_ls[c(5:12)] <-
                   trans_act[c("year", trans_subsector[c(5:12)])])
 names(trans_nrgsum_ls)[5: 12] <- trans_subsector[5: 12]
 
-# 航空和水运部分能耗总量和能耗强度
-trans_nrgsum_ls$"航空" <- func_read_trans("JXG6KGSA")[, c("year", "国内")]
-names(trans_nrgsum_ls$航空)[2] <- "kerosene"
+# 水运部分能耗总量和能耗强度
 trans_nrgsum_ls$"水路客运" <- func_read_trans("NTNZD6VV", "国内客运")
 names(trans_nrgsum_ls$水路客运)[2:3] <- c("diesel", "residual")
 trans_nrgsum_ls$"水路货运" <- func_read_trans("NTNZD6VV", "国内货运")
 names(trans_nrgsum_ls$水路货运)[2:3] <- c("diesel", "residual")
-names(trans_nrgsum_ls)[13:15] <- trans_subsector[13:15]
-trans_nrgintst_ls[trans_subsector[13:15]] <- 
-  func_nrg_intst_ls(trans_nrgsum_ls[trans_subsector[13:15]], 
+names(trans_nrgsum_ls)[13:14] <- trans_subsector[13:14]
+trans_nrgintst_ls[trans_subsector[13:14]] <- 
+  func_nrg_intst_ls(trans_nrgsum_ls[trans_subsector[13:14]], 
                     trans_act[, c(1, 14:16)])
 # 测试：
 # 问题：常规公交2014年后略有下降
@@ -215,9 +207,7 @@ trans_nrgintst_ls[trans_subsector[13:15]] <-
 # func_show_trend_ls(trans_nrgintst_ls)
 
 
-
 # Industry ----
-# 用于聚合工业各行业的函数
 # 问题：如何强制转化为数字以避免计算错误
 ind_lookup <- 
   Reduce(rbind, 
