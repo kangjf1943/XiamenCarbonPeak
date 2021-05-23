@@ -262,6 +262,9 @@ func_interp_2 <- function(year, value, name_value = "value") {
 }
 
 ## 基于特定数值和比率插值
+year <- c(2019, 2060)
+scale <- c(1, 0.5)
+base <- NA
 func_interp_3 <- function(year, scale, base, name_value = "value") {
   total_df <- data.frame(year = c(year[1]: year[length(year)]))
   basevalue <- base
@@ -278,7 +281,9 @@ func_interp_3 <- function(year, scale, base, name_value = "value") {
     }
   }
   names(total_df)[2] <- name_value
-  plot(total_df$year, total_df[, name_value])
+  if (is.na(total_df[, name_value]) == FALSE) {
+    plot(total_df$year, total_df[, name_value])
+  }
   total_df
 }
 
