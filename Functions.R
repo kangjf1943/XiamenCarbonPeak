@@ -131,6 +131,9 @@ func_lastone <- function(numbers) {
   numbers <- numbers[is.infinite(numbers) == FALSE]
   # 取最后一个值
   numbers <- tail(numbers, 1)
+  if (length(numbers) == 0) {
+    numbers <- NA
+  }
   numbers
 }
 
