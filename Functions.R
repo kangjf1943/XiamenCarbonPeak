@@ -258,6 +258,27 @@ func_interp_2 <- function(year, value, name_value = "value") {
   total_df
 }
 
+## 基于特定数值和比率插值
+func_interp_3 <- function(year, scale, base, name_value = "value") {
+  total_df <- data.frame(year = c(year[1]: year[length(year)]))
+  basevalue <- base
+  for (j in c(1:(length(year) - 1))) {
+    start_year <- year[j]
+    end_year <- year[j + 1]
+    start_value <- basevalue * scale[j]
+    end_value <- basevalue * scale[j + 1]
+    for (i in seq(from = start_year, to = end_year, by = 1)) {
+      total_df$value[which(total_df$year == i)] <- 
+        start_value + 
+        (end_value - start_value) * (i - start_year) /
+        (end_year - start_year)
+    }
+  }
+  names(total_df)[2] <- name_value
+  plot(total_df$year, total_df[, name_value])
+  total_df
+}
+
 ## 预测函数：基于增长率
 func_rate <- function(baseyear, basevalue, rate_df) {
   names(rate_df) <- c("year", "rate")
