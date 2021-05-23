@@ -254,85 +254,101 @@ proj_com_emissum_df <- func_emissum(proj_com_nrgsum_df, emisfac_df)
 plot(proj_com_emissum_df$year, proj_com_emissum_df$co2)
 
 
-# Other ----
+# Household ----
 ## Activity level ----
-# 家庭用电
-proj_other_ori_household <- proj_global_population[c("year", "household")]
-# 家庭液化石油气
-proj_other_ori_lpguser <- 
+# household_elec
+proj_household_ori_household <- proj_global_population[c("year", "household")]
+# household_lpg
+proj_household_ori_lpguser <- 
   func_cross(proj_global_population[c("year", "household")], 
              func_interp_2(year = c(2019, 2030, 2060), 
                            value = c(0.30, 0.15, 0.08)))
-### 家庭天然气部分
-proj_other_ori_gasuser <- 
+names(proj_household_ori_lpguser)[2] <- "lpg"
+# household_gas
+proj_household_ori_gasuser <- 
   func_cross(proj_global_population[c("year", "household")], 
              func_interp_2(year = c(2019, 2030, 2060), 
                            value = c(0.35, 0.70, 0.96)))
-### 建筑物用电
-proj_other_ori_construct <- 
+names(proj_household_ori_gasuser)[2] <- "gas"
+# 合并
+proj_household_act <- func_merge_2(list(proj_household_ori_household, 
+                                        proj_household_ori_lpguser, 
+                                        proj_household_ori_gasuser))
+
+# Energy intensity ----
+proj_household_nrgintst_ls <- vector("list", length(household_subsector))
+names(proj_other_nrgintst_ls) <- household_subsector
+# house_elec
+proj_household_nrgintst_ls[[1]] <- 
+  func_interp_2(year = c(2019, 2030, 2060), 
+                value = c(3900, 3900*1.2, 3900*1.4))
+names(proj_household_nrgintst_ls[[1]])[2] <- "electricity"
+
+# household_lpg
+proj_household_nrgintst_ls[[2]] <- 
+  data.frame(year = c(2019: 2060), 
+             lpg = 588.52)
+names(proj_household_nrgintst_ls[[2]])[2] <- "lpg"
+
+# household_gas
+proj_household_nrgintst_ls[[3]] <- 
+  data.frame(year = c(2019: 2060), 
+             gas = 74.50)
+names(proj_household_nrgintst_ls[[3]])[2] <- "gas"
+
+# Consumption and emission ----
+proj_household_nrgsum_ls <- 
+  func_nrg_sum_ls(proj_household_nrgintst_ls, proj_household_act)
+proj_household_nrgsum_df <- func_ls2df(proj_household_nrgsum_ls)
+proj_household_emissum_df <- func_emissum(proj_household_nrgsum_df, emisfac_df)
+
+# Test ----
+plot(proj_household_emissum_df$year, proj_household_emissum_df$co2)
+
+# Construction ----
+## Activity level ----
+proj_construct_act <- 
   func_cross(proj_global_gdp, 
              func_interp_2(year = c(2019,2030,2060), 
                            value = c(0.10, 0.08, 0.03)))
-### 农业用电部分
-proj_other_ori_agriculture <- 
-  func_interp_2(year = c(2019, 2030, 2060), 
-                value = c(221, 
-                          221 * 0.6, 
-                          221 * 0.5))
-# 合并
-proj_other_act <- 
-  func_merge_2(list(proj_other_ori_household, proj_other_ori_lpguser, 
-                    proj_other_ori_gasuser, proj_other_ori_construct, 
-                    proj_other_ori_agriculture))
-names(proj_other_act) <- c("year", other_subsector)
-
 ## Energy intensity ----
-proj_other_nrgintst_ls <- vector("list", length(other_subsector))
-names(proj_other_nrgintst_ls) <- other_subsector
-# 家庭用电
-proj_other_nrgintst_ls[[1]] <- 
-  func_interp_2(year = c(2019, 2030, 2060), 
-                value = c(3900, 3900*1.2, 3900*1.4))
-names(proj_other_nrgintst_ls[[1]])[2] <- "electricity"
-
-### 家庭液化石油气
-proj_other_nrgintst_ls[[2]] <- 
-  data.frame(year = c(2019: 2060), 
-             lpg = 588.52)
-names(proj_other_nrgintst_ls[[2]])[2] <- "lpg"
-
-## 家庭天然气部分
-proj_other_nrgintst_ls[[3]] <- 
-  data.frame(year = c(2019: 2060), 
-             gas = 74.50)
-names(proj_other_nrgintst_ls[[3]])[2] <- "gas"
-
-### 建筑业用电部分
-proj_other_nrgintst_ls[[4]] <- 
+proj_construct_nrgintst_df <- 
   func_interp_2(year = c(2019, 2030, 2060), 
                 value = c(0.0081, 
                           0.0081 * 1.2, 
-                          0.0081))
-names(proj_other_nrgintst_ls[[4]])[2] <- "electricity"
+                          0.0081), "electricity")
 
-## 农业用电
-proj_other_nrgintst_ls[[5]] <- 
+## Consumption and emission ----
+proj_construct_nrgsum_df <- 
+  func_nrg_sum(proj_construct_nrgintst_df, proj_construct_act, "GDP")
+proj_construct_emissum_df <- func_emissum(proj_construct_nrgsum_df, emisfac_df)
+
+## Test ----
+plot(proj_construct_emissum_df$year, proj_construct_emissum_df$co2)
+
+
+# Agriculture ----
+## Activity level ----
+proj_agriculture_act <- 
+  func_interp_2(year = c(2019, 2030, 2060), 
+                value = c(221, 
+                          221 * 0.6, 
+                          221 * 0.5), "area")
+
+## Energy intensity ----
+proj_agriculture_nrgintst_df <- 
   func_interp_2(year = c(2019, 2030, 2060), 
                 value = c(59, 
                           59 * 0.8,
-                          59 * 0.7))
-names(proj_other_nrgintst_ls[[5]])[2] <- "electricity"
+                          59 * 0.7), "electricity")
 
-## Energy consumption ----
-proj_other_nrgsum_ls <- func_nrg_sum_ls(proj_other_nrgintst_ls, proj_other_act)
-proj_other_nrgsum_df <- func_ls2df(proj_other_nrgsum_ls)
-proj_other_emissum_df <- func_emissum(proj_other_nrgsum_df, emisfac_df)
+## Consumption and emission ----
+proj_agriculture_nrgsum_df <- 
+  func_nrg_sum(proj_agriculture_nrgintst_df, proj_agriculture_act, "area")
+proj_agriculture_emissum_df <- func_emissum(proj_agriculture_nrgsum_df, emisfac_df)
 
-### Test ----
-# func_history_project_df(other_act, proj_other_act)
-# func_history_project_ls(other_nrgintst_ls, proj_other_nrgintst_ls)
-# func_history_project_ls(other_nrgsum_ls, proj_other_nrgsum_ls)
-plot(proj_other_emissum_df$year, proj_other_emissum_df$co2)
+## Test ----
+plot(proj_agriculture_emissum_df$year, proj_agriculture_emissum_df$co2)
 
 
 # TF & RES ----
