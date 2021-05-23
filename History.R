@@ -7,7 +7,6 @@ global_nrg_class <- c("coal", "coalproduct",
                       "electricity")
 global_emis_class <- c("co2", "ch4", "n2o")
 
-
 ## GDP ----
 global_gdp <- func_read_trans("2VHEE264", "GDP")
 proj_global_gdprate <- func_interp_2(
@@ -38,7 +37,7 @@ comment(proj_global_indgdp$GDP) <- "万元当年价"
 # 测试：问题：工业GDP变化趋势不太对
 # func_history_project(global_gdp, "##工业", proj_global_indgdp, "GDP")
 
-## 人口和户数 ----
+## Population ----
 global_population <- func_read_trans("2VHEE264")
 # 假设全市综合家庭规模为城镇家庭规模和农村家庭规模的加权平均值
 global_population$household_size <- 
@@ -74,7 +73,7 @@ trans_subsector <- c("常规公交", "快速公交", "出租车", "农村客车"
                      "水路客运", "水路货运")
 
 ## Activity level ----
-# 营运车辆里程数：
+# 营运车辆里程数
 # 需求：没有2018-2019年的营运车辆里程数数据
 trans_act_operation <- func_read_trans("IZM9FWIY", "里程数")
 trans_act_operation <- 
@@ -90,8 +89,7 @@ trans_act_water <- trans_act_water[, c("year", "客运周转量", "货运周转�
 names(trans_act_water) <- c("year", trans_subsector[13:14])
 # 合并为活动水平数据框
 trans_act <- 
-  func_merge_2(list(trans_act_operation, trans_act_nonoperation, 
-                    trans_act_aviation, trans_act_water))
+  func_merge_2(list(trans_act_operation, trans_act_nonoperation, trans_act_water))
 # 测试：
 # 问题：常规公交里程数在2015年之后下降
 # plot(trans_act$year, trans_act$常规公交)
@@ -191,7 +189,12 @@ names(trans_nrgsum_ls)[13:14] <- trans_subsector[13:14]
 trans_nrgintst_ls[trans_subsector[13:14]] <- 
   func_nrg_intst_ls(trans_nrgsum_ls[trans_subsector[13:14]], 
                     trans_act[, c(1, 14:16)])
-# 测试：
+
+## Consumption and emission ----
+trans_nrgsum_df <- func_ls2df(trans_nrgsum_ls)
+trans_emissum_df <- func_emissum(trans_nrgsum_df, emisfac_df)
+
+## Test ----
 # 问题：常规公交2014年后略有下降
 # 问题：快速公交2014年后陡然升高
 # 问题：出租车汽油2012年后陡降
@@ -327,8 +330,10 @@ ind_ori_nrgintst_ls <- func_nrg_intst_ls(ind_ori_nrgsum_scale_ls, ind_ori_act_sc
 # 剔除电力热力供应业
 ind_nrgintst_ls <- ind_ori_nrgintst_ls[ind_subsector]
 
-## Energy consumption ----
+## Consumption and emission----
 ind_nrgsum_ls <- func_nrg_sum_ls(ind_nrgintst_ls, ind_act)
+ind_nrgsum_df <- func_ls2df(ind_nrgsum_ls)
+ind_emissum_df <- func_emissum(ind_nrgsum_df, emisfac_df)
 
 
 # Service -----
@@ -351,7 +356,7 @@ names(com_act)[3] <- "com_gdp"
 # 测试
 # func_show_trend(com_act)
 
-## Energy consumption ----
+## Consumption and emission ----
 com_nrgsum_ls <- vector("list", 2)
 names(com_nrgsum_ls) <- com_subsector
 # 读取厦门市用电数据
@@ -362,8 +367,13 @@ com_nrgsum_ls[[2]] <- func_read_trans("HV4JBQTQ")
 names(com_nrgsum_ls[[2]])[2:3] <- c("lpg", "gas")
 com_nrgsum_ls[[2]]$gas <- com_nrgsum_ls[[2]]$gas*10000
 comment(com_nrgsum_ls[[2]]$gas) <- "万立方米"
+com_nrgsum_df <- func_ls2df(com_nrgsum_ls)
+com_emissum_df <- func_emissum(com_nrgsum_df, emisfac_df)
+
 ## Energy intensity ---- 
 com_nrgintst_ls <- func_nrg_intst_ls(com_nrgsum_ls, com_act)
+
+## Test ----
 # 测试
 # 问题：2015年用气强度比2014年少
 # func_show_trend_ls(com_nrgsum_ls)
@@ -439,6 +449,10 @@ names(other_nrgsum_ls)[5] <- "农业用电"
 other_nrgsum_ls[[5]] <- func_read_trans("2I4DKY2A")
 other_nrgsum_ls[[5]] <- other_nrgsum_ls[[5]][, c("year", "##第一产业")]
 names(other_nrgsum_ls[[5]]) <- c("year", "electricity")
+
+other_nrgsum_df <- func_ls2df(other_nrgsum_ls)
+other_emissum_df <- func_emissum(other_nrgsum_df, emisfac_df)
+
 # 测试
 # func_looknote_ls(other_nrgsum_ls)
 # func_show_trend_ls(other_nrgsum_ls)
@@ -447,29 +461,16 @@ other_nrgintst_ls <- func_nrg_intst_ls(other_nrgsum_ls, other_act)
 # 测试
 # func_show_trend_ls(other_nrgintst_ls)
 
-# All sectors ----
-## Energy consumption ----
-trans_nrgsum_df <- func_ls2df(trans_nrgsum_ls)
-ind_nrgsum_df <- func_ls2df(ind_nrgsum_ls)
-com_nrgsum_df <- func_ls2df(com_nrgsum_ls)
-other_nrgsum_df <- func_ls2df(other_nrgsum_ls)
-# 合并各部门能耗
-demand_nrgsum_ls <- list(trans_nrgsum_df, ind_nrgsum_df, 
-                        com_nrgsum_df, other_nrgsum_df)
-demand_nrgsum_df <- func_ls2df(demand_nrgsum_ls)
-demand_nrgsum_df <- demand_nrgsum_df[c("year", global_nrg_class)]
-
-## Emission ----
-trans_emissum_df <- func_emissum(trans_nrgsum_df, emisfac_df)
-ind_emissum_df <- func_emissum(ind_nrgsum_df, emisfac_df)
-com_emissum_df <- func_emissum(com_nrgsum_df, emisfac_df)
-other_emissum_df <- func_emissum(other_nrgsum_df, emisfac_df)
 
 demand_emissum_df <- func_emissum(demand_nrgsum_df, emisfac_df)
 
 # TF & RES ----
 # Power generation ----
 ## Activity level ----
+# 合并需求端能耗
+demand_nrgsum_df <- func_ls2df(list(trans_nrgsum_df, ind_nrgsum_df, 
+                                    com_nrgsum_df, other_nrgsum_df))
+demand_nrgsum_df <- demand_nrgsum_df[c("year", global_nrg_class)]
 # 读取本地发电量数据
 tfres_act <- func_read_trans("2I4DKY2A", "全市发电量")
 # 构建数据框：用电量，能源行业用电量，本地发电量，外调电量
