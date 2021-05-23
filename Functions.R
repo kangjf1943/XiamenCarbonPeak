@@ -420,6 +420,11 @@ func_emissum <- function(nrgsum_df, emisfac_df) {
   nameori_emisfac <- names(emisfac_df)[names(emisfac_df) %in% "year" == FALSE]
   nrg_scope <- intersect(nameori_nrgsum, nameori_emisfac)
   if (length(nrg_scope) == 0) {
+    emissum_df <- data.frame(year= nrgsum_df[, "year"])
+    for (i in names(emissum_ls)) {
+      emissum_df[, i] <- 0
+    }
+  } else {
     # 如果输入数据框有共同的能源类型则计算排放量
     nrgsum_df <- nrgsum_df[c("year", nrg_scope)]
     emisfac_df <- emisfac_df[c("year", nrg_scope)]
@@ -433,14 +438,9 @@ func_emissum <- function(nrgsum_df, emisfac_df) {
       emissum_subls <- 
         apply(nrgsum_df[names(nrgsum_df) %in% "year" == FALSE], 1, 
               function(x) {
-                x * emisfac_df[emisfac_df[, "year"] == i, ][nrg_scope]})
+                x * emisfac_df[emisfac_df[, "year"] == i, nrg_scope]})
       emissum_ls[[i]] <- Reduce(rbind, emissum_subls)
       emissum_df[, i] <- rowSums(emissum_ls[[i]])
-    }
-  } else {
-    emissum_df <- data.frame(year= nrgsum_df[, "year"])
-    for (i in names(emissum_ls)) {
-      emissum_df[, i] <- 0
     }
   }
   cat("Info: ", "\n", 
