@@ -137,36 +137,44 @@ proj_ind_ori_act_prop[, ind_subsector[10]] <-
 proj_ind_ori_act_prop[, ind_subsector[11]] <- 
   func_interp_2(year = c(2019, 2030, 2060), value = c(12, 10, 9))$value
 proj_ind_ori_act_prop[, ind_subsector[12]] <- 
-  func_interp_2(year = c(2019, 2030, 2060), value = c(49, 49, 49))$value
+  func_interp_2(year = c(2019, 2030, 2060), value = c(49, 55, 60))$value
 proj_ind_ori_act_prop[, ind_subsector[13]] <- func_interp_2(
   year = c(2019, 2030, 2060), 
   value = c(100 - sum(proj_ind_ori_act_prop[2:13][proj_ind_ori_act_prop$year == 2019, ]), 
             100 - sum(proj_ind_ori_act_prop[2:13][proj_ind_ori_act_prop$year == 2030, ]), 
             100 - sum(proj_ind_ori_act_prop[2:13][proj_ind_ori_act_prop$year == 2060, ])
   ))$value
+proj_ind_ori_act_prop_long <- melt(proj_ind_ori_act_prop, id = "year")
+ggplot(proj_ind_ori_act_prop_long) + geom_bar(aes(year, value, fill = variable), stat = "identity")
 # 计算未来各子部门GDP
 proj_ind_act <- func_nrg_sum(proj_ind_ori_act_prop, proj_global_indgdp, "GDP")
 proj_ind_act[ind_subsector] <- proj_ind_act[ind_subsector]/100
-func_show_trend(proj_ind_act)
 
 ## Energy intensity ----
-# 活动强度假设保持不变
+# 假设能耗强度略有减少
 proj_ind_nrgintst_ls <- vector("list", 13)
 names(proj_ind_nrgintst_ls) <- ind_subsector
 for (i in ind_subsector) {
   proj_ind_nrgintst_ls[[i]] <- data.frame(year = c(2019: 2060))
   for (j in ind_nrgclass) {
-    proj_ind_nrgintst_ls[[i]][, j] <- func_lastone(ind_nrgintst_ls[[i]][, j])
+    proj_ind_nrgintst_ls[[i]][, j] <- 
+      func_interp_3(year = c(2019, 2060), 
+                    scale = c(1, 0.9), 
+                    base = func_lastone(ind_nrgintst_ls[[i]][, j]))$value
   }
 }
 
-## Energy consumption ----
+## Energy and emission ----
 proj_ind_nrgsum_ls <- func_nrg_sum_ls(proj_ind_nrgintst_ls, proj_ind_act)
+proj_ind_nrgsum_df <- func_ls2df(proj_ind_nrgsum_ls)
+proj_ind_emissum_df <- func_emissum(proj_ind_nrgsum_df, emisfac_df)
 
 ## Test----
-func_history_project_df(ind_act, proj_ind_act)
-func_history_project_ls(ind_nrgintst_ls, proj_ind_nrgintst_ls)
-func_history_project_ls(ind_nrgsum_ls, proj_ind_nrgsum_ls)
+# func_history_project_df(ind_act, proj_ind_act)
+# func_history_project_ls(ind_nrgintst_ls, proj_ind_nrgintst_ls)
+# func_history_project_ls(ind_nrgsum_ls, proj_ind_nrgsum_ls)
+plot(proj_ind_emissum_df$year, proj_ind_emissum_df$co2)
+
 
 # Service ----
 ## Activity level ----
@@ -183,59 +191,95 @@ proj_com_act <- func_merge_2(list(proj_ori_comemployee, proj_ori_comgdp))
 names(proj_com_act) <- c("year", "com_employee", "com_gdp")
 
 ## Energy intensity ----
+# 服务业用电强度保持不变
 proj_com_nrgintst_ls <- vector("list", 2)
 names(proj_com_nrgintst_ls) <- com_subsector
 proj_com_nrgintst_ls[[1]] <- 
   func_interp_2(year = c(2019, 2030, 2060), 
                 value = c(2958.967, 2958.967, 2958.967), 
                 "electricity")
+# 服务业燃气强度减少且逐渐为电气替代
 proj_com_nrgintst_ls[[2]] <- 
   func_interp_2(year = c(2019, 2030, 2060),
                 value = c(0.002055001,
-                          0.002055001*0.8, 
-                          0.002055001*0.7), "lpg")
+                          0.002055001*0.7, 
+                          0.002055001*0.3), "lpg")
 proj_com_nrgintst_ls[[2]]$gas <- 
   func_interp_2(year = c(2019, 2030, 2060),
                 value = c(1.353608e-04, 
-                          1.353608e-04*0.8, 
-                          1.353608e-04*0.6), "gas")$gas
-proj_com_nrgintst_ls
+                          1.353608e-04*0.7, 
+                          1.353608e-04*0.3), "gas")$gas
+# 液化石油气的电气化
+proj_com_ori_lpg_elec_prop <- 
+  data.frame(year = proj_com_nrgintst_ls[[2]]$year)
+proj_com_ori_lpg_elec_prop$lpg <- 
+  func_interp_2(year = c(2019, 2040, 2060), 
+                value = c(1, 0.1, 0))$value
+proj_com_ori_lpg_elec_prop$electricity <- 
+  1 - proj_com_ori_lpg_elec_prop$lpg
+proj_com_nrgintst_ls[[2]]$electricity4lpg <- 
+  func_alter(proj_com_nrgintst_ls[[2]]$lpg, "lpg", "electricity")
+proj_com_nrgintst_ls[[2]][c("year", "lpg", "electricity4lpg")] <- 
+  func_cross(proj_com_nrgintst_ls[[2]][c("year", "lpg", "electricity4lpg")], 
+             proj_com_ori_lpg_elec_prop)
+# 天然气的电气化
+proj_com_ori_gas_elec_prop <- 
+  data.frame(year = proj_com_nrgintst_ls[[2]]$year)
+proj_com_ori_gas_elec_prop$gas <- 
+  func_interp_2(year = c(2019, 2040, 2060), 
+                value = c(1, 0.1, 0))$value
+proj_com_ori_gas_elec_prop$electricity <- 
+  1 - proj_com_ori_gas_elec_prop$gas
+proj_com_nrgintst_ls[[2]]$electricity4gas <- 
+  func_alter(proj_com_nrgintst_ls[[2]]$gas, "gas", "electricity")
+proj_com_nrgintst_ls[[2]][c("year", "gas", "electricity4gas")] <- 
+  func_cross(proj_com_nrgintst_ls[[2]][c("year", "gas", "electricity4gas")], 
+             proj_com_ori_gas_elec_prop)
+# 整理数据框
+proj_com_nrgintst_ls[[2]][, "electricity"] <- 
+  proj_com_nrgintst_ls[[2]]$electricity4lpg +
+  proj_com_nrgintst_ls[[2]]$electricity4gas
+proj_com_nrgintst_ls[[2]] <- 
+  proj_com_nrgintst_ls[[2]][c("year", "lpg", "gas", "electricity")]
 
-## Energy consumption ----
+## Energy and emission ----
 proj_com_nrgsum_ls <- func_nrg_sum_ls(proj_com_nrgintst_ls, proj_com_act)
-names(proj_com_nrgsum_ls) <- com_subsector
+proj_com_nrgsum_df <- func_ls2df(proj_com_nrgsum_ls)
+proj_com_emissum_df <- func_emissum(proj_com_nrgsum_df, emisfac_df)
 
 ## Test ----
 # func_history_project_df(com_act, proj_com_act)
 # func_history_project_ls(com_nrgintst_ls, proj_com_nrgintst_ls)
 # func_history_project_ls(com_nrgsum_ls, proj_com_nrgsum_ls)
+plot(proj_com_emissum_df$year, proj_com_emissum_df$co2)
+
 
 # Other ----
 ## Activity level ----
-### 家庭用电 ----
+# 家庭用电
 proj_other_ori_household <- proj_global_population[c("year", "household")]
-### 家庭液化石油气 ----
+# 家庭液化石油气
 proj_other_ori_lpguser <- 
   func_cross(proj_global_population[c("year", "household")], 
              func_interp_2(year = c(2019, 2030, 2060), 
                            value = c(0.30, 0.15, 0.08)))
-### 家庭天然气部分 ----
+### 家庭天然气部分
 proj_other_ori_gasuser <- 
   func_cross(proj_global_population[c("year", "household")], 
              func_interp_2(year = c(2019, 2030, 2060), 
                            value = c(0.35, 0.70, 0.96)))
-### 建筑物用电 ----
+### 建筑物用电
 proj_other_ori_construct <- 
   func_cross(proj_global_gdp, 
              func_interp_2(year = c(2019,2030,2060), 
                            value = c(0.10, 0.08, 0.03)))
-### 农业用电部分 ----
+### 农业用电部分
 proj_other_ori_agriculture <- 
   func_interp_2(year = c(2019, 2030, 2060), 
                 value = c(221, 
                           221 * 0.6, 
                           221 * 0.5))
-### 合并 ----
+# 合并
 proj_other_act <- 
   func_merge_2(list(proj_other_ori_household, proj_other_ori_lpguser, 
                     proj_other_ori_gasuser, proj_other_ori_construct, 
@@ -245,25 +289,25 @@ names(proj_other_act) <- c("year", other_subsector)
 ## Energy intensity ----
 proj_other_nrgintst_ls <- vector("list", length(other_subsector))
 names(proj_other_nrgintst_ls) <- other_subsector
-### 家庭用电 ----
+# 家庭用电
 proj_other_nrgintst_ls[[1]] <- 
   func_interp_2(year = c(2019, 2030, 2060), 
                 value = c(3900, 3900*1.2, 3900*1.4))
 names(proj_other_nrgintst_ls[[1]])[2] <- "electricity"
 
-### 家庭液化石油气 ----
+### 家庭液化石油气
 proj_other_nrgintst_ls[[2]] <- 
   data.frame(year = c(2019: 2060), 
              lpg = 588.52)
 names(proj_other_nrgintst_ls[[2]])[2] <- "lpg"
 
-## 家庭天然气部分 ----
+## 家庭天然气部分
 proj_other_nrgintst_ls[[3]] <- 
   data.frame(year = c(2019: 2060), 
              gas = 74.50)
 names(proj_other_nrgintst_ls[[3]])[2] <- "gas"
 
-### 建筑业用电部分 ----
+### 建筑业用电部分
 proj_other_nrgintst_ls[[4]] <- 
   func_interp_2(year = c(2019, 2030, 2060), 
                 value = c(0.0081, 
@@ -271,7 +315,7 @@ proj_other_nrgintst_ls[[4]] <-
                           0.0081))
 names(proj_other_nrgintst_ls[[4]])[2] <- "electricity"
 
-## 农业用电 ----
+## 农业用电
 proj_other_nrgintst_ls[[5]] <- 
   func_interp_2(year = c(2019, 2030, 2060), 
                 value = c(59, 
@@ -281,44 +325,23 @@ names(proj_other_nrgintst_ls[[5]])[2] <- "electricity"
 
 ## Energy consumption ----
 proj_other_nrgsum_ls <- func_nrg_sum_ls(proj_other_nrgintst_ls, proj_other_act)
+proj_other_nrgsum_df <- func_ls2df(proj_other_nrgsum_ls)
+proj_other_emissum_df <- func_emissum(proj_other_nrgsum_df, emisfac_df)
 
 ### Test ----
 # func_history_project_df(other_act, proj_other_act)
 # func_history_project_ls(other_nrgintst_ls, proj_other_nrgintst_ls)
 # func_history_project_ls(other_nrgsum_ls, proj_other_nrgsum_ls)
+plot(proj_other_emissum_df$year, proj_other_emissum_df$co2)
 
 
-# All sectors ----
-## Energy consumption ----
-proj_trans_nrgsum_df <- func_ls2df(proj_trans_nrgsum_ls)
-proj_ind_nrgsum_df <- func_ls2df(proj_ind_nrgsum_ls)
-proj_com_nrgsum_df <- func_ls2df(proj_com_nrgsum_ls)
-proj_other_nrgsum_df <- func_ls2df(proj_other_nrgsum_ls)
-# 合并各部门能耗
-proj_demand_nrgsum_ls <- list(proj_trans_nrgsum_df, proj_ind_nrgsum_df, 
-                              proj_com_nrgsum_df, proj_other_nrgsum_df)
-proj_demand_nrgsum_df <- func_ls2df(proj_demand_nrgsum_ls)
-proj_demand_nrgsum_df <- proj_demand_nrgsum_df[c("year", global_nrg_class)]
-
-## Emission ----
-proj_trans_emissum_df <- func_emissum(proj_trans_nrgsum_df, emisfac_df)
-proj_ind_emissum_df <- func_emissum(proj_ind_nrgsum_df, emisfac_df)
-proj_com_emissum_df <- func_emissum(proj_com_nrgsum_df, emisfac_df)
-proj_other_emissum_df <- func_emissum(proj_other_nrgsum_df, emisfac_df)
-
-proj_demand_emissum_df <- func_emissum(proj_demand_nrgsum_df, emisfac_df)
-
-## Test ----
-func_show_trend(proj_trans_emissum_df)
-func_show_trend(proj_ind_emissum_df)
-func_show_trend(proj_com_emissum_df)
-func_show_trend(proj_other_emissum_df)
-func_show_trend(proj_demand_emissum_df)
-
-
-# TRANSFORMATION ----
+# TF & RES ----
 # Power generation ----
-# Activity level ----
+## Activity level ----
+# 合并各部门能耗
+proj_demand_nrgsum_df <- func_ls2df(list(proj_trans_nrgsum_df, proj_ind_nrgsum_df, 
+                                         proj_com_nrgsum_df, proj_other_nrgsum_df))
+proj_demand_nrgsum_df <- proj_demand_nrgsum_df[c("year", global_nrg_class)]
 # 本地发电量到2025年减少为原来的一半
 proj_tfres_act <- 
   func_merge_2(list(proj_demand_nrgsum_df[c("year", "electricity")], 
@@ -340,7 +363,7 @@ proj_tf_nrgsum_df <-
 ## Emission ----
 proj_tf_emission <- func_emissum(proj_tf_nrgsum_df, emisfac_df)
 
-# # Imported elec ----
+# Imported elec ----
 ## Emission ----
 proj_res_emisfac_df <- data.frame(year = c(2019: 2060), 
                                   emisfac = c(0.000415813))
