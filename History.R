@@ -86,6 +86,145 @@ by_agriculture_nrgintst <-
   func_nrg_intst(by_agriculture_nrgsum_df, by_agriculture_act, "agriculture")
 
 
+# Industry ----
+# 问题：如何强制转化为数字以避免计算错误
+ind_lookup <- 
+  Reduce(rbind, 
+         list(data.frame(ind_agg = c("食品饮料及烟草制造业"), 
+                         ind_ori = c("非金属矿采选业", 
+                                     "农副食品加工业", 
+                                     "食品制造业", 
+                                     "酒、饮料和精制茶制造业", 
+                                     "烟草制品业")),
+              data.frame(ind_agg = c("纺织及服装制造业"), 
+                         ind_ori = c("纺织业", 
+                                     "纺织服装、服饰业", 
+                                     "皮革、毛皮、羽毛及其制品和制鞋业")),
+              data.frame(ind_agg = c("木材及家具制造业"), 
+                         ind_ori = c("木材加工和木、竹、藤、棕、草制品业", 
+                                     "家具制造业")), 
+              data.frame(ind_agg = c("造纸及印刷"), 
+                         ind_ori = c("造纸和纸制品业", 
+                                     "印刷和记录媒介复制业")), 
+              data.frame(ind_agg = c("文体工美用品制造业"), 
+                         ind_ori = c("文教、工美、体育和娱乐用品制造业")), 
+              data.frame(ind_agg = c("石油及炼焦"), 
+                         ind_ori = c("石油加工、炼焦和核燃料加工业")), 
+              data.frame(ind_agg = c("化学工业"), 
+                         ind_ori = c("化学原料和化学制品制造业", 
+                                     "化学纤维制造业", 
+                                     "橡胶和塑料制品业")), 
+              data.frame(ind_agg = c("医药制造业"), 
+                         ind_ori = c("医药制造业")), 
+              data.frame(ind_agg = c("非金属矿物制品业"), 
+                         ind_ori = c("非金属矿物制品业")), 
+              data.frame(ind_agg = c("金属加工制造业"), 
+                         ind_ori = c("黑色金属冶炼和压延加工业", 
+                                     "有色金属冶炼和压延加工业", 
+                                     "金属制品业")), 
+              data.frame(ind_agg = c("设备制造业"), 
+                         ind_ori = c("通用设备制造业", 
+                                     "专用设备制造业", 
+                                     "交通运输设备制造业")), 
+              data.frame(ind_agg = c("电子电气制造业"), 
+                         ind_ori = c("电气机械和器材制造业", 
+                                     "计算机、通信和其他电子设备制造业", 
+                                     "仪器仪表制造业")), 
+              data.frame(ind_agg = c("其他制造业"), 
+                         ind_ori = c("其他制造业", 
+                                     "废弃资源综合利用业", 
+                                     "金属制品、机械和设备修理业", 
+                                     "燃气生产和供应业", 
+                                     "水的生产和供应业")), 
+              data.frame(ind_agg = c("电力、热力生产和供应业"), 
+                         ind_ori = c("电力、热力生产和供应业"))))
+
+# 聚合成的能源大类和行业大类
+# 剔除电力、热力生产和供应业
+ind_ori_subsector <- c("食品饮料及烟草制造业", 
+                       "纺织及服装制造业", "木材及家具制造业", 
+                       "造纸及印刷", "文体工美用品制造业",    
+                       "石油及炼焦", "化学工业", "医药制造业",
+                       "非金属矿物制品业", "金属加工制造业",   
+                       "设备制造业", 
+                       "电子电气制造业", "其他制造业", 
+                       "电力、热力生产和供应业")
+ind_subsector <- c("食品饮料及烟草制造业", 
+                   "纺织及服装制造业", "木材及家具制造业", 
+                   "造纸及印刷", "文体工美用品制造业",    
+                   "石油及炼焦", "化学工业", "医药制造业",
+                   "非金属矿物制品业", "金属加工制造业",   
+                   "设备制造业", 
+                   "电子电气制造业", "其他制造业")
+ind_nrgclass <- c("coal", "coalproduct", 
+                  "gasoline", "diesel", "residual", "lpg", 
+                  "gas", "electricity")
+
+## Activity level ----
+# 读取规上工业各行业GDP
+ind_ori_act_scale <- func_read_trans("7TP7UDE6", "工业GDP")
+ind_ori_act_scale <- func_secagg(ind_ori_act_scale, ind_lookup)
+
+# 计算规上工业各行业所占比例
+ind_ori_act_prop <- ind_ori_act_scale[, -1]/rowSums(ind_ori_act_scale[, -1])*100
+ind_ori_act_prop$year <- ind_ori_act_scale$year
+# 假设2018-2019年规上工业各行业比例同2017年
+ind_ori_act_prop[ind_ori_act_prop$year %in% c(2018, 2019),][ind_ori_subsector] <- 
+  ind_ori_act_prop[ind_ori_act_prop$year == 2017,][ind_ori_subsector]
+
+# 补全2018-2019年规上工业各行业GDP
+# 根据网上资料，厦门市2018年规上工业增加值1611.35亿元，2019年1749.93亿元
+ind_ori_act_scale[ind_ori_act_scale$year == 2018,][ind_ori_subsector] <- 
+  1611.35 * 10000 * ind_ori_act_prop[ind_ori_act_prop$year == 2018,][ind_ori_subsector]/100
+ind_ori_act_scale[ind_ori_act_scale$year == 2019,][ind_ori_subsector] <- 
+  1749.93 * 10000 * ind_ori_act_prop[ind_ori_act_prop$year == 2019,][ind_ori_subsector]/100
+
+# 计算规上工业的总GDP
+ind_ori_indgdp_scale <- data.frame(year = ind_ori_act_scale$year)
+ind_ori_indgdp_scale$GDP <- 
+  rowSums(ind_ori_act_scale[names(ind_ori_act_scale) %in% "year" == FALSE])
+
+# 活动强度为全市工业各行业GDP：剔除电力、热力生产和供应业
+ind_act <- func_nrg_sum(ind_ori_act_prop, global_gdp, "##工业")
+ind_act <- ind_act[c("year", ind_subsector)]
+ind_act[ind_subsector] <- ind_act[ind_subsector]/100
+
+## Energy intensity ---- 
+# 读取规上工业各行业各类能耗总量
+# 原本的数据是按能源分类的
+ind_ori_nrgsum_ls <- 
+  func_read_multitable("7TP7UDE6", 
+                       names_tbl = c("煤", "煤制品", 
+                                     "汽油", "柴油", "燃料油", "液化石油气", "天然气", "电力"), 
+                       names_ls = ind_nrgclass)
+ind_ori_nrgsum_ls <- func_secagg_ls(ind_ori_nrgsum_ls, ind_lookup)
+
+# 转化为按行业分的能耗总量
+ind_ori_nrgsum_scale_ls <- func_ls_transition(ind_ori_nrgsum_ls)
+# 基于规上工业能耗总量和规上工业GDP算出单位GDP能耗
+ind_ori_nrgintst_ls <- func_nrg_intst_ls(ind_ori_nrgsum_scale_ls, ind_ori_act_scale)
+# 剔除电力热力供应业
+ind_nrgintst_ls <- ind_ori_nrgintst_ls[ind_subsector]
+
+## Consumption and emission----
+ind_nrgsum_ls <- func_nrg_sum_ls(ind_nrgintst_ls, ind_act)
+ind_nrgsum_df <- func_ls2df(ind_nrgsum_ls)
+ind_emissum_df <- func_emissum(ind_nrgsum_df, emisfac_df)
+
+
+# Construction ----
+## Activity level ----
+by_construct_act <- global_gdp[, c("year", "##建筑业")]
+names(by_construct_act)[2] <- "construct"
+
+## Consumption and emission ----
+by_construct_nrgsum_df <- 
+  func_read_trans(
+    "2I4DKY2A", "全市电力消费情况表分具体行业")[, c("year", "建筑业")]
+names(by_construct_nrgsum_df) <- c("year", "electricity")
+by_construct_emissum_df <- func_emissum(by_construct_nrgsum_df, emisfac_df)
+
+
 # Transportation ----
 trans_subsector <- c("常规公交", "快速公交", "出租车", "农村客车", 
                      "摩托车", "轿车", 
@@ -230,144 +369,6 @@ trans_emissum_df <- func_emissum(trans_nrgsum_df, emisfac_df)
 # 测试：
 # 问题：出租车2013年陡然升高
 # func_show_trend_ls(trans_nrgintst_ls)
-
-
-# Industry ----
-# 问题：如何强制转化为数字以避免计算错误
-ind_lookup <- 
-  Reduce(rbind, 
-         list(data.frame(ind_agg = c("食品饮料及烟草制造业"), 
-                         ind_ori = c("非金属矿采选业", 
-                                     "农副食品加工业", 
-                                     "食品制造业", 
-                                     "酒、饮料和精制茶制造业", 
-                                     "烟草制品业")),
-              data.frame(ind_agg = c("纺织及服装制造业"), 
-                         ind_ori = c("纺织业", 
-                                     "纺织服装、服饰业", 
-                                     "皮革、毛皮、羽毛及其制品和制鞋业")),
-              data.frame(ind_agg = c("木材及家具制造业"), 
-                         ind_ori = c("木材加工和木、竹、藤、棕、草制品业", 
-                                     "家具制造业")), 
-              data.frame(ind_agg = c("造纸及印刷"), 
-                         ind_ori = c("造纸和纸制品业", 
-                                     "印刷和记录媒介复制业")), 
-              data.frame(ind_agg = c("文体工美用品制造业"), 
-                         ind_ori = c("文教、工美、体育和娱乐用品制造业")), 
-              data.frame(ind_agg = c("石油及炼焦"), 
-                         ind_ori = c("石油加工、炼焦和核燃料加工业")), 
-              data.frame(ind_agg = c("化学工业"), 
-                         ind_ori = c("化学原料和化学制品制造业", 
-                                     "化学纤维制造业", 
-                                     "橡胶和塑料制品业")), 
-              data.frame(ind_agg = c("医药制造业"), 
-                         ind_ori = c("医药制造业")), 
-              data.frame(ind_agg = c("非金属矿物制品业"), 
-                         ind_ori = c("非金属矿物制品业")), 
-              data.frame(ind_agg = c("金属加工制造业"), 
-                         ind_ori = c("黑色金属冶炼和压延加工业", 
-                                     "有色金属冶炼和压延加工业", 
-                                     "金属制品业")), 
-              data.frame(ind_agg = c("设备制造业"), 
-                         ind_ori = c("通用设备制造业", 
-                                     "专用设备制造业", 
-                                     "交通运输设备制造业")), 
-              data.frame(ind_agg = c("电子电气制造业"), 
-                         ind_ori = c("电气机械和器材制造业", 
-                                     "计算机、通信和其他电子设备制造业", 
-                                     "仪器仪表制造业")), 
-              data.frame(ind_agg = c("其他制造业"), 
-                         ind_ori = c("其他制造业", 
-                                     "废弃资源综合利用业", 
-                                     "金属制品、机械和设备修理业", 
-                                     "燃气生产和供应业", 
-                                     "水的生产和供应业")), 
-              data.frame(ind_agg = c("电力、热力生产和供应业"), 
-                         ind_ori = c("电力、热力生产和供应业"))))
-
-# 聚合成的能源大类和行业大类
-# 剔除电力、热力生产和供应业
-ind_ori_subsector <- c("食品饮料及烟草制造业", 
-                       "纺织及服装制造业", "木材及家具制造业", 
-                       "造纸及印刷", "文体工美用品制造业",    
-                       "石油及炼焦", "化学工业", "医药制造业",
-                       "非金属矿物制品业", "金属加工制造业",   
-                       "设备制造业", 
-                       "电子电气制造业", "其他制造业", 
-                       "电力、热力生产和供应业")
-ind_subsector <- c("食品饮料及烟草制造业", 
-                   "纺织及服装制造业", "木材及家具制造业", 
-                   "造纸及印刷", "文体工美用品制造业",    
-                   "石油及炼焦", "化学工业", "医药制造业",
-                   "非金属矿物制品业", "金属加工制造业",   
-                   "设备制造业", 
-                   "电子电气制造业", "其他制造业")
-ind_nrgclass <- c("coal", "coalproduct", 
-                  "gasoline", "diesel", "residual", "lpg", 
-                  "gas", "electricity")
-
-## Activity level ----
-# 读取规上工业各行业GDP
-ind_ori_act_scale <- func_read_trans("7TP7UDE6", "工业GDP")
-ind_ori_act_scale <- func_secagg(ind_ori_act_scale, ind_lookup)
-
-# 计算规上工业各行业所占比例
-ind_ori_act_prop <- ind_ori_act_scale[, -1]/rowSums(ind_ori_act_scale[, -1])*100
-ind_ori_act_prop$year <- ind_ori_act_scale$year
-# 假设2018-2019年规上工业各行业比例同2017年
-ind_ori_act_prop[ind_ori_act_prop$year %in% c(2018, 2019),][ind_ori_subsector] <- 
-  ind_ori_act_prop[ind_ori_act_prop$year == 2017,][ind_ori_subsector]
-
-# 补全2018-2019年规上工业各行业GDP
-# 根据网上资料，厦门市2018年规上工业增加值1611.35亿元，2019年1749.93亿元
-ind_ori_act_scale[ind_ori_act_scale$year == 2018,][ind_ori_subsector] <- 
-  1611.35 * 10000 * ind_ori_act_prop[ind_ori_act_prop$year == 2018,][ind_ori_subsector]/100
-ind_ori_act_scale[ind_ori_act_scale$year == 2019,][ind_ori_subsector] <- 
-  1749.93 * 10000 * ind_ori_act_prop[ind_ori_act_prop$year == 2019,][ind_ori_subsector]/100
-
-# 计算规上工业的总GDP
-ind_ori_indgdp_scale <- data.frame(year = ind_ori_act_scale$year)
-ind_ori_indgdp_scale$GDP <- 
-  rowSums(ind_ori_act_scale[names(ind_ori_act_scale) %in% "year" == FALSE])
-
-# 活动强度为全市工业各行业GDP：剔除电力、热力生产和供应业
-ind_act <- func_nrg_sum(ind_ori_act_prop, global_gdp, "##工业")
-ind_act <- ind_act[c("year", ind_subsector)]
-ind_act[ind_subsector] <- ind_act[ind_subsector]/100
-
-## Energy intensity ---- 
-# 读取规上工业各行业各类能耗总量
-# 原本的数据是按能源分类的
-ind_ori_nrgsum_ls <- 
-  func_read_multitable("7TP7UDE6", 
-    names_tbl = c("煤", "煤制品", 
-                  "汽油", "柴油", "燃料油", "液化石油气", "天然气", "电力"), 
-    names_ls = ind_nrgclass)
-ind_ori_nrgsum_ls <- func_secagg_ls(ind_ori_nrgsum_ls, ind_lookup)
-
-# 转化为按行业分的能耗总量
-ind_ori_nrgsum_scale_ls <- func_ls_transition(ind_ori_nrgsum_ls)
-# 基于规上工业能耗总量和规上工业GDP算出单位GDP能耗
-ind_ori_nrgintst_ls <- func_nrg_intst_ls(ind_ori_nrgsum_scale_ls, ind_ori_act_scale)
-# 剔除电力热力供应业
-ind_nrgintst_ls <- ind_ori_nrgintst_ls[ind_subsector]
-
-## Consumption and emission----
-ind_nrgsum_ls <- func_nrg_sum_ls(ind_nrgintst_ls, ind_act)
-ind_nrgsum_df <- func_ls2df(ind_nrgsum_ls)
-ind_emissum_df <- func_emissum(ind_nrgsum_df, emisfac_df)
-
-# Construction ----
-## Activity level ----
-by_construct_act <- global_gdp[, c("year", "##建筑业")]
-names(by_construct_act)[2] <- "construct"
-
-## Consumption and emission ----
-by_construct_nrgsum_df <- 
-  func_read_trans(
-    "2I4DKY2A", "全市电力消费情况表分具体行业")[, c("year", "建筑业")]
-names(by_construct_nrgsum_df) <- c("year", "electricity")
-by_construct_emissum_df <- func_emissum(by_construct_nrgsum_df, emisfac_df)
 
 
 # Service -----
