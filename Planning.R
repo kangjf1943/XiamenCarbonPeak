@@ -1,7 +1,7 @@
-# DEMAND MODULE ----
+# DEMAND ----
 # Transportation ----
 ## Activity level ----
-### 营运和非营运车辆----
+# 营运和非营运车辆
 proj_trans_act <- data.frame(year = c(2019: 2060))
 for (i in trans_subsector[1:12]) {
   proj_trans_act[, i] <- 
@@ -10,8 +10,12 @@ for (i in trans_subsector[1:12]) {
                             func_lastone(trans_act[, i])*1.05, 
                             func_lastone(trans_act[, i])*1.07))$value
 }
-### 航空和水运----
-proj_trans_act$"航空" <- rep(1, length(c(2019: 2060)))
+# 但是其中摩托车数量减少
+proj_trans_act$摩托车 <- 
+  func_interp_2(year = c(2019, 2030, 2060), 
+                value = c(237499.0, 237499.0*0.5, 0))$value
+
+# 水运
 proj_trans_act$"水路客运" <- 
   func_interp_2(year = c(2019, 2030, 2060), 
                 value = c(10000, 10500, 11000))$value
@@ -22,9 +26,9 @@ proj_trans_act$"水路货运" <-
 comment(proj_trans_act$"水路货运") <- "万吨公里"
 
 ## Energy intensity ----
-proj_trans_nrgintst_ls <- vector("list", 15)
+proj_trans_nrgintst_ls <- vector("list", length(trans_subsector))
 names(proj_trans_nrgintst_ls) <- trans_subsector
-### 营运车辆和非营运车辆----
+### 营运车辆和非营运车辆
 # 均假设和最后一个有数值的年份一致，且假设这个数值是在2019年
 for (j in c(1: 12)) {
   proj_trans_nrgintst_ls[[j]] <- data.frame(year = c(2019: 2060))
@@ -33,42 +37,77 @@ for (j in c(1: 12)) {
     proj_trans_nrgintst_ls[[j]][, i] <- func_lastone(trans_nrgintst_ls[[j]][, i])
   }
 }
-### 航空----
-proj_trans_nrgintst_ls[["航空"]] <- 
-  func_interp_2(year = c(2019, 2030, 2060), 
-                value = c(36.73, 40, 50), "kerosene")
+# 但是其中：
+# 摩托车电气化
+proj_trans_motorprop <- data.frame(year = proj_trans_nrgintst_ls[["摩托车"]]$year)
+proj_trans_motorprop$gasoline <- 
+  func_interp_2(year = c(2019, 2030, 2050, 2060), 
+                value = c(1, 0.5, 0, 0))$value
+proj_trans_motorprop$electricity <- 1 - proj_trans_motorprop$gasoline
+# 计算相应能耗强度中汽油和电力的变化
+proj_trans_nrgintst_ls[["轿车"]]$electricity <- 
+  func_alter(mean(proj_trans_nrgintst_ls[["轿车"]]$gasoline), 
+             "gasoline", "electricity")
+proj_trans_nrgintst_ls[["轿车"]] <- 
+  func_cross(proj_trans_nrgintst_ls[["轿车"]], 
+             proj_trans_motorprop)
 
-### 水路客运----
-proj_trans_nrgintst_ls[["水路客运"]] <- data.frame(year = c(2019: 2060))
-proj_trans_nrgintst_ls[["水路客运"]]$diesel <- 
+# 轿车逐渐实现电气化
+proj_trans_carprop <- data.frame(year = proj_trans_nrgintst_ls[["轿车"]]$year)
+proj_trans_carprop$gasoline <- 
+  func_interp_2(year = c(2019, 2030, 2050, 2060), 
+                value = c(1, 0.3, 0, 0))$value
+proj_trans_carprop$electricity <- 1 - proj_trans_carprop$gasoline
+# 计算相应能耗强度中汽油和电力的变化
+proj_trans_nrgintst_ls[["轿车"]]$electricity <- 
+  func_alter(mean(proj_trans_nrgintst_ls[["轿车"]]$gasoline), 
+             "gasoline", "electricity")
+proj_trans_nrgintst_ls[["轿车"]] <- 
+  func_cross(proj_trans_nrgintst_ls[["轿车"]], 
+             proj_trans_carprop)
+
+# 水路客运
+# 柴油：基于历史数据和比率
+proj_trans_nrgintst_ls[["水路客运"]] <- 
   func_interp_2(year = c(2019, 2030, 2060), 
-                value = c(1.612026e-05, 1.612026e-05*0.85, 1.612026e-05*0.80), 
-                "diesel")$diesel
+                value = c(
+                  func_lastone(trans_nrgintst_ls[["水路客运"]]$diesel),
+                  func_lastone(trans_nrgintst_ls[["水路客运"]]$diesel)*0.85, 
+                  func_lastone(trans_nrgintst_ls[["水路客运"]]$diesel)*0.80), 
+                "diesel")
+# 燃料油：基于历史数据和比率
 proj_trans_nrgintst_ls[["水路客运"]]$residual <- 
   func_interp_2(year = c(2019, 2030, 2060), 
-                value = c(3.224052e-07, 3.224052e-07*0.85, 3.224052e-07*0.80), 
+                value = c(
+                  func_lastone(trans_nrgintst_ls[["水路客运"]]$residual), 
+                  func_lastone(trans_nrgintst_ls[["水路客运"]]$residual)*0.85, 
+                  func_lastone(trans_nrgintst_ls[["水路客运"]]$residual)*0.80),
                 "residual")$residual
-func_history_project_df(proj_trans_nrgintst_ls[["水路客运"]], 
-                        trans_nrgintst_ls[["水路客运"]])
 
-### 水路货运----
-proj_trans_nrgintst_ls[["水路货运"]] <- data.frame(year = c(2019: 2060))
-proj_trans_nrgintst_ls[["水路货运"]]$diesel <- 
-  func_interp_2(year = c(2019, 2030, 2060), 
-                value = c(6.964230e-09, 6.964230e-09*0.85, 6.964230e-09*0.80))$value
+# 水路货运
+# 柴油：基于历史数据和比率
+proj_trans_nrgintst_ls[["水路货运"]] <- 
+  func_interp_3(year = c(2019, 2030, 2060), 
+                scale = c(1, 0.85, 0.8), 
+                base = func_lastone(trans_nrgintst_ls[["水路货运"]]$diesel),
+                "diesel")
+# 燃料油：基于历史数据和比率
 proj_trans_nrgintst_ls[["水路货运"]]$residual <- 
-  func_interp_2(year = c(2019, 2030, 2060), 
-                value = c(1.392846e-10, 1.392846e-10*0.85, 1.392846e-10*0.80))$value
+  func_interp_3(year = c(2019, 2030, 2060), 
+                scale = c(1, 0.85, 0.8), 
+                base = func_lastone(trans_nrgintst_ls[["水路货运"]]$residual),
+                "residual")$residual
 
 ## Energy and emission ----
 proj_trans_nrgsum_ls <- func_nrg_sum_ls(proj_trans_nrgintst_ls, proj_trans_act)
 proj_trans_nrgsum_df <- func_ls2df(proj_trans_nrgsum_ls)
 proj_trans_emissum_df <- func_emissum(proj_trans_nrgsum_df, emisfac_df)
 
-# Test----
+## Test----
 # func_history_project_df(trans_act, proj_trans_act)
 # func_history_project_ls(trans_nrgintst_ls, proj_trans_nrgintst_ls)
 # func_history_project_ls(trans_nrgsum_ls, proj_trans_nrgsum_ls)
+# plot(proj_trans_emissum_df$year, proj_trans_emissum_df$co2)
 
 
 # Industry ----
@@ -167,9 +206,9 @@ proj_com_nrgsum_ls <- func_nrg_sum_ls(proj_com_nrgintst_ls, proj_com_act)
 names(proj_com_nrgsum_ls) <- com_subsector
 
 ## Test ----
-func_history_project_df(com_act, proj_com_act)
-func_history_project_ls(com_nrgintst_ls, proj_com_nrgintst_ls)
-func_history_project_ls(com_nrgsum_ls, proj_com_nrgsum_ls)
+# func_history_project_df(com_act, proj_com_act)
+# func_history_project_ls(com_nrgintst_ls, proj_com_nrgintst_ls)
+# func_history_project_ls(com_nrgsum_ls, proj_com_nrgsum_ls)
 
 # Other ----
 ## Activity level ----
@@ -248,20 +287,71 @@ proj_other_nrgsum_ls <- func_nrg_sum_ls(proj_other_nrgintst_ls, proj_other_act)
 # func_history_project_ls(other_nrgintst_ls, proj_other_nrgintst_ls)
 # func_history_project_ls(other_nrgsum_ls, proj_other_nrgsum_ls)
 
+
+# All sectors ----
+## Energy consumption ----
+proj_trans_nrgsum_df <- func_ls2df(proj_trans_nrgsum_ls)
+proj_ind_nrgsum_df <- func_ls2df(proj_ind_nrgsum_ls)
+proj_com_nrgsum_df <- func_ls2df(proj_com_nrgsum_ls)
+proj_other_nrgsum_df <- func_ls2df(proj_other_nrgsum_ls)
+# 合并各部门能耗
+proj_demand_nrgsum_ls <- list(proj_trans_nrgsum_df, proj_ind_nrgsum_df, 
+                              proj_com_nrgsum_df, proj_other_nrgsum_df)
+proj_demand_nrgsum_df <- func_ls2df(proj_demand_nrgsum_ls)
+proj_demand_nrgsum_df <- proj_demand_nrgsum_df[c("year", global_nrg_class)]
+
+## Emission ----
+proj_trans_emissum_df <- func_emissum(proj_trans_nrgsum_df, emisfac_df)
+proj_ind_emissum_df <- func_emissum(proj_ind_nrgsum_df, emisfac_df)
+proj_com_emissum_df <- func_emissum(proj_com_nrgsum_df, emisfac_df)
+proj_other_emissum_df <- func_emissum(proj_other_nrgsum_df, emisfac_df)
+
+proj_demand_emissum_df <- func_emissum(proj_demand_nrgsum_df, emisfac_df)
+
+## Test ----
+func_show_trend(proj_trans_emissum_df)
+func_show_trend(proj_ind_emissum_df)
+func_show_trend(proj_com_emissum_df)
+func_show_trend(proj_other_emissum_df)
+func_show_trend(proj_demand_emissum_df)
+
+
 # TRANSFORMATION ----
 # Power generation ----
-# 本地发电
-proj_elecgen <- 
-  func_interp_2(year = c(2020, 2025, 2030, 2060), 
-                value = c(900371, 900371*0.5, 900371*0.2, 0), "elecgen")
+# Activity level ----
+# 本地发电量到2025年减少为原来的一半
+proj_tfres_act <- 
+  func_merge_2(list(proj_demand_nrgsum_df[c("year", "electricity")], 
+                    func_interp_2(year = c(2020, 2025, 2030, 2060),
+                                  value = c(900371, 900371*0.5, 900371*0.2, 0),
+                                                  "elecgen")))
+proj_tfres_act$importelec <- proj_tfres_act$electricity - proj_tfres_act$elecgen
 
-# 计算外调电力需求
+## Energy intensity ----
+proj_tf_nrgintst <- data.frame(year = c(2019: 2060))
+for (i in names(tf_nrgintst)[names(tf_nrgintst) %in% "year" == FALSE]) {
+  proj_tf_nrgintst[, i] <- func_lastone(tf_nrgintst[, i])
+}
 
+## Energy consumption ----
+proj_tf_nrgsum_df <- 
+  func_nrg_sum(proj_tf_nrgintst, proj_tfres_act, "elecgen")
+
+## Emission ----
+proj_tf_emission <- func_emissum(proj_tf_nrgsum_df, emisfac_df)
+
+# # Imported elec ----
+## Emission ----
+proj_res_emisfac_df <- data.frame(year = c(2019: 2060), 
+                                  emisfac = c(0.000415813))
+proj_res_emissum <- 
+  func_cross(proj_res_emisfac_df, proj_tfres_act[c("year", "importelec" )])
+names(proj_res_emissum)[2] <- "co2"
 
 
 # RESULT ----
 # Energy consumption ----
-
+proj_trans_nrgsum_df <- func_ls2df(proj_trans_nrgsum_ls)
 proj_ind_nrgsum_df <- func_ls2df(proj_ind_nrgsum_ls)
 proj_com_nrgsum_df <- func_ls2df(proj_com_nrgsum_ls)
 proj_other_nrgsum_df <- func_ls2df(proj_other_nrgsum_ls)
@@ -270,30 +360,24 @@ total_nrgsum_ls <- list(trans_nrgsum_df, ind_nrgsum_df,
                         com_nrgsum_df, other_nrgsum_df)
 names(total_nrgsum_ls) <- c("trans", "ind", "com", "other")
 total_nrgsum_df <- func_ls2df(total_nrgsum_ls)
-func_show_trend(total_nrgsum_df)
 
 # Emission ----
-
-proj_ind_emissum_df <- func_emissum(proj_ind_nrgsum_df, emisfac_df)
-proj_com_emissum_df <- func_emissum(proj_com_nrgsum_df, emisfac_df)
-proj_other_emissum_df <- func_emissum(proj_other_nrgsum_df, emisfac_df)
-
 proj_trans_emissum_df <- func_emissum(proj_trans_nrgsum_df, emisfac_df)
 proj_ind_emissum_df <- func_emissum(proj_ind_nrgsum_df, emisfac_df)
 proj_com_emissum_df <- func_emissum(proj_com_nrgsum_df, emisfac_df)
 proj_other_emissum_df <- func_emissum(proj_other_nrgsum_df, emisfac_df)
 
-func_show_trend(proj_trans_emissum_df)
-func_show_trend(proj_ind_emissum_df)
-func_show_trend(proj_com_emissum_df)
-func_show_trend(proj_other_emissum_df)
+proj_total_emissum_df <- 
+  func_ls2df(list(proj_trans_emissum_df, proj_ind_emissum_df, 
+                  proj_com_emissum_df, proj_other_emissum_df, 
+                  proj_tf_emission, proj_res_emissum))
 
+func_show_trend(proj_total_emissum_df)
 
-
-
-
-
-
-
+# Test ----
+# func_show_trend(proj_trans_emissum_df[c("year", "co2")])
+# func_show_trend(proj_ind_emissum_df)
+# func_show_trend(proj_com_emissum_df)
+# func_show_trend(proj_other_emissum_df)
 
 
