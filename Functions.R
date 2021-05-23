@@ -295,6 +295,21 @@ func_linear <- function(df_history, col_dependent, startyear, endyear) {
   proj_df
 }
 
+## 转化能源类型
+func_alter <- function(nrg_in, name_in, name_out) {
+  factors <- 
+    data.frame(nrg = c("coal", "coalproduct", 
+                       "gasoline", "diesel", "kerosene", "residual", "lpg", 
+                       "gas", "electricity"), 
+               factor = c(0.7143, 0.6072, 
+                          1.4714, 1.4571, 1.4714, 1.4286, 1.7143, 
+                          1.33, 0.1229))
+  alter_factor <- factors$factor[which(factors$nrg == name_in)] / 
+    factors$factor[which(factors$nrg == name_out)]
+  nrg_out <- nrg_in * alter_factor
+  nrg_out
+}
+
 ## 通过能源总量和活动水平计算活动强度
 # 数据框对某一列的版本
 func_nrg_intst <- function(df_nrg_sum, df_actlvl, name) {
