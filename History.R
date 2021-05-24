@@ -349,7 +349,7 @@ names(trans_nrgsum_ls$水路货运)[2:3] <- c("diesel", "residual")
 names(trans_nrgsum_ls)[13:14] <- trans_subsector[13:14]
 trans_nrgintst_ls[trans_subsector[13:14]] <- 
   func_nrg_intst_ls(trans_nrgsum_ls[trans_subsector[13:14]], 
-                    trans_act[, c(1, 14:16)])
+                    trans_act[, c(1, 14:15)])
 
 ## Consumption and emission ----
 trans_nrgsum_df <- func_ls2df(trans_nrgsum_ls)
