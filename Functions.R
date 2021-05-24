@@ -218,7 +218,8 @@ func_merge_rate <- function(var_1, name_1, var_2, name_2, method,
 }
 # 升级版
 # 输入：两个时间序列数据框
-func_cross <- function(df1, df2) {
+# 可选计算方式：“sum”，“product”，“rate”和“difference”，默认为“product”
+func_cross <- function(df1, df2, method = "product") {
   # 判断是否包含“year”列
   if ("year" %in% names(df1) & "year" %in% names(df2) == FALSE) {
     print("warning: no year data in the dataframe.")
@@ -233,7 +234,19 @@ func_cross <- function(df1, df2) {
     # 基于year列合并数据框，作为储存结果的数据框
     dfout <- merge(df1, df2, by = "year")
     for (i in c(1: length(dfout_names))) {
-      dfout[, dfout_names[i]] <- dfout[, df1_names[i]] * dfout[, df2_names[i]]
+      # 根据不同method参数选择不同计算方式
+      if (method == "sum") {
+        dfout[, dfout_names[i]] <- dfout[, df1_names[i]] + dfout[, df2_names[i]]
+      }
+      if (method == "difference") {
+        dfout[, dfout_names[i]] <- dfout[, df1_names[i]] - dfout[, df2_names[i]]
+      }
+      if (method == "product") {
+        dfout[, dfout_names[i]] <- dfout[, df1_names[i]] * dfout[, df2_names[i]]
+      }
+      if (method == "rate") {
+        dfout[, dfout_names[i]] <- dfout[, df1_names[i]] / dfout[, df2_names[i]]
+      }
     }
     dfout <- dfout[c("year", dfout_names)]
     dfout
@@ -573,7 +586,7 @@ func_history_project <- function(var_his, name_his, var_proj, name_proj, style =
                             color = c("blue", "red"))
     plot(total_df$year, total_df[, name_proj], 
          xlab = "year", ylab = name_proj, col = total_df$color)
-    legend("topleft", legend = legend_df$attr, pch = 1, col = legend_df$color)
+    #legend("topleft", legend = legend_df$attr, pch = 1, col = legend_df$color)
     plot_data <- recordPlot()
   } else {
     plot_data <- ggplot(total_df) + 
