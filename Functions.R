@@ -298,7 +298,7 @@ func_rate <- function(baseyear, basevalue, rate_df) {
     proj_df$value[i] <- proj_df$value[i - 1] * (1 + proj_df$value[i])
   }
   plot(proj_df$value)
-  proj_df <- proj_df[-1, ]
+  proj_df
 }
 
 ## 根据历史趋势线性外推未来趋势的函数
@@ -334,6 +334,30 @@ func_alter <- function(nrg_in, name_in, name_out) {
     factors$factor[which(factors$nrg == name_out)]
   nrg_out <- nrg_in * alter_factor
   nrg_out
+}
+
+## 转化成标准煤
+func_toce <- function(nrg_df) {
+  out_df <- data.frame(year = nrg_df[, "year"])
+  factors <- 
+    data.frame(nrg = c("coal", "coalproduct", 
+                       "gasoline", "diesel", "kerosene", "residual", "lpg", 
+                       "gas", "electricity"), 
+               factor = c(0.7143, 0.6072, 
+                          1.4714, 1.4571, 1.4714, 1.4286, 1.7143, 
+                          0.133, 0.01229))
+  # 提取共同的列名
+  name_nrg <- names(nrg_df)[names(nrg_df) %in% "year" == FALSE]
+  name_factor <- factors$nrg
+  name_scope <- intersect(name_nrg, name_factor)
+  # 重塑两个数据框
+  nrg_df <- nrg_df[name_scope]
+  factors <- factors[which(factors$nrg %in% name_scope), ]
+  # 将能源数据框能耗转化为标准煤
+  for (i in name_scope) {
+    out_df[, i] <- nrg_df[, i] * factors$factor[which(factors$nrg == i)]
+  }
+  out_df
 }
 
 ## 通过能源总量和活动水平计算活动强度
@@ -663,4 +687,12 @@ func_result <- function(var_aclevel, var_int) {
   total_df$value <- total_df[, 1] * total_df[, 2]
   plot(total_df$value)
   total_df
+}
+
+## 临时测试函数
+func_test <- function(x, y) {
+  print(x[1])
+  print(x[1]/y > 0.8 & x[1]/y < 1.2)
+  print(min(x)/y)
+  print(max(x)/y)
 }
