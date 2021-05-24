@@ -257,7 +257,7 @@ func_interp_2 <- function(year, value, name_value = "value") {
     }
   }
   names(total_df)[2] <- name_value
-  plot(total_df$year, total_df[, name_value])
+  # plot(total_df$year, total_df[, name_value])
   total_df
 }
 
