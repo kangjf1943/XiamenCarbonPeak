@@ -119,6 +119,11 @@ func_varname <- function(variable) {
   deparse(substitute(variable))
 }
 
+## 判断峰值年份
+func_peakyear <- function(nrg_df, name_peak) {
+  nrg_df$year[which(nrg_df[, name_peak] == max(nrg_df[, name_peak]))]
+}
+
 ## 取一列数据最后一个有效数值
 func_lastone <- function(numbers) {
   # 去除零值
