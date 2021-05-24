@@ -279,7 +279,7 @@ func_interp_3 <- function(year, scale, base, name_value = "value") {
   }
   names(total_df)[2] <- name_value
   if (sum(is.na(total_df[, name_value])) < nrow(total_df)) {
-    plot(total_df$year, total_df[, name_value])
+    #plot(total_df$year, total_df[, name_value])
   }
   total_df
 }
@@ -437,7 +437,7 @@ func_emissum <- function(nrgsum_df, emisfac_df) {
               function(x) {
                 x * emisfac_df[emisfac_df[, "year"] == i, nrg_scope]})
       emissum_ls[[i]] <- Reduce(rbind, emissum_subls)
-      emissum_df[, i] <- rowSums(emissum_ls[[i]])
+      emissum_df[, i] <- rowSums(emissum_ls[[i]], na.rm = TRUE)
     }
   }
   cat("Info: ", "\n", 
