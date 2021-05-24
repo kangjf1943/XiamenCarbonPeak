@@ -552,22 +552,33 @@ func_ls2df <- function(ls) {
 
 ## 比较历史数据和预测数据
 # 比较数据框的两列版本
-func_history_project <- function(var_his, name_his, var_proj, name_proj) {
+# 提供两种作图风格：“base”为基础作图，“ggplot”为高级作图
+func_history_project <- function(var_his, name_his, var_proj, name_proj, style = "base") {
   var_his <- var_his[, c("year", name_his)]
   var_proj <- var_proj[, c("year", name_proj)]
-  var_his$color <- "history"
-  var_proj$color <- "project"
+  var_his$attr <- "history"
+  var_his$color <- "blue"
+  var_proj$attr <- "project"
+  var_proj$color <- "red"
   names(var_his)[names(var_his) == name_his] <- name_proj
-  total_df <- rbind(var_his[, c("year", name_proj, "color")], 
-                    var_proj[, c("year", name_proj, "color")])
+  total_df <- rbind(var_his[, c("year", name_proj, "attr", "color")], 
+                    var_proj[, c("year", name_proj, "attr", "color")])
   total_df <- total_df[is.na(total_df[, name_proj]) == FALSE, ]
-  # 将作图数据强制转化为数字，否则可能会出现坐标轴重叠
-  total_df$year <- as.numeric(total_df$year)
+  # 将作图数据强制转化为整数，否则可能会出现坐标轴重叠
+  total_df$year <- as.integer(total_df$year)
   total_df[, name_proj] <- as.numeric(total_df[, name_proj])
   # 作图
-  plot_data <- ggplot(total_df) + 
-    geom_point(aes(year, total_df[, name_proj], color = color), alpha = 0.5, size = 3) +
-    labs(y = name_his)
+  if (style == "base") {
+    legend_df <- data.frame(attr = c("history", "project"), 
+                            color = c("blue", "red"))
+    plot(total_df$year, total_df[, name_proj], col = total_df$color)
+    legend("topleft", legend = legend_df$attr, pch = 1, col = legend_df$color)
+    plot_data <- recordPlot()
+  } else {
+    plot_data <- ggplot(total_df) + 
+      geom_point(aes(year, total_df[, name_proj], color = color), alpha = 0.5, size = 3) +
+      labs(y = name_his)
+  }
   plot_data
 }
 # 两个数据框的每一列
