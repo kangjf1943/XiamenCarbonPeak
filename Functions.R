@@ -571,7 +571,8 @@ func_history_project <- function(var_his, name_his, var_proj, name_proj, style =
   if (style == "base") {
     legend_df <- data.frame(attr = c("history", "project"), 
                             color = c("blue", "red"))
-    plot(total_df$year, total_df[, name_proj], col = total_df$color)
+    plot(total_df$year, total_df[, name_proj], 
+         xlab = "year", ylab = name_proj, col = total_df$color)
     legend("topleft", legend = legend_df$attr, pch = 1, col = legend_df$color)
     plot_data <- recordPlot()
   } else {
