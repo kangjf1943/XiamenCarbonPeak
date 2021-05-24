@@ -1,4 +1,115 @@
 # DEMAND ----
+# Agriculture ----
+## Activity level ----
+proj_agriculture_act <- 
+  func_interp_2(year = c(2019, 2030, 2060), 
+                value = c(221, 
+                          221 * 0.6, 
+                          221 * 0.5), "area")
+
+## Energy intensity ----
+proj_agriculture_nrgintst_df <- 
+  func_interp_2(year = c(2019, 2030, 2060), 
+                value = c(59, 
+                          59 * 0.8,
+                          59 * 0.7), "electricity")
+
+## Consumption and emission ----
+proj_agriculture_nrgsum_df <- 
+  func_nrg_sum(proj_agriculture_nrgintst_df, proj_agriculture_act, "area")
+proj_agriculture_emissum_df <- func_emissum(proj_agriculture_nrgsum_df, emisfac_df)
+
+## Test ----
+plot(proj_agriculture_emissum_df$year, proj_agriculture_emissum_df$co2)
+
+# Industry ----
+## Activity level ----
+# 先计算未来子部门GDP所占比重
+proj_ind_ori_act_prop <- data.frame(year = c(2019:2060))
+proj_ind_ori_act_prop[, ind_subsector[1]] <- 
+  func_interp_2(year = c(2019, 2030, 2060), value = c(5, 5, 5))$value
+proj_ind_ori_act_prop[, ind_subsector[2]] <- 
+  func_interp_2(year = c(2019, 2030, 2060), value = c(6, 6, 6))$value
+proj_ind_ori_act_prop[, ind_subsector[3]] <- 
+  func_interp_2(year = c(2019, 2030, 2060), value = c(1.5, 1.5, 2))$value
+proj_ind_ori_act_prop[, ind_subsector[4]] <- 
+  func_interp_2(year = c(2019, 2030, 2060), value = c(1.5, 1.5, 0.5))$value
+proj_ind_ori_act_prop[, ind_subsector[5]] <- 
+  func_interp_2(year = c(2019, 2030, 2060), value = c(2, 2, 4))$value
+proj_ind_ori_act_prop[, ind_subsector[6]] <- 
+  func_interp_2(year = c(2019, 2030, 2060), value = c(0.3, 0, 0))$value
+proj_ind_ori_act_prop[, ind_subsector[7]] <- 
+  func_interp_2(year = c(2019, 2030, 2060), value = c(7.4, 0, 0))$value
+proj_ind_ori_act_prop[, ind_subsector[8]] <- 
+  func_interp_2(year = c(2019, 2030, 2060), value = c(1.6, 2, 3))$value
+proj_ind_ori_act_prop[, ind_subsector[9]] <- 
+  func_interp_2(year = c(2019, 2030, 2060), value = c(1.8, 1.3, 0.5))$value
+proj_ind_ori_act_prop[, ind_subsector[10]] <- 
+  func_interp_2(year = c(2019, 2030, 2060), value = c(7.6, 7.6, 7.6))$value
+proj_ind_ori_act_prop[, ind_subsector[11]] <- 
+  func_interp_2(year = c(2019, 2030, 2060), value = c(12, 10, 9))$value
+proj_ind_ori_act_prop[, ind_subsector[12]] <- 
+  func_interp_2(year = c(2019, 2030, 2060), value = c(49, 55, 60))$value
+proj_ind_ori_act_prop[, ind_subsector[13]] <- func_interp_2(
+  year = c(2019, 2030, 2060), 
+  value = c(100 - sum(proj_ind_ori_act_prop[2:13][proj_ind_ori_act_prop$year == 2019, ]), 
+            100 - sum(proj_ind_ori_act_prop[2:13][proj_ind_ori_act_prop$year == 2030, ]), 
+            100 - sum(proj_ind_ori_act_prop[2:13][proj_ind_ori_act_prop$year == 2060, ])
+  ))$value
+proj_ind_ori_act_prop_long <- melt(proj_ind_ori_act_prop, id = "year")
+ggplot(proj_ind_ori_act_prop_long) + geom_bar(aes(year, value, fill = variable), stat = "identity")
+# 计算未来各子部门GDP
+proj_ind_act <- func_nrg_sum(proj_ind_ori_act_prop, proj_global_indgdp, "GDP")
+proj_ind_act[ind_subsector] <- proj_ind_act[ind_subsector]/100
+
+## Energy intensity ----
+# 假设能耗强度略有减少
+proj_ind_nrgintst_ls <- vector("list", 13)
+names(proj_ind_nrgintst_ls) <- ind_subsector
+for (i in ind_subsector) {
+  proj_ind_nrgintst_ls[[i]] <- data.frame(year = c(2019: 2060))
+  for (j in ind_nrgclass) {
+    proj_ind_nrgintst_ls[[i]][, j] <- 
+      func_interp_3(year = c(2019, 2060), 
+                    scale = c(1, 0.9), 
+                    base = func_lastone(ind_nrgintst_ls[[i]][, j]))$value
+  }
+}
+
+## Energy and emission ----
+proj_ind_nrgsum_ls <- func_nrg_sum_ls(proj_ind_nrgintst_ls, proj_ind_act)
+proj_ind_nrgsum_df <- func_ls2df(proj_ind_nrgsum_ls)
+proj_ind_emissum_df <- func_emissum(proj_ind_nrgsum_df, emisfac_df)
+
+## Test----
+# func_history_project_df(ind_act, proj_ind_act)
+# func_history_project_ls(ind_nrgintst_ls, proj_ind_nrgintst_ls)
+# func_history_project_ls(ind_nrgsum_ls, proj_ind_nrgsum_ls)
+plot(proj_ind_emissum_df$year, proj_ind_emissum_df$co2)
+
+
+# Construction ----
+## Activity level ----
+proj_construct_act <- 
+  func_cross(proj_global_gdp, 
+             func_interp_2(year = c(2019,2030,2060), 
+                           value = c(0.10, 0.08, 0.03)))
+## Energy intensity ----
+proj_construct_nrgintst_df <- 
+  func_interp_2(year = c(2019, 2030, 2060), 
+                value = c(0.0081, 
+                          0.0081 * 1.2, 
+                          0.0081), "electricity")
+
+## Consumption and emission ----
+proj_construct_nrgsum_df <- 
+  func_nrg_sum(proj_construct_nrgintst_df, proj_construct_act, "GDP")
+proj_construct_emissum_df <- func_emissum(proj_construct_nrgsum_df, emisfac_df)
+
+## Test ----
+plot(proj_construct_emissum_df$year, proj_construct_emissum_df$co2)
+
+
 # Transportation ----
 ## Activity level ----
 # 营运和非营运车辆
@@ -110,72 +221,6 @@ proj_trans_emissum_df <- func_emissum(proj_trans_nrgsum_df, emisfac_df)
 # plot(proj_trans_emissum_df$year, proj_trans_emissum_df$co2)
 
 
-# Industry ----
-## Activity level ----
-# 先计算未来子部门GDP所占比重
-proj_ind_ori_act_prop <- data.frame(year = c(2019:2060))
-proj_ind_ori_act_prop[, ind_subsector[1]] <- 
-  func_interp_2(year = c(2019, 2030, 2060), value = c(5, 5, 5))$value
-proj_ind_ori_act_prop[, ind_subsector[2]] <- 
-  func_interp_2(year = c(2019, 2030, 2060), value = c(6, 6, 6))$value
-proj_ind_ori_act_prop[, ind_subsector[3]] <- 
-  func_interp_2(year = c(2019, 2030, 2060), value = c(1.5, 1.5, 2))$value
-proj_ind_ori_act_prop[, ind_subsector[4]] <- 
-  func_interp_2(year = c(2019, 2030, 2060), value = c(1.5, 1.5, 0.5))$value
-proj_ind_ori_act_prop[, ind_subsector[5]] <- 
-  func_interp_2(year = c(2019, 2030, 2060), value = c(2, 2, 4))$value
-proj_ind_ori_act_prop[, ind_subsector[6]] <- 
-  func_interp_2(year = c(2019, 2030, 2060), value = c(0.3, 0, 0))$value
-proj_ind_ori_act_prop[, ind_subsector[7]] <- 
-  func_interp_2(year = c(2019, 2030, 2060), value = c(7.4, 0, 0))$value
-proj_ind_ori_act_prop[, ind_subsector[8]] <- 
-  func_interp_2(year = c(2019, 2030, 2060), value = c(1.6, 2, 3))$value
-proj_ind_ori_act_prop[, ind_subsector[9]] <- 
-  func_interp_2(year = c(2019, 2030, 2060), value = c(1.8, 1.3, 0.5))$value
-proj_ind_ori_act_prop[, ind_subsector[10]] <- 
-  func_interp_2(year = c(2019, 2030, 2060), value = c(7.6, 7.6, 7.6))$value
-proj_ind_ori_act_prop[, ind_subsector[11]] <- 
-  func_interp_2(year = c(2019, 2030, 2060), value = c(12, 10, 9))$value
-proj_ind_ori_act_prop[, ind_subsector[12]] <- 
-  func_interp_2(year = c(2019, 2030, 2060), value = c(49, 55, 60))$value
-proj_ind_ori_act_prop[, ind_subsector[13]] <- func_interp_2(
-  year = c(2019, 2030, 2060), 
-  value = c(100 - sum(proj_ind_ori_act_prop[2:13][proj_ind_ori_act_prop$year == 2019, ]), 
-            100 - sum(proj_ind_ori_act_prop[2:13][proj_ind_ori_act_prop$year == 2030, ]), 
-            100 - sum(proj_ind_ori_act_prop[2:13][proj_ind_ori_act_prop$year == 2060, ])
-  ))$value
-proj_ind_ori_act_prop_long <- melt(proj_ind_ori_act_prop, id = "year")
-ggplot(proj_ind_ori_act_prop_long) + geom_bar(aes(year, value, fill = variable), stat = "identity")
-# 计算未来各子部门GDP
-proj_ind_act <- func_nrg_sum(proj_ind_ori_act_prop, proj_global_indgdp, "GDP")
-proj_ind_act[ind_subsector] <- proj_ind_act[ind_subsector]/100
-
-## Energy intensity ----
-# 假设能耗强度略有减少
-proj_ind_nrgintst_ls <- vector("list", 13)
-names(proj_ind_nrgintst_ls) <- ind_subsector
-for (i in ind_subsector) {
-  proj_ind_nrgintst_ls[[i]] <- data.frame(year = c(2019: 2060))
-  for (j in ind_nrgclass) {
-    proj_ind_nrgintst_ls[[i]][, j] <- 
-      func_interp_3(year = c(2019, 2060), 
-                    scale = c(1, 0.9), 
-                    base = func_lastone(ind_nrgintst_ls[[i]][, j]))$value
-  }
-}
-
-## Energy and emission ----
-proj_ind_nrgsum_ls <- func_nrg_sum_ls(proj_ind_nrgintst_ls, proj_ind_act)
-proj_ind_nrgsum_df <- func_ls2df(proj_ind_nrgsum_ls)
-proj_ind_emissum_df <- func_emissum(proj_ind_nrgsum_df, emisfac_df)
-
-## Test----
-# func_history_project_df(ind_act, proj_ind_act)
-# func_history_project_ls(ind_nrgintst_ls, proj_ind_nrgintst_ls)
-# func_history_project_ls(ind_nrgsum_ls, proj_ind_nrgsum_ls)
-plot(proj_ind_emissum_df$year, proj_ind_emissum_df$co2)
-
-
 # Service ----
 ## Activity level ----
 proj_ori_comemployee <- 
@@ -275,7 +320,7 @@ proj_household_act <- func_merge_2(list(proj_household_ori_household,
                                         proj_household_ori_lpguser, 
                                         proj_household_ori_gasuser))
 
-# Energy intensity ----
+## Energy intensity ----
 proj_household_nrgintst_ls <- vector("list", length(household_subsector))
 names(proj_other_nrgintst_ls) <- household_subsector
 # house_elec
@@ -296,59 +341,14 @@ proj_household_nrgintst_ls[[3]] <-
              gas = 74.50)
 names(proj_household_nrgintst_ls[[3]])[2] <- "gas"
 
-# Consumption and emission ----
+## Consumption and emission ----
 proj_household_nrgsum_ls <- 
   func_nrg_sum_ls(proj_household_nrgintst_ls, proj_household_act)
 proj_household_nrgsum_df <- func_ls2df(proj_household_nrgsum_ls)
 proj_household_emissum_df <- func_emissum(proj_household_nrgsum_df, emisfac_df)
 
-# Test ----
+## Test ----
 plot(proj_household_emissum_df$year, proj_household_emissum_df$co2)
-
-# Construction ----
-## Activity level ----
-proj_construct_act <- 
-  func_cross(proj_global_gdp, 
-             func_interp_2(year = c(2019,2030,2060), 
-                           value = c(0.10, 0.08, 0.03)))
-## Energy intensity ----
-proj_construct_nrgintst_df <- 
-  func_interp_2(year = c(2019, 2030, 2060), 
-                value = c(0.0081, 
-                          0.0081 * 1.2, 
-                          0.0081), "electricity")
-
-## Consumption and emission ----
-proj_construct_nrgsum_df <- 
-  func_nrg_sum(proj_construct_nrgintst_df, proj_construct_act, "GDP")
-proj_construct_emissum_df <- func_emissum(proj_construct_nrgsum_df, emisfac_df)
-
-## Test ----
-plot(proj_construct_emissum_df$year, proj_construct_emissum_df$co2)
-
-
-# Agriculture ----
-## Activity level ----
-proj_agriculture_act <- 
-  func_interp_2(year = c(2019, 2030, 2060), 
-                value = c(221, 
-                          221 * 0.6, 
-                          221 * 0.5), "area")
-
-## Energy intensity ----
-proj_agriculture_nrgintst_df <- 
-  func_interp_2(year = c(2019, 2030, 2060), 
-                value = c(59, 
-                          59 * 0.8,
-                          59 * 0.7), "electricity")
-
-## Consumption and emission ----
-proj_agriculture_nrgsum_df <- 
-  func_nrg_sum(proj_agriculture_nrgintst_df, proj_agriculture_act, "area")
-proj_agriculture_emissum_df <- func_emissum(proj_agriculture_nrgsum_df, emisfac_df)
-
-## Test ----
-plot(proj_agriculture_emissum_df$year, proj_agriculture_emissum_df$co2)
 
 
 # TF & RES ----
