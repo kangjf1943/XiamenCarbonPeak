@@ -316,7 +316,7 @@ func_stage <- function(year, value, name_value = "value") {
 func_rate <- function(baseyear, basevalue, rate_df) {
   names(rate_df) <- c("year", "rate")
   # 先统一年度为基准年到增长率数据框的最后一年
-  rate_df <- rate_df[rate_df$year %in% c(baseyear: max(rate_df$year)), ]
+  rate_df <- rate_df[which(rate_df$year > baseyear), ]
   # 更改增长率的单位为1
   rate_df$rate <- rate_df$rate / 100
   proj_df <- rbind(data.frame(year = baseyear, rate = basevalue), 
@@ -325,7 +325,7 @@ func_rate <- function(baseyear, basevalue, rate_df) {
   for (i in c(2: nrow(proj_df))) {
     proj_df$value[i] <- proj_df$value[i - 1] * (1 + proj_df$value[i])
   }
-  plot(proj_df$value)
+  # plot(proj_df$value)
   proj_df
 }
 
@@ -386,6 +386,18 @@ func_toce <- function(nrg_df) {
   for (i in name_scope) {
     out_df[, i] <- nrg_df[, i] * factors$factor[which(factors$nrg == i)]
   }
+  out_df
+}
+
+# 计算生长率
+func_ratecalc <- function(in_df, name_value) {
+  out_df <- data.frame(year = in_df$year)
+  out_df$now <- in_df[, name_value]
+  # 将带计算数据错位放在另一列
+  out_df$before <- 
+    c(NA, head(in_df[, name_value], length(in_df[, name_value])-1))
+  out_df$rate <- (out_df$now - out_df$before) / out_df$now
+  out_df <- out_df[c("year", "rate")]
   out_df
 }
 
