@@ -3,8 +3,7 @@
 # 能源类别
 global_nrg_class <- c("coal", "coalproduct", 
                       "gasoline", "diesel", "kerosene", "residual", "lpg", 
-                      "gas", 
-                      "electricity")
+                      "gas", "electricity")
 global_emis_class <- c("co2", "ch4", "n2o")
 
 ## GDP ----
@@ -30,12 +29,16 @@ comment(proj_global_indgdp_prop$proportion) <- "%"
 # func_history_project(global_indgdp_prop, "proportion", proj_global_indgdp_prop, "proportion")
 # 未来工业GDP
 proj_global_indgdp <- 
-  data.frame(year = c(2020:2060), 
-             value = proj_global_gdp$GDP * proj_global_indgdp_prop$proportion / 100)
-names(proj_global_indgdp)[2] <- "GDP"
+  func_cross(proj_global_gdp, proj_global_indgdp_prop)
+proj_global_indgdp$GDP <- proj_global_indgdp$GDP/100
 comment(proj_global_indgdp$GDP) <- "万元当年价"
 # 测试：问题：工业GDP变化趋势不太对
 # func_history_project(global_gdp, "##工业", proj_global_indgdp, "GDP")
+
+# 合并历史数据和预测数据
+global_indgdp <- global_gdp[c("year", "##工业")]
+names(global_indgdp)[2] <- "GDP"
+global_indgdp <- rbind(global_indgdp, proj_global_indgdp)
 
 ## Population ----
 global_population <- func_read_trans("2VHEE264")
@@ -224,8 +227,13 @@ by_construct_nrgsum_df <-
 names(by_construct_nrgsum_df) <- c("year", "electricity")
 by_construct_emissum_df <- func_emissum(by_construct_nrgsum_df, emisfac_df)
 
+## Energy intensity ----
+by_construct_nrgintst <- 
+  func_nrg_intst(by_construct_nrgsum_df, by_construct_act, "construct")
+
 
 # Transportation ----
+# 问题：轨道交通能耗呢？
 trans_subsector <- c("常规公交", "快速公交", "出租车", "农村客车", 
                      "摩托车", "轿车", 
                      "轻型客车", "大型客车", 
@@ -433,6 +441,11 @@ by_ori_gasuser$gas <- by_ori_gasuser$gas/10000
 # 合并成活动水平数据框
 by_household_act <- 
   func_merge_2(list(by_ori_household, by_ori_lpguser, by_ori_gasuser))
+# 查看燃气用户比例变化
+by_household_ori_users <- 
+  func_nrg_intst(by_household_act[c("year", "lpg", "gas")], 
+                 by_household_act, "household")
+
 
 ## Consumption and emission ----
 by_household_nrgsum_ls <- vector("list", length(household_subsector))
@@ -455,7 +468,7 @@ by_household_emissum_df <-
   func_emissum(by_household_nrgsum_df, emisfac_df)
 
 ## Energy intensity ----
-by_household_nrgsum_ls <- 
+by_household_nrgintst_ls <- 
   func_nrg_intst_ls(by_household_nrgsum_ls, by_household_act)
 
 
@@ -463,9 +476,10 @@ by_household_nrgsum_ls <-
 # Power generation ----
 ## Activity level ----
 # 合并需求端能耗
-demand_nrgsum_df <- func_ls2df(list(trans_nrgsum_df, ind_nrgsum_df, 
-                                    com_nrgsum_df, other_nrgsum_df))
-demand_nrgsum_df <- demand_nrgsum_df[c("year", global_nrg_class)]
+demand_nrgsum_df <- func_ls2df(list(by_agriculture_nrgsum_df, ind_nrgsum_df, 
+                                    by_construct_nrgsum_df, 
+                                    trans_nrgsum_df, 
+                                    com_nrgsum_df, by_household_nrgsum_df))
 # 读取本地发电量数据
 tfres_act <- func_read_trans("2I4DKY2A", "全市发电量")
 # 构建数据框：用电量，能源行业用电量，本地发电量，外调电量
@@ -499,9 +513,22 @@ res_emissum <- func_cross(tfres_act[c("year", "importelec")],
 names(res_emissum)[2] <- "co2"
 
 # RESULT ----
-# Emission ----
+# 总能耗
+total_nrgsum_df <- func_ls2df(list(by_agriculture_nrgsum_df, ind_nrgsum_df, 
+                                   by_construct_nrgsum_df, 
+                                   trans_nrgsum_df, 
+                                   com_nrgsum_df, by_household_nrgsum_df, 
+                                   tf_nrgsum_df))
+total_nrgsum_ce_df <- func_toce(total_nrgsum_df)
+rowSums(total_nrgsum_ce_df[names(total_nrgsum_ce_df) %in% "year" == FALSE])
+
+# 总排放
+demand_emissum_df <- 
+  func_ls2df(list(by_agriculture_emissum_df, ind_emissum_df, 
+                  by_construct_emissum_df, trans_emissum_df, 
+                  com_emissum_df, by_household_emissum_df))
 total_emissum_df <- 
   func_ls2df(list(demand_emissum_df, tf_emissum, 
                   res_emissum))
-
+plot(total_emissum_df$year, total_emissum_df$co2)
 
