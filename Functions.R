@@ -584,7 +584,7 @@ func_ls2df <- function(ls) {
 # 提供两种作图风格：“base”为基础作图，“ggplot”为高级作图
 func_history_project <- 
   function(var_his, name_his, var_proj, name_proj, style = "base", 
-           xlab = "year", ylab = name_proj) {
+           xlab = "year", ylab = name_proj, main = NULL) {
   var_his <- var_his[, c("year", name_his)]
   var_proj <- var_proj[, c("year", name_proj)]
   var_his$attr <- "history"
@@ -603,7 +603,8 @@ func_history_project <-
     legend_df <- data.frame(attr = c("history", "project"), 
                             color = c("blue", "red"))
     plot(total_df$year, total_df[, name_proj], 
-         xlab = xlab, ylab = ylab, col = total_df$color)
+         xlab = xlab, ylab = ylab, main = main, 
+         col = total_df$color)
     #legend("topleft", legend = legend_df$attr, pch = 1, col = legend_df$color)
     plot_data <- recordPlot()
   } else {
