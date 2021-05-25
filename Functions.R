@@ -302,6 +302,15 @@ func_interp_3 <- function(year, scale, base, name_value = "value") {
   total_df
 }
 
+# 阶梯式插值函数
+func_stage <- function(year, value) {
+  total_df <- data.frame(year = c(year[1]: year[length(year)]))
+  for (i in c(1: length(year))) {
+    total_df$value[total_df$year >= year[i]] <- value[i]
+  }
+  total_df
+}
+
 ## 预测函数：基于增长率
 func_rate <- function(baseyear, basevalue, rate_df) {
   names(rate_df) <- c("year", "rate")
@@ -341,13 +350,14 @@ func_linear <- function(df_history, col_dependent, startyear, endyear) {
 
 ## 转化能源类型
 func_alter <- function(nrg_in, name_in, name_out) {
+  # 输入折标煤系数
   factors <- 
     data.frame(nrg = c("coal", "coalproduct", 
                        "gasoline", "diesel", "kerosene", "residual", "lpg", 
                        "gas", "electricity"), 
                factor = c(0.7143, 0.6072, 
                           1.4714, 1.4571, 1.4714, 1.4286, 1.7143, 
-                          0.133, 0.01229))
+                          13.3, 1.229))
   alter_factor <- factors$factor[which(factors$nrg == name_in)] / 
     factors$factor[which(factors$nrg == name_out)]
   nrg_out <- nrg_in * alter_factor
