@@ -303,11 +303,12 @@ func_interp_3 <- function(year, scale, base, name_value = "value") {
 }
 
 # 阶梯式插值函数
-func_stage <- function(year, value) {
+func_stage <- function(year, value, name_value = "value") {
   total_df <- data.frame(year = c(year[1]: year[length(year)]))
   for (i in c(1: length(year))) {
     total_df$value[total_df$year >= year[i]] <- value[i]
   }
+  names(total_df)[2] <- name_value
   total_df
 }
 
