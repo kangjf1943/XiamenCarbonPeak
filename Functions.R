@@ -275,7 +275,7 @@ func_interp_2 <- function(year, value, name_value = "value") {
     }
   }
   names(total_df)[2] <- name_value
-  # plot(total_df$year, total_df[, name_value])
+  plot(total_df$year, total_df[, name_value])
   total_df
 }
 
@@ -694,61 +694,61 @@ func_datacomp <- function(var_1, name_source_1, var_2, name_source_2, name_comp)
 
 
 
-## 考虑废弃的函数
-## 计算乘积：可能跟上面的函数重复了 - 废弃？
+# # 考虑废弃的函数
+# # 计算乘积：可能跟上面的函数重复了 - 废弃？
 # func_merge_product <- function(var_1, name_1, var_2, name_2) {
 #   total <- merge(var_1, var_2, by = "year")
-#   product <- data.frame("year" = total$year, 
+#   product <- data.frame("year" = total$year,
 #                         "Rate" = total[, name_1] * total[, name_2])
 #   plot(x = product$year, y = product$Rate)
 #   product
 # }
-
-## 合并2个数据框，并且保留所有观察 - 废弃？
-# func_merge <- function(x, y) {
-#   merge(x, y, by = "year", all = TRUE)
+# 
+# ## 合并2个数据框，并且保留所有观察 - 废弃？
+# # func_merge <- function(x, y) {
+# #   merge(x, y, by = "year", all = TRUE)
+# # }
+# 
+# ## 旧版插值函数 - 废弃？
+# func_interp <- function(mydata) {
+#   total_df <- data.frame(year = c(2005:2050))
+#   for (j in c(1:(nrow(mydata) - 1))) {
+#     start_year <- mydata$year[j]
+#     end_year <- mydata$year[j + 1]
+#     start_value <- mydata$value[which(mydata$year == start_year)]
+#     end_value <- mydata$value[which(mydata$year == end_year)]
+#     for (i in seq(from = start_year, to = end_year, by = 1)) {
+#       total_df$value[which(total_df$year == i)] <- 
+#         start_value + 
+#         (end_value - start_value) * (i - start_year) /
+#         (end_year - start_year)
+#     }
+#   }
+#   plot(total_df$year, total_df$value)
+#   total_df
 # }
-
-## 旧版插值函数 - 废弃？
-func_interp <- function(mydata) {
-  total_df <- data.frame(year = c(2005:2050))
-  for (j in c(1:(nrow(mydata) - 1))) {
-    start_year <- mydata$year[j]
-    end_year <- mydata$year[j + 1]
-    start_value <- mydata$value[which(mydata$year == start_year)]
-    end_value <- mydata$value[which(mydata$year == end_year)]
-    for (i in seq(from = start_year, to = end_year, by = 1)) {
-      total_df$value[which(total_df$year == i)] <- 
-        start_value + 
-        (end_value - start_value) * (i - start_year) /
-        (end_year - start_year)
-    }
-  }
-  plot(total_df$year, total_df$value)
-  total_df
-}
-
-## 生成预测数据的函数-废弃？
-func_proj <- function(input_ls, itemnames, startyear = 2005, endyear = 2050) {
-  out_df <- data.frame(year = c(startyear: endyear))
-  for (i in c(1:length(itemnames))) {
-    out_df[, itemnames[i]] <- func_interp(input_ls[[i]])$value
-  }
-  out_df
-}
-
-## 结果计算函数-废弃？
-func_result <- function(var_aclevel, var_int) {
-  total_df <- merge(var_aclevel, var_int, by = "year", all.x = TRUE)
-  total_df$value <- total_df[, 1] * total_df[, 2]
-  plot(total_df$value)
-  total_df
-}
-
-## 临时测试函数
-func_test <- function(x, y) {
-  print(x[1])
-  print(x[1]/y > 0.8 & x[1]/y < 1.2)
-  print(min(x)/y)
-  print(max(x)/y)
-}
+# 
+# ## 生成预测数据的函数-废弃？
+# func_proj <- function(input_ls, itemnames, startyear = 2005, endyear = 2050) {
+#   out_df <- data.frame(year = c(startyear: endyear))
+#   for (i in c(1:length(itemnames))) {
+#     out_df[, itemnames[i]] <- func_interp(input_ls[[i]])$value
+#   }
+#   out_df
+# }
+# 
+# ## 结果计算函数-废弃？
+# func_result <- function(var_aclevel, var_int) {
+#   total_df <- merge(var_aclevel, var_int, by = "year", all.x = TRUE)
+#   total_df$value <- total_df[, 1] * total_df[, 2]
+#   plot(total_df$value)
+#   total_df
+# }
+# 
+# ## 临时测试函数
+# func_test <- function(x, y) {
+#   print(x[1])
+#   print(x[1]/y > 0.8 & x[1]/y < 1.2)
+#   print(min(x)/y)
+#   print(max(x)/y)
+# }
