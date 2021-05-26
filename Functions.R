@@ -650,6 +650,13 @@ func_history_project_ls <- function(ls_his, ls_proj) {
   }
 }
 
+# 查看数据框中百分比的变化
+func_propplot <- function(in_df) {
+  in_df_long <- melt(in_df, id = "year")
+  ggplot(in_df_long) + 
+    geom_bar(aes(year, value, fill = variable), stat = "identity")
+}
+
 ## 查看数据框中不同数据的变化趋势
 # 数据框版本
 func_show_trend <- function(var_df, commontitle = NULL) {
