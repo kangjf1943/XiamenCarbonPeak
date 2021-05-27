@@ -303,6 +303,61 @@ func_interp_3 <- function(year, scale, base, name_value = "value") {
   total_df
 }
 
+## 平滑插值函数
+func_smooth <- function(year, value) {
+  # 步骤1：拆分成几段并计算每段斜率
+  # 假设第一个斜率为0，方便后面比较
+  ls_slop <- vector("list")
+  ls_slop[[1]] <- 0
+  for (i in c(2: length(year))) {
+    ls_slop[[i]] <- 
+      (value[i] - value[i-1])/(year[i] - year[i-1])
+  }
+  # 步骤2：构建级数
+  ls_series_sub <- vector("list")
+  ls_series <- vector("list")
+  for (i in c(1: (length(ls_slop)-1))) {
+    # 如果后一段比当前段斜率小，则级数顺序为正，曲线为凸
+    if (ls_slop[[i+1]] < ls_slop[[i]]) {
+      ls_series_sub[[i]] <- 
+        c((year[i+1] - year[i] -1): 
+            (2*year[i+1] - 2*year[i] -3))
+    } else {
+      # 如果后一段比前一段斜率大，则级数顺序为负
+      ls_series_sub[[i]] <- 
+        c((2*year[i+1] - 2*year[i] -3): 
+            (year[i+1] - year[i] -1))
+    }
+    ls_series[[i]] <- 1/ls_series_sub[[i]]
+  }
+  # 步骤3：计算差值
+  # 第一个差值为0
+  ls_diff <- vector("list")
+  ls_diff[[1]] <- 0
+  for (i in c(2: length(year))) {
+    ls_diff[[i]] <- 
+      value[i] - value[i-1]
+  }
+  # 步骤4：插值
+  ls_out <- vector("list")
+  for (i in c(1:length(year))) {
+    ls_out[[i]] <- value[i]
+  }
+  for (i in c(1:(length(year)-1))) {
+    for (j in c(1: length(ls_series[[i]]))) {
+      ls_out[[i]] <- 
+        c(ls_out[[i]],
+          tail(ls_out[[i]], 1) + 
+            ls_diff[[i+1]] * ls_series[[i]][j])
+    }
+  }
+  ls_out
+  df_out <- data.frame(year = c(year[1]:tail(year, 1)), 
+                       value = Reduce(c, ls_out))
+  plot(df_out$year, df_out$value)
+  df_out
+}
+
 # 阶梯式插值函数
 func_stage <- function(year, value, name_value = "value") {
   total_df <- data.frame(year = c(year[1]: year[length(year)]))
