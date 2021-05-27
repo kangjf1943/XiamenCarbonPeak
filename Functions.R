@@ -105,11 +105,12 @@ func_ls_transition <- function(ls_ori) {
 
 ## 将计算结果统一到一个表头下的函数
 func_supple_colnames <- function(var_output, account_names){
+  # 对于原本没有的列，填充为0
   supple_colnames <- account_names[account_names %in% names(var_output) == FALSE]
   for (i in supple_colnames) {
-    var_output[, i] <- ""
+    var_output[, i] <- 0
   }
-  var_output[is.na(var_output)] <- ""
+  # 重新排列
   var_output[, c(account_names, 
                  names(var_output)[names(var_output) %in% account_names == FALSE])]
 }
@@ -137,7 +138,7 @@ func_lastone <- function(numbers) {
   # 取最后一个值
   numbers <- tail(numbers, 1)
   if (length(numbers) == 0) {
-    numbers <- NA
+    numbers <- 0
   }
   numbers
 }
@@ -160,7 +161,7 @@ func_looknote <- function(data) {
     notes <- c(notes, note)
   }
   notes_df <- data.frame(colnames = names(data), note = notes)
-  print(notes_df)
+  notes_df
 }
 # 列表版
 func_looknote_ls <- function(var_ls) {
@@ -327,6 +328,14 @@ func_rate <- function(baseyear, basevalue, rate_df) {
   }
   # plot(proj_df$value)
   proj_df
+}
+
+## 补足比例数据
+# 输入：时间序列数据
+func_saturate <- function(in_df, name_new) {
+  in_df_noyear <- in_df[names(in_df) %in% "year" == FALSE]
+  in_df[, name_new] <- 100 - rowSums(in_df_noyear)
+  in_df
 }
 
 ## 根据历史趋势线性外推未来趋势的函数
@@ -502,7 +511,7 @@ func_emissum <- function(nrgsum_df, emisfac_df) {
               function(x) {
                 x * emisfac_df[emisfac_df[, "year"] == i, nrg_scope]})
       emissum_ls[[i]] <- Reduce(rbind, emissum_subls)
-      emissum_df[, i] <- rowSums(emissum_ls[[i]], na.rm = TRUE)
+      emissum_df[, i] <- rowSums(emissum_ls[[i]])
     }
   }
   cat("Info: ", "\n", 
@@ -567,7 +576,6 @@ func_nrgsum_ls_to_df <- function(nrgsum_ls) {
   }
 }
 # 升级版
-# 考虑：
 func_ls2df <- function(ls) {
   # 生成目标数据框的列名
   names_column <- character(0)
@@ -585,8 +593,7 @@ func_ls2df <- function(ls) {
   # 将各列转化为数字类型
   df[names_column] <- lapply(df[names_column], as.numeric)
   # 按照年份合并
-  df <- aggregate(df[, names_column], by = list(df$year), 
-                  function(x) {sum(x, na.rm = TRUE)})
+  df <- aggregate(df[, names_column], by = list(df$year), sum)
   names(df)[1] <- "year"
   df
 }
