@@ -511,6 +511,7 @@ func_nrg_intst <- function(df_nrg_sum, df_actlvl, name) {
 # 输入列表的长度应等于数据框列数减1
 # 列表中数据框的排列顺序应和数据框严格对应
 # 计算结果应为一个列表
+# 问题：生成的能耗强度列表继承活动水平的列名可能未必好，虽然通常活动水平是唯一的
 func_nrg_intst_ls <- function(ls_nrgsum, df_actlvl) {
   ls_nrgintst <- vector("list", length(ls_nrgsum))
   for (i in c(1: length(ls_nrgsum))) {
