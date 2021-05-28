@@ -407,7 +407,11 @@ func_rate <- function(baseyear, basevalue, rate_df) {
 func_saturate <- function(in_df, name_new) {
   in_df_noyear <- in_df[names(in_df) %in% "year" == FALSE]
   in_df[, name_new] <- 100 - rowSums(in_df_noyear)
-  in_df
+  if (sum(in_df[, name_new] < 0) > 0) {
+    print("warning: less then 0%.")
+  } else {
+    in_df
+  }
 }
 
 ## 根据历史趋势线性外推未来趋势的函数
