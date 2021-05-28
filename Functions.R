@@ -1,6 +1,7 @@
 ## 载入包和设置
 library(openxlsx)
 library(ggplot2)
+library(ggthemes)
 library(reshape2)
 library(ggpubr)
 Sys.setlocale("LC_ALL", "chinese")
@@ -298,13 +299,13 @@ func_interp_3 <- function(year, scale, base, name_value = "value") {
   }
   names(total_df)[2] <- name_value
   if (sum(is.na(total_df[, name_value])) < nrow(total_df)) {
-    #plot(total_df$year, total_df[, name_value])
+    plot(total_df$year, total_df[, name_value])
   }
   total_df
 }
 
 ## 平滑插值函数
-func_smooth <- function(year, value) {
+func_smooth <- function(year, value, name_value = "value") {
   # 步骤1：拆分成几段并计算每段斜率
   # 假设第一个斜率为0，方便后面比较
   ls_slop <- vector("list")
@@ -355,6 +356,7 @@ func_smooth <- function(year, value) {
   df_out <- data.frame(year = c(year[1]:tail(year, 1)), 
                        value = Reduce(c, ls_out))
   plot(df_out$year, df_out$value)
+  name_value <- name_value
   df_out
 }
 
