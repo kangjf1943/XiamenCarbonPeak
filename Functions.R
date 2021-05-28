@@ -713,6 +713,7 @@ func_history_project <-
 }
 # 两个数据框的每一列
 # 要保证输入两个数据框列数一致
+# 问题：对除了“year”外列名少于3列的会报错
 func_history_project_df <- function(var_his, var_proj, 
                                     commontitle = NULL, basetitle = NULL, 
                                     style = "base") {
