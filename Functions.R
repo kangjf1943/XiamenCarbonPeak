@@ -682,13 +682,13 @@ func_history_project <-
   var_proj <- var_proj[, c("year", name_proj)]
   var_his$attr <- "history"
   var_his$color <- "blue"
-  var_his$cex <- "2"
+  var_his$cex <- 1.5
   var_proj$attr <- "project"
   var_proj$color <- "red"
   var_proj$cex <- 1
   names(var_his)[names(var_his) == name_his] <- name_proj
-  total_df <- rbind(var_his[, c("year", name_proj, "attr", "color")], 
-                    var_proj[, c("year", name_proj, "attr", "color")])
+  total_df <- rbind(var_his[, c("year", name_proj, "attr", "color", "cex")], 
+                    var_proj[, c("year", name_proj, "attr", "color", "cex")])
   total_df <- total_df[is.na(total_df[, name_proj]) == FALSE, ]
   # 将作图数据强制转化为整数，否则可能会出现坐标轴重叠
   total_df$year <- as.integer(total_df$year)
