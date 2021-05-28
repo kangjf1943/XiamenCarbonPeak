@@ -30,6 +30,7 @@ func_read_data <- function(name_subdir, order_sht = 1) {
 }
 
 # 读取并转化带4列文件头的Excel数据
+# 问题：如果Excel数据中“数据来源”有数据，而其他无数据，就会导致列明出现“NA”
 func_read_trans <- function(name_subdir, order_sht = 1) {
   data_ori <- func_read_data(name_subdir, order_sht = order_sht)
   # 删去前两列，即数据来源和数据备注
@@ -732,8 +733,10 @@ func_history_project_df <- function(var_his, var_proj,
       text(line2user(line=mean(par("mar")[c(2, 4)]), side=2), 
            line2user(line=2, side=3), basetitle, xpd=NA, cex=2, font=2)
     }
-    for (i in names_varproj[3:length(names_varproj)]) {
-      func_history_project(var_his, i, var_proj, i)
+    if (length(var_proj) > 2) {
+      for (i in names_varproj[3:length(names_varproj)]) {
+        func_history_project(var_his, i, var_proj, i)
+      }
     }
   } else {
     plot_ls <- vector("list")
