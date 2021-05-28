@@ -6,6 +6,18 @@ library(reshape2)
 library(ggpubr)
 Sys.setlocale("LC_ALL", "chinese")
 
+## 通用函数
+line2user <- function(line, side) {
+  lh <- par('cin')[2] * par('cex') * par('lheight')
+  x_off <- diff(grconvertX(0:1, 'inches', 'user'))
+  y_off <- diff(grconvertY(0:1, 'inches', 'user'))
+  switch(side,
+         `1` = par('usr')[3] - line * y_off * lh,
+         `2` = par('usr')[1] - line * x_off * lh,
+         `3` = par('usr')[4] + line * y_off * lh,
+         `4` = par('usr')[2] + line * x_off * lh,
+         stop("side must be 1, 2, 3, or 4", call.=FALSE))
+}
 
 ## 数据读取函数
 # 来自Zotero的普通Excel数据
@@ -16,6 +28,7 @@ func_read_data <- function(name_subdir, order_sht = 1) {
   data <- read.xlsx(path, sheet = order_sht)
   data
 }
+
 # 读取并转化带4列文件头的Excel数据
 func_read_trans <- function(name_subdir, order_sht = 1) {
   data_ori <- func_read_data(name_subdir, order_sht = order_sht)
@@ -127,9 +140,11 @@ func_peakyear <- function(nrg_df, name_peak) {
 }
 
 ## 取一列数据最后一个有效数值
-func_lastone <- function(numbers) {
-  # 去除零值
-  numbers <- numbers[numbers != 0]
+func_lastone <- function(numbers, zero.rm = TRUE) {
+  # 是否去除零值
+  if (zero.rm) {
+    numbers <- numbers[numbers != 0]
+  }
   # 去除NA
   numbers <- numbers[is.na(numbers) == FALSE]
   # 去除NaN
@@ -681,6 +696,7 @@ func_history_project <-
     legend_df <- data.frame(attr = c("history", "project"), 
                             color = c("blue", "red"))
     plot(total_df$year, total_df[, name_proj], 
+         ylim = c(0, max(total_df[, name_proj])), 
          xlab = xlab, ylab = ylab, main = main, 
          col = total_df$color)
     #legend("topleft", legend = legend_df$attr, pch = 1, col = legend_df$color)
@@ -695,18 +711,26 @@ func_history_project <-
 # 两个数据框的每一列
 # 要保证输入两个数据框列数一致
 func_history_project_df <- function(var_his, var_proj, 
-                                    commontitle = NULL) {
+                                    commontitle = NULL, 
+                                    style = "base") {
   names_varhis <- names(var_his)[names(var_his) %in% "year" == FALSE]
   names_varproj <- names(var_proj)[names(var_proj) %in% "year" == FALSE]
-  plot_ls <- vector("list")
-  for (i in c(1: length(names_varhis))) {
-    plot_ls[[i]] <- invisible(func_history_project(var_his, names_varhis[i], 
-                                                   var_proj, names_varproj[i]))
+  if (style == "base") {
+    par(mfrow = c(4, 2))
+    for (i in names_varproj) {
+      func_history_project(var_his, i, var_proj, i)
+    }
+  } else {
+    plot_ls <- vector("list")
+    for (i in c(1: length(names_varhis))) {
+      plot_ls[[i]] <- invisible(func_history_project(var_his, names_varhis[i], 
+                                                     var_proj, names_varproj[i]))
+    }
+    plot_arrange <- invisible(ggarrange(plotlist = plot_ls, 
+                                        nrow = 3, ncol = 2, 
+                                        common.legend = TRUE, labels = commontitle))
+    plot_arrange
   }
-  plot_arrange <- invisible(ggarrange(plotlist = plot_ls, 
-                                      nrow = 3, ncol = 2, 
-                                      common.legend = TRUE, labels = commontitle))
-  plot_arrange
 }
 # 两个列表的版本
 func_history_project_ls <- function(ls_his, ls_proj) {
