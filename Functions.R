@@ -432,6 +432,8 @@ func_alter <- function(nrg_in, name_in, name_out) {
 }
 
 ## 转化成标准煤
+# 输入能源数据框单位：吨/万立方米/百万千焦/万千瓦时
+# 输出单位：吨标准煤
 func_toce <- function(nrg_df) {
   out_df <- data.frame(year = nrg_df[, "year"])
   factors <- 
@@ -440,7 +442,7 @@ func_toce <- function(nrg_df) {
                        "gas", "electricity"), 
                factor = c(0.7143, 0.6072, 
                           1.4714, 1.4571, 1.4714, 1.4286, 1.7143, 
-                          0.133, 0.01229))
+                          13.3, 1.229))
   # 提取共同的列名
   name_nrg <- names(nrg_df)[names(nrg_df) %in% "year" == FALSE]
   name_factor <- factors$nrg
