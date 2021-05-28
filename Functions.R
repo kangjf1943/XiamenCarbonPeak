@@ -682,8 +682,10 @@ func_history_project <-
   var_proj <- var_proj[, c("year", name_proj)]
   var_his$attr <- "history"
   var_his$color <- "blue"
+  var_his$cex <- "2"
   var_proj$attr <- "project"
   var_proj$color <- "red"
+  var_proj$cex <- 1
   names(var_his)[names(var_his) == name_his] <- name_proj
   total_df <- rbind(var_his[, c("year", name_proj, "attr", "color")], 
                     var_proj[, c("year", name_proj, "attr", "color")])
@@ -698,7 +700,8 @@ func_history_project <-
     plot(total_df$year, total_df[, name_proj], 
          ylim = c(0, max(total_df[, name_proj])), 
          xlab = xlab, ylab = ylab, main = main, 
-         col = total_df$color)
+         col = total_df$color, 
+         cex = total_df$cex)
     #legend("topleft", legend = legend_df$attr, pch = 1, col = legend_df$color)
     plot_data <- recordPlot()
   } else {
@@ -711,13 +714,20 @@ func_history_project <-
 # 两个数据框的每一列
 # 要保证输入两个数据框列数一致
 func_history_project_df <- function(var_his, var_proj, 
-                                    commontitle = NULL, 
+                                    commontitle = NULL, basetitle = NULL, 
                                     style = "base") {
   names_varhis <- names(var_his)[names(var_his) %in% "year" == FALSE]
   names_varproj <- names(var_proj)[names(var_proj) %in% "year" == FALSE]
   if (style == "base") {
     par(mfrow = c(4, 2))
-    for (i in names_varproj) {
+    for (i in names_varproj[1:2]) {
+      func_history_project(var_his, i, var_proj, i)
+    }
+    if (is.null(basetitle) == FALSE) {
+      text(line2user(line=mean(par("mar")[c(2, 4)]), side=2), 
+           line2user(line=2, side=3), basetitle, xpd=NA, cex=2, font=2)
+    }
+    for (i in names_varproj[3:length(names_varproj)]) {
       func_history_project(var_his, i, var_proj, i)
     }
   } else {
@@ -736,7 +746,8 @@ func_history_project_df <- function(var_his, var_proj,
 func_history_project_ls <- function(ls_his, ls_proj) {
   for (i in c(1: length(ls_his))) {
     print(func_history_project_df(ls_his[[i]], ls_proj[[i]], 
-                                  commontitle = names(ls_his[i])))
+                                  commontitle = names(ls_his[i]), 
+                                  basetitle = names(ls_his[i])))
   }
 }
 
