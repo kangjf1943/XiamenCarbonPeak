@@ -6,18 +6,6 @@ library(reshape2)
 library(ggpubr)
 Sys.setlocale("LC_ALL", "chinese")
 
-## 通用函数
-line2user <- function(line, side) {
-  lh <- par('cin')[2] * par('cex') * par('lheight')
-  x_off <- diff(grconvertX(0:1, 'inches', 'user'))
-  y_off <- diff(grconvertY(0:1, 'inches', 'user'))
-  switch(side,
-         `1` = par('usr')[3] - line * y_off * lh,
-         `2` = par('usr')[1] - line * x_off * lh,
-         `3` = par('usr')[4] + line * y_off * lh,
-         `4` = par('usr')[2] + line * x_off * lh,
-         stop("side must be 1, 2, 3, or 4", call.=FALSE))
-}
 
 ## 数据读取函数
 # 来自Zotero的普通Excel数据
@@ -720,6 +708,8 @@ func_history_project <-
 # 两个数据框的每一列
 # 要保证输入两个数据框列数一致
 # 问题：对除了“year”外列名少于3列的会报错
+var_his <- by_com_nrgintst_ls[[2]]
+var_proj <- pln_com_nrgintst_ls[[2]]
 func_history_project_df <- function(var_his, var_proj, 
                                     commontitle = NULL, basetitle = NULL, 
                                     style = "base") {
@@ -727,17 +717,15 @@ func_history_project_df <- function(var_his, var_proj,
   names_varproj <- names(var_proj)[names(var_proj) %in% "year" == FALSE]
   if (style == "base") {
     par(mfrow = c(4, 2))
-    for (i in names_varproj[1:2]) {
-      func_history_project(var_his, i, var_proj, i)
-    }
+    # 小图是否共享标题
     if (is.null(basetitle) == FALSE) {
-      text(line2user(line=mean(par("mar")[c(2, 4)]), side=2), 
-           line2user(line=2, side=3), basetitle, xpd=NA, cex=2, font=2)
+      plot.new()
+      text(0.5, 0.5, basetitle)
+      plot.new()
     }
-    if (length(var_proj) > 2) {
-      for (i in names_varproj[3:length(names_varproj)]) {
-        func_history_project(var_his, i, var_proj, i)
-      }
+    # 画小图
+    for (i in names_varproj[1:length(names_varproj)]) {
+      func_history_project(var_his, i, var_proj, i)
     }
   } else {
     plot_ls <- vector("list")
