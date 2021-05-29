@@ -90,7 +90,8 @@ global_trans_subsector <- c("常规公交", "快速公交", "出租车", "农村
 global_com_subsector <- c("electricity", "lpg_and_gas")
 # 生活子部门
 global_household_subsector <- 
-  c("household_elec", "household_lpg", "household_gas")
+  c("household_coal_elec", "household_lpg", "household_gas")
+
 
 ## Factors ----
 # 构建排放因子列表
@@ -117,34 +118,25 @@ prj_global_gdp <-
                             value = c(6.00, 6.00, 5.00, 4.00, 3.00, 2.00)))
 names(prj_global_gdp)[2] <- "GDP"
 comment(prj_global_gdp$GDP) <- "万元当年价"
-# 各产业所占比重预测
+# 预测各产业所占比重
 prj_global_gdp$second_prop <- 
   func_interp_2(year = c(2019, 2025, 2030, 2035, 2060), 
                 value = c(global_gdp$second_prop[global_gdp$year == 2019], 
-                          30, 26, 23, 15))$value
+                          32, 26, 23, 15))$value
 prj_global_gdp$com_prop <- 
   func_interp_2(year = c(2019, 2025, 2030, 2035, 2060), 
                 value = c(global_gdp$com_prop[global_gdp$year == 2019], 
-                          69.70, 73.75, 76.80, 84.8))$value
+                          67.7, 73.7, 76.8, 84.8))$value
 prj_global_gdp$agri_prop <- 
-  100 - prj_global_gdp$second_prop - prj_global_gdp$com_prop
-prj_global_gdp$ind_prop <- 
-  func_interp_2(
-    year = c(2019, 2025, 2030, 2035, 2060), 
-    value = c(global_gdp$ind_prop[global_gdp$year == 2019], 
-              prj_global_gdp$second_prop[prj_global_gdp$year == 2025]*0.76, 
-              prj_global_gdp$second_prop[prj_global_gdp$year == 2030]*0.76, 
-              prj_global_gdp$second_prop[prj_global_gdp$year == 2035]*0.76, 
-              prj_global_gdp$second_prop[prj_global_gdp$year == 2060]*0.76))$value
-
+  func_saturate(prj_global_gdp[c("year", "second_prop", "com_prop")], 
+                "agri_prop")$agri_prop
 prj_global_gdp$const_prop <- 
   func_interp_2(
-    year = c(2019, 2025, 2030, 2035, 2060), 
-    value = c(global_gdp$const_prop[global_gdp$year == 2019], 
-              prj_global_gdp$second_prop[prj_global_gdp$year == 2025]*0.24, 
-              prj_global_gdp$second_prop[prj_global_gdp$year == 2030]*0.24, 
-              prj_global_gdp$second_prop[prj_global_gdp$year == 2035]*0.24, 
-              prj_global_gdp$second_prop[prj_global_gdp$year == 2060]*0.24))$value
+    year = c(2019, 2060), 
+    value = c(global_gdp$const_prop[global_gdp$year == 2019], 15))$value
+prj_global_gdp$ind_prop <- 
+  func_saturate(prj_global_gdp[c("agri_prop", "const_prop", "com_prop")], 
+                "ind_prop")$ind_prop
 
 # 预测各行业GDP
 prj_global_gdp$agri_gdp <- prj_global_gdp$GDP * prj_global_gdp$agri_prop/100
@@ -152,6 +144,9 @@ prj_global_gdp$second_gdp <- prj_global_gdp$GDP * prj_global_gdp$second_prop/100
 prj_global_gdp$ind_gdp <- prj_global_gdp$GDP * prj_global_gdp$ind_prop/100
 prj_global_gdp$const_gdp <- prj_global_gdp$GDP * prj_global_gdp$const_prop/100
 prj_global_gdp$com_gdp <- prj_global_gdp$GDP * prj_global_gdp$com_prop/100
+
+# Test
+# func_history_project_df(global_gdp, prj_global_gdp)
 
 ## Population ----
 global_population <- func_read_trans("2VHEE264")
@@ -174,6 +169,7 @@ prj_global_population <- func_interp_2(
 prj_global_population$household <- 
   prj_global_population$population / func_lastone(global_population$household_size)
 comment(prj_global_population$household) <- "万户"
+
 
 # DEMAND ----
 # Agriculture ----
@@ -270,18 +266,20 @@ by_ind_emissum_df <- func_emissum(by_ind_nrgsum_df, global_emisfac_df)
 # Construction ----
 ## Activity level ----
 by_construct_act <- global_gdp[, c("year", "##建筑业")]
-names(by_construct_act)[2] <- "construct"
+names(by_construct_act)[2] <- "construct_gdp"
 
 ## Consumption and emission ----
+# 读取《厦门市电力数据》
 by_construct_nrgsum_df <- 
   func_read_trans(
     "2I4DKY2A", "全市电力消费情况表分具体行业")[, c("year", "建筑业")]
 names(by_construct_nrgsum_df) <- c("year", "electricity")
-by_construct_emissum_df <- func_emissum(by_construct_nrgsum_df, global_emisfac_df)
+by_construct_emissum_df <- 
+  func_emissum(by_construct_nrgsum_df, global_emisfac_df)
 
 ## Energy intensity ----
 by_construct_nrgintst <- 
-  func_nrg_intst(by_construct_nrgsum_df, by_construct_act, "construct")
+  func_nrg_intst(by_construct_nrgsum_df, by_construct_act, "construct_gdp")
 
 
 # Transportation ----
@@ -395,25 +393,21 @@ by_trans_nrgintst_ls[global_trans_subsector[13:14]] <-
 by_trans_nrgsum_df <- func_ls2df(by_trans_nrgsum_ls)
 by_trans_emissum_df <- func_emissum(by_trans_nrgsum_df, global_emisfac_df)
 
-## Test ----
-
 
 # Service -----
 ## Activity level ----
 # 服务业从业人口
 by_com_act <- func_read_trans("2VHEE264", "从业人口")
 by_com_act <- by_com_act[, c("year", "第三产业")]
-names(by_com_act)[2] <- "by_com_employee"
+names(by_com_act)[2] <- "com_employee"
 # 补全2015-2019年数据：假设线性外推
-by_com_act[which(by_com_act$year %in% c(2015:2019)), "by_com_employee"] <- 
-  func_linear(by_com_act, "by_com_employee", startyear = 2015, endyear = 2019)$by_com_employee[16:20]
+by_com_act[which(by_com_act$year %in% c(2015:2019)), "com_employee"] <- 
+  func_linear(by_com_act, "com_employee", startyear = 2015, endyear = 2019)$com_employee[16:20]
 # 服务业GDP
-by_com_act$by_com_employee <- by_com_act$by_com_employee/10000
-comment(by_com_act$by_com_employee) <- "万人"
+by_com_act$com_employee <- by_com_act$com_employee/10000
+comment(by_com_act$com_employee) <- "万人"
 by_com_act <- merge(by_com_act, global_gdp[c("year", "#第三产业")], by = "year")
-names(by_com_act)[3] <- "by_com_gdp"
-# 测试
-# func_show_trend(by_com_act)
+names(by_com_act)[3] <- "com_gdp"
 
 ## Consumption and emission ----
 by_com_nrgsum_ls <- vector("list", 2)
@@ -426,18 +420,16 @@ by_com_nrgsum_ls[[2]] <- func_read_trans("HV4JBQTQ")
 names(by_com_nrgsum_ls[[2]])[2:3] <- c("lpg", "gas")
 by_com_nrgsum_ls[[2]]$gas <- by_com_nrgsum_ls[[2]]$gas*10000
 comment(by_com_nrgsum_ls[[2]]$gas) <- "万立方米"
+# 设置由服务业GDP驱动的用电量
+by_com_nrgsum_ls[[2]]$electricity <- 0
+# 生成能耗总量数据框
 by_com_nrgsum_df <- func_ls2df(by_com_nrgsum_ls)
+# 计算排放量
 by_com_emissum_df <- func_emissum(by_com_nrgsum_df, global_emisfac_df)
 
 ## Energy intensity ---- 
 by_com_nrgintst_ls <- func_nrg_intst_ls(by_com_nrgsum_ls, by_com_act)
-
-## Test ----
-# 测试
-# 问题：2015年用气强度比2014年少
-# 问题：清单中P29服务业的汽油从哪里来？
-# func_show_trend_ls(by_com_nrgsum_ls)
-# func_show_trend_ls(by_com_nrgintst_ls)
+names(by_com_nrgintst_ls) <- global_com_subsector
 
 
 # Household ----
@@ -457,19 +449,31 @@ by_ori_gasuser$gas <- by_ori_gasuser$gas/10000
 # 合并成活动水平数据框
 by_household_act <- 
   func_merge_2(list(by_ori_household, by_ori_lpguser, by_ori_gasuser))
+# 通过线性拟合补全2016-2019年燃气用户数据
+by_household_act$lpg[by_household_act$year > 2015] <- 
+  func_linear(by_household_act, "lpg", startyear = 2016, endyear = 2019)$lpg[
+    func_linear(by_household_act, "lpg", startyear = 2016, endyear = 2019)$color == 
+      "predicted"]
+by_household_act$gas[by_household_act$year > 2015] <- 
+  func_linear(by_household_act, "gas", startyear = 2016, endyear = 2019)$gas[
+    func_linear(by_household_act, "gas", startyear = 2016, endyear = 2019)$color == 
+      "predicted"]
 # 查看燃气用户比例变化
-by_household_ori_users <- 
+by_household_ori_users_prop <- 
   func_nrg_intst(by_household_act[c("year", "lpg", "gas")], 
                  by_household_act, "household")
-
 
 ## Consumption and emission ----
 by_household_nrgsum_ls <- vector("list", length(global_household_subsector))
 names(by_household_nrgsum_ls) <- global_household_subsector
-# household_elec
+# household_coal_elec
+# 电力部分
 by_household_nrgsum_ls[[1]] <- 
   func_read_trans("2I4DKY2A")[, c("year", "#城乡居民生活用电")]
 names(by_household_nrgsum_ls[[1]]) <- c("year", "electricity")
+# 煤炭部分
+by_household_nrgsum_ls[[1]]$coal <- func_read_trans("H4REI5RK")$"居民生活用煤"
+names(by_household_nrgsum_ls[[1]])[3] <- "coal"
 # household_lpg
 by_household_nrgsum_ls[[2]] <- 
   func_read_trans("HHKVE85Q", "瓶装液化气")[, c("year", "家庭")]
@@ -482,7 +486,6 @@ names(by_household_nrgsum_ls[[3]]) <- c("year", "gas")
 by_household_nrgsum_df <- func_ls2df(by_household_nrgsum_ls)
 by_household_emissum_df <- 
   func_emissum(by_household_nrgsum_df, global_emisfac_df)
-# 问题：清单中居民生活的煤炭从哪里来？
 
 ## Energy intensity ----
 by_household_nrgintst_ls <- 
@@ -528,7 +531,7 @@ comment(by_res_emifac_df$福建省电网平均电力碳排放因子) <-
   "万吨二氧化碳/万千瓦时"
 by_res_emissum <- func_cross(by_tfres_act[c("year", "importelec")], 
                           by_res_emifac_df)
-names(res_emissum)[2] <- "co2"
+names(by_res_emissum)[2] <- "co2"
 
 # RESULT ----
 # 总能耗
