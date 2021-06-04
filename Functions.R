@@ -562,7 +562,7 @@ func_nrg_sum_ls <- function(ls_nrgintst, df_actlvl) {
 
 ## 基于两个数据框计算碳排放的函数
 # 本函数根据列名对应能耗总量和排放因子
-func_emissum <- function(nrgsum_df, emisfac_df) {
+func_emissum <- function(nrgsum_df, emisfac_df, agg = TRUE) {
   emissum_df <- data.frame(year = nrgsum_df[, "year"])
   # 只计算两个数据框共有的能耗类型
   nameori_nrgsum <- names(nrgsum_df)[names(nrgsum_df) %in% "year" == FALSE]
@@ -578,18 +578,12 @@ func_emissum <- function(nrgsum_df, emisfac_df) {
     nrgsum_df <- nrgsum_df[c("year", nrg_scope)]
     emisfac_df <- emisfac_df[c("year", nrg_scope)]
     # 构建一个列表用来暂存结果
-    emissum_ls <- vector("list", nrow(emisfac_df))
-    # 将排放列表各元素命名为各类温室气体
-    names(emissum_ls) <- emisfac_df[, 1]
-    # 对每种温室气体排放进行计算
-    for (i in names(emissum_ls)) {
-      # 先将计算结果存储在另一个列表中，然后合并成数据框
-      emissum_subls <- 
-        apply(nrgsum_df[names(nrgsum_df) %in% "year" == FALSE], 1, 
-              function(x) {
-                x * emisfac_df[emisfac_df[, "year"] == i, nrg_scope]})
-      emissum_ls[[i]] <- Reduce(rbind, emissum_subls)
-      emissum_df[, i] <- rowSums(emissum_ls[[i]])
+    emissum_df_ori <- func_cross(nrgsum_df, emisfac_df, method = "product")
+    if (agg == TRUE) {
+      emissum_df <- data.frame(year = emissum_df_ori$year)
+      emissum_df$co2 <- rowSums(emissum_df_ori[, -1])
+    } else {
+      emissum_df <- emissum_df_ori
     }
   }
   cat("Info: ", "\n", 
