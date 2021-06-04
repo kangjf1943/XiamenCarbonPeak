@@ -393,12 +393,13 @@ func_rate <- function(baseyear, basevalue, rate_df) {
 
 ## 补足比例数据
 # 输入：时间序列数据
-func_saturate <- function(in_df, name_new) {
+func_saturate <- function(in_df, name_new = "value") {
   in_df_noyear <- in_df[names(in_df) %in% "year" == FALSE]
   in_df[, name_new] <- 100 - rowSums(in_df_noyear)
   if (sum(in_df[, name_new] < 0) > 0) {
     print("warning: less then 0%.")
   } else {
+    in_df <- in_df[c("year", name_new)]
     in_df
   }
 }
@@ -429,10 +430,10 @@ func_alter <- function(nrg_in, name_in, name_out) {
   factors <- 
     data.frame(nrg = c("coal", "coalproduct", 
                        "gasoline", "diesel", "kerosene", "residual", "lpg", 
-                       "gas", "electricity"), 
+                       "gas", "electricity", "ce"), 
                factor = c(0.7143, 0.6072, 
                           1.4714, 1.4571, 1.4714, 1.4286, 1.7143, 
-                          13.3, 1.229))
+                          13.3, 1.229, 1))
   alter_factor <- factors$factor[which(factors$nrg == name_in)] / 
     factors$factor[which(factors$nrg == name_out)]
   nrg_out <- nrg_in * alter_factor
@@ -463,6 +464,15 @@ func_toce <- function(nrg_df) {
     out_df[, i] <- nrg_df[, i] * factors$factor[which(factors$nrg == i)]
   }
   out_df
+}
+
+# 计算除年份外的各行之和
+func_rowsums <- function(df, namevalue = "value") {
+  new_df <- data.frame(year = df$year)
+  df <- df[names(df) %in% year == FALSE]
+  new_df$value <- rowSums(df)
+  names(new_df)[2] <- namevalue
+  new_df
 }
 
 # 计算生长率
@@ -670,19 +680,21 @@ func_ls2df <- function(ls) {
 # 比较数据框的两列版本
 # 提供两种作图风格：“base”为基础作图，“ggplot”为高级作图
 func_history_project <- 
-  function(var_his, name_his, var_proj, name_proj, style = "base", 
+  function(var_his, name_his, var_proj, name_proj, style = "ggplot", 
            xlab = "year", ylab = name_proj, main = NULL) {
   var_his <- var_his[, c("year", name_his)]
   var_proj <- var_proj[, c("year", name_proj)]
   var_his$attr <- "history"
   var_his$color <- "blue"
+  var_his$Data <- "历史数据"
   var_his$cex <- 1.5
   var_proj$attr <- "project"
   var_proj$color <- "red"
+  var_proj$Data <- "预测数据"
   var_proj$cex <- 1
   names(var_his)[names(var_his) == name_his] <- name_proj
-  total_df <- rbind(var_his[, c("year", name_proj, "attr", "color", "cex")], 
-                    var_proj[, c("year", name_proj, "attr", "color", "cex")])
+  total_df <- rbind(var_his[, c("year", name_proj, "attr", "color", "cex", "Data")], 
+                    var_proj[, c("year", name_proj, "attr", "color", "cex", "Data")])
   total_df <- total_df[is.na(total_df[, name_proj]) == FALSE, ]
   # 将作图数据强制转化为整数，否则可能会出现坐标轴重叠
   total_df$year <- as.integer(total_df$year)
@@ -699,17 +711,36 @@ func_history_project <-
     #legend("topleft", legend = legend_df$attr, pch = 1, col = legend_df$color)
     plot_data <- recordPlot()
   } else {
-    plot_data <- ggplot(total_df) + 
-      geom_point(aes(year, total_df[, name_proj], color = color), alpha = 0.5, size = 3) +
-      labs(y = name_his)
+    if (style == "ggline") {
+      plot_data <- ggplot(total_df) + 
+        geom_line(aes(year, total_df[, name_proj], color = Data), 
+                  size = 1.5) + 
+        labs(x = "", y = ylab) +
+        theme_bw() + 
+        theme(axis.title = element_text(size = 10))
+    } else {
+      if (style == "ggpoint") {
+        plot_data <- ggplot(total_df) + 
+          geom_point(aes(year, total_df[, name_proj], color = Data), 
+                     size = 1.5) + 
+          labs(x = "", y = ylab) +
+          theme_bw() + 
+          theme(axis.title = element_text(size = 10))
+      } else {
+        plot_data <- ggplot(total_df) + 
+          geom_smooth(aes(year, total_df[, name_proj], color = Data), 
+                      se = FALSE, size = 1.5) + 
+          labs(x = "", y = ylab) +
+          theme_bw() + 
+          theme(axis.title = element_text(size = 10))
+      }
+    }
   }
   plot_data
 }
 # 两个数据框的每一列
 # 要保证输入两个数据框列数一致
 # 问题：对除了“year”外列名少于3列的会报错
-var_his <- by_com_nrgintst_ls[[2]]
-var_proj <- pln_com_nrgintst_ls[[2]]
 func_history_project_df <- function(var_his, var_proj, 
                                     commontitle = NULL, basetitle = NULL, 
                                     style = "base") {
@@ -754,6 +785,56 @@ func_propplot <- function(in_df) {
   ggplot(in_df_long) + 
     geom_bar(aes(year, value, fill = variable), stat = "identity")
 }
+
+# 对比不同情景
+func_scenarios <- 
+  function(var_his, name_his, var_proj, name_proj, style = "ggplot", 
+           xlab = "year", ylab = name_proj, main = NULL) {
+    var_his <- var_his[, c("year", name_his)]
+    var_proj <- var_proj[, c("year", name_proj)]
+    var_his$attr <- "history"
+    var_his$color <- "blue"
+    var_his$Data <- "惯性情景"
+    var_his$cex <- 1.5
+    var_proj$attr <- "project"
+    var_proj$color <- "red"
+    var_proj$Data <- "规划情景"
+    var_proj$cex <- 1
+    names(var_his)[names(var_his) == name_his] <- name_proj
+    total_df <- rbind(var_his[, c("year", name_proj, "attr", "color", "cex", "Data")], 
+                      var_proj[, c("year", name_proj, "attr", "color", "cex", "Data")])
+    total_df <- total_df[is.na(total_df[, name_proj]) == FALSE, ]
+    # 将作图数据强制转化为整数，否则可能会出现坐标轴重叠
+    total_df$year <- as.integer(total_df$year)
+    total_df[, name_proj] <- as.numeric(total_df[, name_proj])
+    # 作图
+    if (style == "ggpoint") {
+      plot_data <- ggplot(total_df) + 
+        geom_point(aes(year, total_df[, name_proj], color = Data), 
+                   size = 1.5) + 
+        labs(x = "", y = ylab) +
+        theme_bw() + 
+        theme(axis.title = element_text(size = 10))
+    } else {
+      if (style == "ggline") {
+        plot_data <- ggplot(total_df) + 
+          geom_line(aes(year, total_df[, name_proj], color = Data), 
+                    size = 1.5) + 
+          labs(x = "", y = ylab) +
+          theme_bw() + 
+          theme(axis.title = element_text(size = 10))
+      } else {
+        plot_data <- ggplot(total_df) + 
+          geom_smooth(aes(year, total_df[, name_proj], color = Data), 
+                      se = FALSE, size = 1.5) + 
+          labs(x = "", y = ylab) +
+          theme_bw() + 
+          theme(axis.title = element_text(size = 10))
+      }
+    }
+    plot_data
+}
+
 
 ## 查看数据框中不同数据的变化趋势
 # 数据框版本

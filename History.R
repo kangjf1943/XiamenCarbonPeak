@@ -304,6 +304,14 @@ by_trans_act <-
   func_merge_2(list(by_trans_act_operation, 
                     by_trans_act_nonoperation, 
                     by_trans_act_water))
+# 假设营运车辆2018-2019年数据为历史数据线性外推
+for (i in global_trans_subsector[1:3]) {
+  by_trans_act[which(by_trans_act$year > 2017), i] <- 
+    tail(func_linear(by_trans_act, i, startyear = 2018, endyear = 2019)[, i], 2)
+}
+by_trans_act[which(by_trans_act$year > 2014), "农村客车"] <- 
+  tail(func_linear(by_trans_act, "农村客车", 
+                   startyear = 2015, endyear = 2019)[, "农村客车"], 5)
 
 ## Consumption & intensity ---- 
 # 营运车辆部分先输入总量后算强度，非营运车辆则相反
@@ -473,6 +481,7 @@ by_household_nrgsum_ls[[1]] <-
 names(by_household_nrgsum_ls[[1]]) <- c("year", "electricity")
 # 煤炭部分
 by_household_nrgsum_ls[[1]]$coal <- func_read_trans("H4REI5RK")$"居民生活用煤"
+by_household_nrgsum_ls[[1]]$coal <- by_household_nrgsum_ls[[1]]$coal/10000
 names(by_household_nrgsum_ls[[1]])[3] <- "coal"
 # household_lpg
 by_household_nrgsum_ls[[2]] <- 
