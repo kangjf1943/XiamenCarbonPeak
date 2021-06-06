@@ -1,27 +1,30 @@
-# SETTINGS ----
+# Global ----
 {
-  scenarios <- c("PLN", "BAU")
+  scenarios <- c("PLN", "PLN_KEEPCOAL", "BAU")
   outputs <- c("_parm_ls", "_nrgsum_ls", "_emissum_dir_ls", "_emissum_ls")
-}
-
-# 输出结果变量
-global_output_ls <- vector("list", length(scenarios))
-names(global_output_ls) <- scenarios
-for (i in global_sectors) {
-  for (j in outputs) {
-    assign(paste0(i, j), global_output_ls)
+  # 构建输出结果变量
+  global_output_ls <- vector("list", length(scenarios))
+  names(global_output_ls) <- scenarios
+  for (i in c(global_sectors, "tot")) {
+    for (j in outputs) {
+      assign(paste0(i, j), global_output_ls)
+    }
   }
+  # 电力等不区分直接排放和间接排放故删除
+  rm(global_output_ls, 
+     tf_emissum_dir_ls, res_emissum_dir_ls, 
+     tot_parm_ls, tot_emissum_dir_ls)
+  
 }
-# 电力不区分直接排放和间接排放
-rm(tf_emissum_dir_ls, res_emissum_dir_ls)
 
-scalc <- "PLN"
+# Settings ----
+scalc <- scenarios[3]
 plotstyle <- "base"
-calc_cache <- TRUE
-parmsim <- TRUE
+calc_cache <- FALSE
+parmsim <- FALSE
 
 
-for (time in c(1: 5)) {
+for (time in c(1: 1)) {
   print(time)
   # Agriculture ----
   ## Parameter ----
@@ -36,8 +39,7 @@ for (time in c(1: 5)) {
   ## Activity level ----
   agri_act <- 
     func_interp_3(year = c(2019, 2025, 2035, 2050, 2060), 
-                  scale = c(1, 0.68, agri_parm_ls[[scalc]][1], 0.63, 
-                            agri_parm_ls[[scalc]][2]), 
+                  scale = c(1, 0.68, 0.64, 0.63, 0.62), 
                   base = func_lastone(by_agri_act$agri), 
                   "area")
   
@@ -203,7 +205,7 @@ for (time in c(1: 5)) {
       ind_nrgintst_ls[[i]][, "gas"] <- 
         func_interp_3(
           year = c(2019, 2022, 2025, 2030, 2035, 2060), 
-          scale = c(1.0, ind_parm_ls[[scalc]][2], 1.4, 1.2, 1.2, 1), 
+          scale = c(1.0, 1.45, 1.4, 1.2, 1.2, 1), 
           base = func_lastone(by_ind_nrgintst_ls[[i]][, "gas"], 
                               zero.rm =  FALSE))$value
     }
@@ -481,7 +483,7 @@ for (time in c(1: 5)) {
   # hh_lpg
   hh_ori_lpguser <- 
     func_cross(prj_global_population[c("year", "household")], 
-               func_interp_3(year = c(2019, hh_parm_ls[[scalc]][1], 2060), 
+               func_interp_3(year = c(2019, 2033, 2060), 
                              scale = c(1, 0.65, 0.30), 
                              base = func_lastone(
                                by_hh_ori_users_prop[c("year", "lpg")])))
@@ -586,13 +588,23 @@ for (time in c(1: 5)) {
   tfres_act <- tfres_act[c("year", "electricity")]
   names(tfres_act) <- c("year", "elecuse")
   if (grepl("PLN", scalc)) { ### PLN ----
-    # 本地发电量减少为原来的一半
-    tfres_act <- 
-      func_merge_2(list(
-        tfres_act, 
-        func_interp_2(
-          year = c(2019, tf_parm_ls[[scalc]][1], 2050, 2060),
-          value = c(900371, 900371*0.5, 0, 0), "elecgen", showplot = FALSE)))
+    if (grepl("KEEPCOAL", scalc)) {
+      # 本地发电量到2050年减少为原来的一半
+      tfres_act <- 
+        func_merge_2(list(
+          tfres_act, 
+          func_interp_2(
+            year = c(2019, 2030, 2050, 2060),
+            value = c(900371, 900371, 900371*0.5, 0), "elecgen", showplot = FALSE)))
+    } else {
+      # 本地发电量减少为原来的一半
+      tfres_act <- 
+        func_merge_2(list(
+          tfres_act, 
+          func_interp_2(
+            year = c(2019, 2030, 2050, 2060),
+            value = c(900371, 900371*0.5, 0, 0), "elecgen", showplot = FALSE)))
+    }
   } else if (grepl("BAU", scalc)) { ### BAU ----
     # 本地发电量到2025年减少为原来的一半
     tfres_act <- 
@@ -663,45 +675,11 @@ for (time in c(1: 5)) {
   tot_emis <- data.frame(year = tot_emisbysec$year)
   tot_emis$co2 <- rowSums(tot_emisbysec[names(tot_emisbysec) != "year"])
   
-  # Test ----
-  if (func_peakyear(tot_emisbysec, "agri") <= 2020) {
-    cat("agri emission: done!", func_peakyear(tot_emisbysec, "agri"), "\n")
-  } else {
-    next
+  
+  # Output ----
+  for (i in global_sectors[1:6]) {
+    cat(i, "peak in", func_peakyear(tot_emisbysec, i), "\n")
   }
-  if (func_peakyear(tot_emisbysec, "ind") %in% c(2022:2024)) {
-    cat("ind emission: done!", func_peakyear(tot_emisbysec, "ind"), "\n")
-  } else {
-    next
-  }
-  if (func_peakyear(tot_emisbysec, "const") <= 2024) {
-    cat("const emission: done!", func_peakyear(tot_emisbysec, "const"), "\n")
-  } else {
-    next
-  }
-  if (func_peakyear(tot_emisbysec, "trans") %in% c(2027:2035)) {
-    cat("trans emission: done!", func_peakyear(tot_emisbysec, "trans"), "\n")
-  } else {
-    next
-  }
-  if (func_peakyear(tot_emisbysec, "com") %in% c(2025:2035)) {
-    cat("com emission: done!", func_peakyear(tot_emisbysec, "com"), "\n")
-  } else {
-    next
-  }
-  if (func_peakyear(tot_emisbysec, "hh") %in% c(2025:2035)) {
-    cat("hh emission: done!", func_peakyear(tot_emisbysec, "hh"), "\n")
-  } else {
-    next
-  }
-  if (func_peakyear(tot_emis, "co2") == 2025) {
-    cat("total emission: done!", func_peakyear(tot_emis, "co2"), "\n")
-  } else {
-    cat("total emission: something wrong!", func_peakyear(tot_emis, "co2"), "\n")
-    lstot[[time]] <- tot_emis
-    next
-  }
-  # 输出
   ## Agri
   # 活动水平，能耗强度，能耗总量
   par(mfrow = c(3, 2))
@@ -770,12 +748,30 @@ for (time in c(1: 5)) {
   }
   
   ## Household
-  func_history_project_df(by_hh_act, hh_act)
-  func_history_project_ls(by_hh_nrgintst_ls, hh_nrgintst_ls)
-  func_history_project_ls(by_hh_nrgsum_ls[[scalc]], hh_nrgsum_ls[[scalc]])
-  par(mfrow = c(1, 1))
-  func_history_project(by_hh_emissum_df, "co2", hh_emissum_df, "co2")
-  func_peakyear(com_emissum_df, "co2")
+  par(mfrow = c(3, 4))
+  # 活动水平
+  for (i in c("household", "lpg", "gas")) {
+    func_history_project(by_hh_act, i, hh_act, i, 
+                         xlab = "", ylab = paste0(i, "用户"), style = plotstyle)
+  }
+  # 能耗强度
+  for (i in c("electricity", "rawcoal")) {
+    func_history_project(by_hh_nrgintst_ls[["household"]], i, 
+                         hh_nrgintst_ls[["hh_coal_elec"]], i, 
+                         xlab = "", ylab = paste0(i, "强度"), style = plotstyle)
+  }
+  func_history_project(by_hh_nrgintst_ls[["lpg"]], "lpg", 
+                       hh_nrgintst_ls[["hh_lpg"]], "lpg", 
+                       xlab = "", ylab = paste0("lpg", "强度"), style = plotstyle)
+  func_history_project(by_hh_nrgintst_ls[["gas"]], "gas", 
+                       hh_nrgintst_ls[["hh_gas"]], "gas", 
+                       xlab = "", ylab = paste0("gas", "强度"), style = plotstyle)
+  # 能耗总量
+  for (i in c("electricity", "rawcoal", "lpg", "gas")) {
+    func_history_project(by_hh_nrgsum_df, i, 
+                         hh_nrgsum_ls[[scalc]], i, 
+                         xlab = "", ylab = paste0(i, "总量"), style = plotstyle)
+  }
   
   # 各部门排放量和总排放量
   par(mfrow = c(3, 3))
