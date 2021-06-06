@@ -285,7 +285,7 @@ func_cross <- function(df1, df2, method = "product") {
 
 
 ## 构建插值函数
-func_interp_2 <- function(year, value, name_value = "value") {
+func_interp_2 <- function(year, value, name_value = "value", showplot = FALSE) {
   total_df <- data.frame(year = c(year[1]: year[length(year)]))
   for (j in c(1:(length(year) - 1))) {
     start_year <- year[j]
@@ -300,7 +300,9 @@ func_interp_2 <- function(year, value, name_value = "value") {
     }
   }
   names(total_df)[2] <- name_value
-  # plot(total_df$year, total_df[, name_value])
+  if (showplot == TRUE) {
+    plot(total_df$year, total_df[, name_value])
+  }
   total_df
 }
 
