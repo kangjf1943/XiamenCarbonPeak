@@ -606,10 +606,11 @@ func_emissum <- function(nrgsum_df, emisfac_df, agg = TRUE) {
       emissum_df <- emissum_df_ori
     }
   }
-  cat("Info: ", "\n", 
-      "Energy input: ", nameori_nrgsum, "\n", 
-      "Emission factors for: ", nameori_emisfac, "\n", 
-      "common names: ", nrg_scope, "\n", "\n")
+  # 有些能源出现在能耗数据中但没有对应的排放因子
+  name_nofac <- setdiff(nameori_nrgsum, nameori_emisfac)
+  if (length(name_nofac) != 0) {
+    cat("warning: no emission faction for", name_nofac, "\n\n")
+  }
   emissum_df
 }
 
