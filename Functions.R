@@ -197,6 +197,25 @@ func_merge_2 <- function(ls_var) {
   }
 }
 
+# 合并多个年份不同数据框同名列并重命名各列
+func_mrgcol <- function(ls_var, namemrg, namesnew) {
+  # 判断新名字和要合并的列数长度是否一致
+  if (length(namesnew) != length(ls_var)) {
+    print("warning: wrong length of new names.")
+    out_df <- NULL
+  } else {
+    for (i in c(1: length(ls_var))) {
+      # 提取year列和目标列，存储，并改列名
+      ls_var[[i]] <- ls_var[[i]][c("year", namemrg)]
+      names(ls_var[[i]])[2] <- namesnew[i]
+    }
+    # 合并各个数据框成为一个新数据框
+    out_df <- func_merge_2(ls_var)
+  }
+  out_df
+}
+comment(func_mrgcol) <- "合并多个年份不同数据框同名列并重命名各列"
+
 ## 计算两个系列的比率或乘积
 # 两列版本
 # method取值“rate”或者“product”
@@ -281,7 +300,7 @@ func_interp_2 <- function(year, value, name_value = "value") {
     }
   }
   names(total_df)[2] <- name_value
-  plot(total_df$year, total_df[, name_value])
+  # plot(total_df$year, total_df[, name_value])
   total_df
 }
 
@@ -580,6 +599,7 @@ func_emissum <- function(nrgsum_df, emisfac_df, agg = TRUE) {
     # 构建一个列表用来暂存结果
     emissum_df_ori <- func_cross(nrgsum_df, emisfac_df, method = "product")
     if (agg == TRUE) {
+      emissum_df_ori$temp <- 0
       emissum_df <- data.frame(year = emissum_df_ori$year)
       emissum_df$co2 <- rowSums(emissum_df_ori[, -1])
     } else {
