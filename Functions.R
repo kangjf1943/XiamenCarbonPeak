@@ -487,6 +487,13 @@ func_toce <- function(nrg_df) {
   out_df
 }
 
+# 能源替代
+# func_nrgsub <- function(nrgori, namenrgori, namenrgsub, propsub) {
+#   # 构造替代比例数据框
+#   prop_df <- data.frame(nrgori$year)
+#   prop_df[, ] <- 
+# }
+
 # 计算除年份外的各行之和
 func_rowsums <- function(df, namevalue = "value") {
   new_df <- data.frame(year = df$year)
@@ -505,6 +512,36 @@ func_ratecalc <- function(in_df, name_value) {
     c(NA, head(in_df[, name_value], length(in_df[, name_value])-1))
   out_df$rate <- (out_df$now - out_df$before) / out_df$now
   out_df <- out_df[c("year", "rate")]
+  out_df
+}
+
+# 生成方案组合名称的函数
+measures <- c("a", "b")
+basescenario <- "bau"
+func_sgen <- function(basescenario, measures) {
+  # 生成组合矩阵
+  # 该代码来自网络
+  BitMatrix <- function(n) {
+    # 方案选择矩阵
+    set <- 0:(2^n-1)
+    rst <- matrix(0, ncol = n, nrow = 2^n)
+    for (i in 1:n){
+      rst[, i] = ifelse((set-rowSums(rst*rep(c(2^((n-1):0)), each=2^n)))/(2^(n-i))>=1, 1, 0)
+    }
+    rst
+  }
+  selectmatrix <- BitMatrix(length(measures))
+  # 看措施是否入选
+  out_df <- data.frame(sid = c(1: nrow(selectmatrix)))
+  out_df$scenario <- basescenario
+  for (i in c(1: nrow(selectmatrix))) {
+    for (j in c(1: ncol(selectmatrix))) {
+      if (selectmatrix[i, j] == 1) {
+        # 如果对应的选择矩阵的数值是1，则将对应措施添加到情景中
+        out_df[i, "scenario"] <- paste0(out_df[i, "scenario"], "_", measures[j])
+      }
+    }
+  }
   out_df
 }
 
