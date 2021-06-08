@@ -4,7 +4,7 @@
 global_nrg_class <- c("rawcoal", "coalproduct", 
                       "gasoline", "diesel", "residual", "kerosene", "lpg", 
                       "gas", "electricity")
-global_global_sectors <- c("agri", "ind", "const", "trans", "com", "hh", "tf", "res")
+global_sectors <- c("agri", "ind", "const", "trans", "com", "hh", "tf", "res")
 
 ## Subsector ----
 # 工业行业聚合方式
@@ -96,15 +96,16 @@ for (i in global_nrg_class) {
   global_emisfac_df[, i] <- global_ori_emisfac_df[, i]
 }
 rm(global_ori_emisfac_df)
-# 预测排放因子变化：从2045年开始各类能耗开始脱碳，至2050年为0
+# 预测排放因子变化：从2040年开始各类能耗开始脱碳，至2055年为0
 prj_emisfac_df <- data.frame(year = c(2019: 2060))
 for (i in global_nrg_class) {
   prj_emisfac_df[, i] <- 
     func_interp_2(
-      year = c(2019, 2045, 2050, 2060), 
+      year = c(2019, 2040, 2050, 2060), 
       value = c(global_emisfac_df[which(global_emisfac_df$year == 2019), i], 
-                global_emisfac_df[which(global_emisfac_df$year == 2019), i], 
-                0, 0))$value
+                global_emisfac_df[which(global_emisfac_df$year == 2019), i],
+                global_emisfac_df[which(global_emisfac_df$year == 2019), i]*0.7,
+                0))$value
 }
 
 
