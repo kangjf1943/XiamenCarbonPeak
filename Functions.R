@@ -542,7 +542,7 @@ func_sgen <- function(basescenario, measures) {
       }
     }
   }
-  out_df
+  out_df$scenario
 }
 
 ## 通过能源总量和活动水平计算活动强度
@@ -888,7 +888,17 @@ func_scenarios <-
     }
     plot_data
 }
-
+# 升级版
+# 输入列表查看同名列差异
+func_scompplot <- function(ls_var, namecol) {
+  # 转化成长数据框
+  df_var <- 
+    func_mrgcol(ls_var = ls_var, namemrg = namecol, namesnew = names(ls_var))
+  df_var_long <- 
+    melt(df_var, id = "year")
+  # 画图
+  ggplot(df_var_long) + geom_line(aes(year, value, color = variable))
+}
 
 ## 查看数据框中不同数据的变化趋势
 # 数据框版本
