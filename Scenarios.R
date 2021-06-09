@@ -101,7 +101,7 @@ for (set_scalc in set_scalcs) {
       year = c(2019, 2030, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"电子电气制造业"), 50, 55))$value
   }
-  if (set_calc_cache == TRUE) { ### Cache ----
+  if (set_calc_cache == FALSE) { ### Cache ----
     ind_ori_act_prop[, "食品饮料及烟草制造业"] <- func_interp_2(
       year = c(2019, 2030, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"食品饮料及烟草制造业"), 3, 2))$value
@@ -380,27 +380,29 @@ for (set_scalc in set_scalcs) {
     func_emissum(trans_nrgsum_ls[[set_scalc]], prj_emisfac_df)
   
   
-  # Service ----
+  # Commerce ----
   ## Activity level ----
-  ori_comemployee <- func_cross(
-    prj_global_population[c("year", "population")], 
-    func_interp_2(
-      year = c(2019, 2030, 2060),
-      value = c(by_com_act$com_employee[by_com_act$year == 2019]/
-                  global_population$"常住人口"[global_population$year == 2019], 
-                0.6, 0.75)))
-  ori_comgdp <- prj_global_gdp[c("year", "comgdp")]
-  com_act <- func_merge_2(list(ori_comemployee, ori_comgdp))
-  names(com_act) <- c("year", "com_employee", "com_gdp")
+  if (set_calc_cache == FALSE) {
+    ori_comemployee <- func_cross(
+      prj_global_population[c("year", "population")], 
+      func_interp_2(
+        year = c(2019, 2030, 2060),
+        value = c(by_com_act$com_employee[by_com_act$year == 2019]/
+                    global_population$"常住人口"[global_population$year == 2019], 
+                  0.6, 0.75)))
+    ori_comgdp <- prj_global_gdp[c("year", "comgdp")]
+    com_act <- func_merge_2(list(ori_comemployee, ori_comgdp))
+    names(com_act) <- c("year", "com_employee", "com_gdp")
+  }
   
   ## Energy intensity ----
-  if (grepl("COMCONS", set_scalc)) { ### COMCONS ----
+  if (grepl("OTHER", set_scalc)) { ### OTHER ----
     # 服务业用电强度略有增加
     com_nrgintst_ls <- vector("list", 2)
     names(com_nrgintst_ls) <- global_com_subsector
     com_nrgintst_ls[[1]] <- 
       func_interp_2(year = c(2019, 2025, 2060), 
-                    value = c(2958.967, 2958.967*1.2, 2958.967), 
+                    value = c(2958.967, 2958.967*1.1, 2958.967), 
                     "electricity")
     # 服务业燃气强度略有增加后减少，且逐渐为电气替代
     com_nrgintst_ls[[2]] <- 
@@ -413,39 +415,6 @@ for (set_scalc in set_scalcs) {
                     scale = c(1, 1.2, 0.8), 
                     base = func_lastone(by_com_nrgintst_ls[[2]]$gas), 
                     "gas")$gas
-    
-    # 液化石油气的电气化
-    com_ori_lpg_elec_prop <- 
-      data.frame(year = com_nrgintst_ls[[2]]$year)
-    com_ori_lpg_elec_prop$lpg <- 
-      func_interp_2(year = c(2019, 2030, 2050, 2060), 
-                    value = c(1, 0.4, 0, 0))$value
-    com_ori_lpg_elec_prop$electricity <- 
-      1 - com_ori_lpg_elec_prop$lpg
-    com_nrgintst_ls[[2]]$electricity4lpg <- 
-      func_alter(com_nrgintst_ls[[2]]$lpg, "lpg", "electricity")*0.9
-    com_nrgintst_ls[[2]][c("year", "lpg", "electricity4lpg")] <- 
-      func_cross(com_nrgintst_ls[[2]][c("year", "lpg", "electricity4lpg")], 
-                 com_ori_lpg_elec_prop)
-    # 天然气的电气化
-    com_ori_gas_elec_prop <- 
-      data.frame(year = com_nrgintst_ls[[2]]$year)
-    com_ori_gas_elec_prop$gas <- 
-      func_interp_2(year = c(2019, 2030, 2050, 2060), 
-                    value = c(1, 0.4, 0, 0))$value
-    com_ori_gas_elec_prop$electricity <- 
-      1 - com_ori_gas_elec_prop$gas
-    com_nrgintst_ls[[2]]$electricity4gas <- 
-      func_alter(com_nrgintst_ls[[2]]$gas, "gas", "electricity")*0.9
-    com_nrgintst_ls[[2]][c("year", "gas", "electricity4gas")] <- 
-      func_cross(com_nrgintst_ls[[2]][c("year", "gas", "electricity4gas")], 
-                 com_ori_gas_elec_prop)
-    # 整理数据框
-    com_nrgintst_ls[[2]][, "electricity"] <- 
-      com_nrgintst_ls[[2]]$electricity4lpg +
-      com_nrgintst_ls[[2]]$electricity4gas
-    com_nrgintst_ls[[2]] <- 
-      com_nrgintst_ls[[2]][c("year", "lpg", "gas", "electricity")]
   } else { ### BAU ----
     # 服务业用电强度略有增加
     # 效率较低，推迟年份
@@ -453,7 +422,7 @@ for (set_scalc in set_scalcs) {
     names(com_nrgintst_ls) <- global_com_subsector
     com_nrgintst_ls[[1]] <- 
       func_interp_2(year = c(2019, 2030, 2060), 
-                    value = c(2958.967, 2958.967*1.4, 2958.967), 
+                    value = c(2958.967, 2958.967*1.2, 2958.967), 
                     "electricity")
     # 服务业燃气强度略有增加后减少，且逐渐为电气替代
     com_nrgintst_ls[[2]] <- 
@@ -466,42 +435,31 @@ for (set_scalc in set_scalcs) {
                     scale = c(1, 1.5, 1.1), 
                     base = func_lastone(by_com_nrgintst_ls[[2]]$gas), 
                     "gas")$gas
-    
-    # 液化石油气的电气化
-    # 推迟年份
-    com_ori_lpg_elec_prop <- 
-      data.frame(year = com_nrgintst_ls[[2]]$year)
-    com_ori_lpg_elec_prop$lpg <- 
-      func_interp_2(year = c(2019, 2040, 2050, 2060), 
-                    value = c(1, 0.4, 0, 0))$value
-    com_ori_lpg_elec_prop$electricity <- 
-      1 - com_ori_lpg_elec_prop$lpg
-    com_nrgintst_ls[[2]]$electricity4lpg <- 
-      func_alter(com_nrgintst_ls[[2]]$lpg, "lpg", "electricity")*0.9
-    com_nrgintst_ls[[2]][c("year", "lpg", "electricity4lpg")] <- 
-      func_cross(com_nrgintst_ls[[2]][c("year", "lpg", "electricity4lpg")], 
-                 com_ori_lpg_elec_prop)
-    # 天然气的电气化
-    com_ori_gas_elec_prop <- 
-      data.frame(year = com_nrgintst_ls[[2]]$year)
-    com_ori_gas_elec_prop$gas <- 
-      func_interp_2(year = c(2019, 2040, 2050, 2060), 
-                    value = c(1, 0.4, 0, 0))$value
-    com_ori_gas_elec_prop$electricity <- 
-      1 - com_ori_gas_elec_prop$gas
-    com_nrgintst_ls[[2]]$electricity4gas <- 
-      func_alter(com_nrgintst_ls[[2]]$gas, "gas", "electricity")*0.9
-    com_nrgintst_ls[[2]][c("year", "gas", "electricity4gas")] <- 
-      func_cross(com_nrgintst_ls[[2]][c("year", "gas", "electricity4gas")], 
-                 com_ori_gas_elec_prop)
-    # 整理数据框
-    com_nrgintst_ls[[2]][, "electricity"] <- 
-      com_nrgintst_ls[[2]]$electricity4lpg +
-      com_nrgintst_ls[[2]]$electricity4gas
-    com_nrgintst_ls[[2]] <- 
-      com_nrgintst_ls[[2]][c("year", "lpg", "gas", "electricity")]
   }
-  
+  if (grepl("COMCONS", set_scalc)) {
+    # 燃气的电气化较早
+    com_nrgintst_ls[[2]] <- func_nrgsub( ### COMCONS ----
+      nrgori = com_nrgintst_ls[[2]], 
+      namenrgoris = list("lpg", "gas"), 
+      namenrgsubs = list("electricity", "electricity"), 
+      yearsubs = list(c(2019, 2030, 2050, 2060), 
+                      c(2019, 2030, 2050, 2060)), 
+      propsubs = list(c(0, 0.6, 1, 1), 
+                      c(0, 0.6, 1, 1)), 
+      alterscales = list(0.9, 0.9))
+  } else { ### BAU ----
+    # 燃气的电气化推迟
+    com_nrgintst_ls[[2]] <- func_nrgsub(
+      nrgori = com_nrgintst_ls[[2]], 
+      namenrgoris = list("lpg", "gas"), 
+      namenrgsubs = list("electricity", "electricity"), 
+      yearsubs = list(c(2019, 2040, 2055, 2060), 
+                      c(2019, 2040, 2055, 2060)), 
+      propsubs = list(c(0, 0.6, 1, 1), 
+                      c(0, 0.6, 1, 1)), 
+      alterscales = list(0.9, 0.9))
+  }
+
   
   ## Energy and emission ----
   com_nrgsum_ls[[set_scalc]] <- func_nrg_sum_ls(com_nrgintst_ls, com_act)
