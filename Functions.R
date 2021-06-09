@@ -329,6 +329,29 @@ func_interp_3 <- function(year, scale, base, name_value = "value") {
   total_df
 }
 
+# 可指定初始增长率和最高值时间点
+# 增速逐渐减慢直至饱和：抛物线加水平直线
+func_curve_1 <- function(baseyear, basevalue, maxyear, endyear,  init_rate) {
+  # 将增长率转化成斜率
+  initrate <- init_rate*basevalue
+  # 生成方程各项系数
+  a <- (initrate)/(baseyear-maxyear)
+  b <- -maxyear*a
+  c <- basevalue-0.5*a*baseyear^2-b*baseyear
+  out_df <- data.frame(year = c(baseyear:endyear))
+  # 储存计算结果因变量
+  # 计算抛物线段因变量值：达到最大值之前持续上升
+  out_df$value <- 0.5*a*(out_df$year^2) + b*out_df$year + c
+  # 计算水平直线段因变量值：达到最大值之后保持不变
+  out_df[which(out_df$year > maxyear), "value"] <- 
+    0.5*a*maxyear^2+b*maxyear + c
+  # 画图检验
+  plot(out_df$year, out_df$value)
+  # 输出结果
+  out_df
+}
+a <- func_curve_1(baseyear=2015, basevalue=300, maxyear=2030, endyear=2050,  init_rate=0.02)
+
 ## 平滑插值函数
 func_smooth <- function(year, value, name_value = "value") {
   # 步骤1：拆分成几段并计算每段斜率
