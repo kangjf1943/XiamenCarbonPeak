@@ -80,46 +80,60 @@ for (set_scalc in set_scalcs) {
   ## Activity level ----
   # 先计算未来子部门GDP所占比重
   ind_ori_act_prop <- data.frame(year = c(2019:2060))
-  ind_ori_act_prop[, "食品饮料及烟草制造业"] <- func_interp_2(
-    year = c(2019, 2030, 2060), 
-    value = c(func_lastone(by_ind_ori_act_prop$"食品饮料及烟草制造业"), 3, 2))$value
-  ind_ori_act_prop[, "纺织及服装制造业"] <- func_interp_2(
-    year = c(2019, 2030, 2060), 
-    value = c(func_lastone(by_ind_ori_act_prop$"纺织及服装制造业"), 3, 2))$value
-  ind_ori_act_prop[, "木材及家具制造业"] <- func_interp_2(
-    year = c(2019, 2030, 2060), 
-    value = c(func_lastone(by_ind_ori_act_prop$"木材及家具制造业"), 1.5, 2))$value
-  ind_ori_act_prop[, "造纸及印刷"] <- func_interp_2(
-    year = c(2019, 2030, 2060), 
-    value = c(func_lastone(by_ind_ori_act_prop$"造纸及印刷"), 1.5, 1))$value
-  ind_ori_act_prop[, "文体工美用品制造业"] <- func_interp_2(
-    year = c(2019, 2040, 2060), 
-    value = c(func_lastone(by_ind_ori_act_prop$"文体工美用品制造业"), 2, 4))$value
-  ind_ori_act_prop[, "石油及炼焦"] <- func_interp_2(
-    year = c(2019, 2030, 2060), 
-    value = c(func_lastone(by_ind_ori_act_prop$"石油及炼焦"), 0.1, 0))$value
-  ind_ori_act_prop[, "化学工业"] <- func_interp_2(
-    year = c(2019, 2030, 2045, 2060), 
-    value = c(func_lastone(by_ind_ori_act_prop$"化学工业"), 5, 0.5, 0))$value
-  ind_ori_act_prop[, "医药制造业"] <- func_interp_2(
-    year = c(2019, 2030, 2060), 
-    value = c(func_lastone(by_ind_ori_act_prop$"医药制造业"), 2, 4))$value
-  ind_ori_act_prop[, "非金属矿物制品业"] <- func_interp_2(
-    year = c(2019, 2030, 2060), 
-    value = c(func_lastone(by_ind_ori_act_prop$"非金属矿物制品业"), 1.3, 0.5))$value
-  ind_ori_act_prop[, "金属加工制造业"] <- func_interp_2(
-    year = c(2019, 2040, 2060), 
-    value = c(func_lastone(by_ind_ori_act_prop$"金属加工制造业"), 7, 3))$value
-  ind_ori_act_prop[, "设备制造业"] <- func_interp_2(
-    year = c(2019, 2030, 2060), 
-    value = c(func_lastone(by_ind_ori_act_prop$"设备制造业"), 15, 16))$value
-  ind_ori_act_prop[, "电子电气制造业"] <- func_interp_2(
-    year = c(2019, 2030, 2060), 
-    value = c(func_lastone(by_ind_ori_act_prop$"电子电气制造业"), 57, 64))$value
-  ind_ori_act_prop[, "电力、热力生产和供应业"] <- func_interp_2(
-    year = c(2019, 2030, 2060), 
-    value = c(func_lastone(by_ind_ori_act_prop$"电力、热力生产和供应业"), 
-              0.9, 0.1))$value
+  if (grepl("INDSTR", set_scalc)) { ### OTHER ----
+    ind_ori_act_prop[, "化学工业"] <- func_interp_2(
+      year = c(2019, 2030, 2045, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"化学工业"), 5, 0.5, 0))$value
+    ind_ori_act_prop[, "设备制造业"] <- func_interp_2(
+      year = c(2019, 2030, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"设备制造业"), 15, 16))$value
+    ind_ori_act_prop[, "电子电气制造业"] <- func_interp_2(
+      year = c(2019, 2030, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"电子电气制造业"), 57, 64))$value
+  } else {
+    ind_ori_act_prop[, "化学工业"] <- func_interp_2(
+      year = c(2019, 2030, 2050, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"化学工业"), 7, 0.5, 0))$value
+    ind_ori_act_prop[, "设备制造业"] <- func_interp_2(
+      year = c(2019, 2030, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"设备制造业"), 13, 15))$value
+    ind_ori_act_prop[, "电子电气制造业"] <- func_interp_2(
+      year = c(2019, 2030, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"电子电气制造业"), 50, 55))$value
+  }
+  if (set_calc_cache == TRUE) { ### Cache ----
+    ind_ori_act_prop[, "食品饮料及烟草制造业"] <- func_interp_2(
+      year = c(2019, 2030, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"食品饮料及烟草制造业"), 3, 2))$value
+    ind_ori_act_prop[, "纺织及服装制造业"] <- func_interp_2(
+      year = c(2019, 2030, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"纺织及服装制造业"), 3, 2))$value
+    ind_ori_act_prop[, "木材及家具制造业"] <- func_interp_2(
+      year = c(2019, 2030, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"木材及家具制造业"), 1, 0.5))$value
+    ind_ori_act_prop[, "造纸及印刷"] <- func_interp_2(
+      year = c(2019, 2030, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"造纸及印刷"), 1.5, 1))$value
+    ind_ori_act_prop[, "文体工美用品制造业"] <- func_interp_2(
+      year = c(2019, 2040, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"文体工美用品制造业"), 2, 4))$value
+    ind_ori_act_prop[, "石油及炼焦"] <- func_interp_2(
+      year = c(2019, 2030, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"石油及炼焦"), 0.1, 0))$value
+    ind_ori_act_prop[, "医药制造业"] <- func_interp_2(
+      year = c(2019, 2030, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"医药制造业"), 2, 4))$value
+    ind_ori_act_prop[, "非金属矿物制品业"] <- func_interp_2(
+      year = c(2019, 2030, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"非金属矿物制品业"), 1.3, 0.5))$value
+    ind_ori_act_prop[, "金属加工制造业"] <- func_interp_2(
+      year = c(2019, 2040, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"金属加工制造业"), 7, 3))$value
+    ind_ori_act_prop[, "电力、热力生产和供应业"] <- func_interp_2(
+      year = c(2019, 2030, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"电力、热力生产和供应业"), 
+                0.9, 0.1))$value
+  }
   ind_ori_act_prop[, "其他制造业"] <- 
     func_saturate(ind_ori_act_prop, "value")$value
   # 计算未来各子部门GDP
