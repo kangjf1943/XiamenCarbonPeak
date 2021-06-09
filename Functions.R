@@ -249,6 +249,7 @@ func_merge_rate <- function(var_1, name_1, var_2, name_2, method,
 # 升级版
 # 输入：两个时间序列数据框
 # 可选计算方式：“sum”，“product”，“rate”和“difference”，默认为“product”
+# 注意：该函数计算的时候顺序很重要！
 func_cross <- function(df1, df2, method = "product") {
   # 判断是否包含“year”列
   if ("year" %in% names(df1) & "year" %in% names(df2) == FALSE) {
@@ -511,11 +512,33 @@ func_toce <- function(nrg_df) {
 }
 
 # 能源替代
-# func_nrgsub <- function(nrgori, namenrgori, namenrgsub, propsub) {
-#   # 构造替代比例数据框
-#   prop_df <- data.frame(nrgori$year)
-#   prop_df[, ] <- 
-# }
+# 一半是对能耗强度数据框进行替代，当然对能耗总量进行替代亦可
+func_nrgsub <- 
+  function(nrgori, namenrgoris, namenrgsubs, yearsubs, propsubs, alterscales) {
+    out_df <- vector("list", length(namenrgsubs))
+    for (i in c(1: length(namenrgsubs))) {
+      # 构造替代比例数据框
+      prop_df <- data.frame(year = nrgori$year)
+      # 有多少比例原能源被新能源替代
+      prop_df[, namenrgsubs[[i]]] <- 
+        func_interp_2(year = yearsubs[[i]], value = propsubs[[i]])$value
+      prop_df[, namenrgoris[[i]]] <- 1 - prop_df[, namenrgsubs[[i]]]
+      # 调整下顺序使之和下面的计算需求一致
+      prop_df <- prop_df[c("year", namenrgoris[[i]], namenrgsubs[[i]])]
+      # 构造新数据框：替代后的能耗强度
+      out_df[[i]] <- nrgori[c("year", namenrgoris[[i]])]
+      out_df[[i]][, namenrgsubs[[i]]] <- 
+        func_alter(
+          nrgori[, namenrgoris[[i]]], 
+          name_in = namenrgoris[[i]], 
+          name_out = namenrgsubs[[i]]) * alterscales[[i]]
+      out_df[[i]] <- func_cross(
+        out_df[[i]][c("year", namenrgoris[[i]], namenrgsubs[[i]])], 
+        prop_df)
+    }
+    out_df <- func_ls2df(out_df)
+  }
+
 
 # 计算除年份外的各行之和
 func_rowsums <- function(df, namevalue = "value") {
@@ -525,6 +548,7 @@ func_rowsums <- function(df, namevalue = "value") {
   names(new_df)[2] <- namevalue
   new_df
 }
+
 
 # 计算生长率
 func_ratecalc <- function(in_df, name_value) {
