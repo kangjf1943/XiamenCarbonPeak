@@ -402,7 +402,7 @@ for (set_scalc in set_scalcs) {
     names(com_nrgintst_ls) <- global_com_subsector
     com_nrgintst_ls[[1]] <- 
       func_interp_2(year = c(2019, 2025, 2060), 
-                    value = c(2958.967, 2958.967*1.1, 2958.967), 
+                    value = c(2958.967, 2958.967, 2958.967*0.7), 
                     "electricity")
     # 服务业燃气强度略有增加后减少，且逐渐为电气替代
     com_nrgintst_ls[[2]] <- 
@@ -436,9 +436,9 @@ for (set_scalc in set_scalcs) {
                     base = func_lastone(by_com_nrgintst_ls[[2]]$gas), 
                     "gas")$gas
   }
-  if (grepl("COMCONS", set_scalc)) {
+  if (grepl("COMCONS", set_scalc)) { ### COMCONS ----
     # 燃气的电气化较早
-    com_nrgintst_ls[[2]] <- func_nrgsub( ### COMCONS ----
+    com_nrgintst_ls[[2]] <- func_nrgsub(
       nrgori = com_nrgintst_ls[[2]], 
       namenrgoris = list("lpg", "gas"), 
       namenrgsubs = list("electricity", "electricity"), 
