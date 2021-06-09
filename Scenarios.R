@@ -229,7 +229,10 @@ for (set_scalc in set_scalcs) {
   }
   
   # 出租车保持不变或波动
-  trans_act[, "出租车"] <- func_lastone(by_trans_act[, "出租车"])
+  trans_act[, "出租车"] <- 
+    func_curve_1(
+      baseyear = 2019, basevalue = func_lastone(by_trans_act[, "出租车"]), 
+      maxyear = 2035, endyear = 2060, init_rate = -0.01)$value
   
   # 农村客运因城乡交流频繁，2025年前以初始7%的速率增长
   trans_act[, "农村客车"] <- 
