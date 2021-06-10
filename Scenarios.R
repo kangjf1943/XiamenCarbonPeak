@@ -286,36 +286,48 @@ for (set_scalc in set_scalcs) {
   ## Energy intensity ----
   trans_nrgintst_ls <- vector("list", length(global_trans_subsector))
   names(trans_nrgintst_ls) <- global_trans_subsector
-  ### 营运车辆和非营运车辆
-  # 均假设和最后一个有数值的年份一致，且假设这个数值是在2019年
-  for (j in c(1: 6)) {
+  # 公路交通
+  # 常规公交、快速公交、出租车、农村客车、公路其他柴油的能耗强度逐渐下降
+  for (j in c(1: 4, 6)) {
     trans_nrgintst_ls[[j]] <- data.frame(year = c(2019: 2060))
     for (i in names(by_trans_nrgintst_ls[[j]])[
       names(by_trans_nrgintst_ls[[j]]) %in% "year" == FALSE]) {
       trans_nrgintst_ls[[j]][, i] <- 
-        func_interp_3(year = c(2019, 2030, 2035, 2060), 
-                      scale = c(1, 1.2, 1.2, 0.8), 
+        func_interp_3(year = c(2019, 2060), 
+                      scale = c(1, 0.8), 
                       base = func_lastone(by_trans_nrgintst_ls[[j]][, i]))$value
     }
   }
+  # 公路汽油：私家车的电气化
+  trans_nrgintst_ls[["公路其他汽油"]] <- data.frame(year = c(2019: 2060))
+  for (i in c("gasoline", "electricity")) {
+    trans_nrgintst_ls[["公路其他汽油"]][, i] <- 
+      func_curve_1(baseyear = 2019, 
+        basevalue = func_lastone(by_trans_nrgintst_ls[["公路其他汽油"]][, i]), 
+        maxyear = 2040, endyear = 2060, init_rate = -0.03)$value
+  }
   if (grepl("ELECCAR", set_scalc)) { ### ELECCAR ----
     # 轿车逐渐实现电气化
-    # 替代比例
-    trans_carprop_ls[[set_scalc]] <- 
-      data.frame(year = trans_nrgintst_ls[["公路其他汽油"]]$year)
-    trans_carprop_ls[[set_scalc]]$gasoline <-
-      func_interp_2(year = c(2019, 2025, 2030, 2050, 2060),
-                    value = c(1, 0.95, 0.9, 0.2, 0))$value
-    trans_carprop_ls[[set_scalc]]$electricity <- 
-      1 - trans_carprop_ls[[set_scalc]]$gasoline
-    # 计算相应能耗强度中汽油和电力的变化
-    trans_nrgintst_ls[["公路其他汽油"]]$electricity <-
-      func_alter(mean(trans_nrgintst_ls[["公路其他汽油"]]$gasoline),
-                 "gasoline", "electricity")
-    trans_nrgintst_ls[["公路其他汽油"]] <-
-      func_cross(trans_nrgintst_ls[["公路其他汽油"]],
-                 trans_carprop_ls[[set_scalc]])
-    
+    trans_nrgintst_ls[["公路其他汽油"]] <- func_nrgsub(
+      nrgori = trans_nrgintst_ls[["公路其他汽油"]], 
+      namenrgoris = list("gasoline"), 
+      namenrgsubs = list("electricity"), 
+      yearsubs = list(c(2019, 2025, 2030, 2050, 2060)), 
+      propsubs = list(c(0, 0.05, 0.10, 0.80, 1)), 
+      alterscales = list(0.9))
+  } else { ### BAU ----
+    # 其中轿车逐渐实现电气化
+    # 推迟年份
+    trans_nrgintst_ls[["公路其他汽油"]] <- func_nrgsub(
+      nrgori = trans_nrgintst_ls[["公路其他汽油"]], 
+      namenrgoris = list("gasoline"), 
+      namenrgsubs = list("electricity"), 
+      yearsubs = list(c(2019, 2035, 2040, 2055, 2060)), 
+      propsubs = list(c(0, 0.05, 0.10, 0.80, 0.80)), 
+      alterscales = list(0.9))
+  }
+  # 水路客货运
+  if (grepl("OTHER", set_scalc)) { ### OTHER ----
     # 水路客运
     # 柴油和燃料油均基于历史数据和比率
     trans_nrgintst_ls[["水路客运"]] <- 
@@ -345,22 +357,6 @@ for (set_scalc in set_scalcs) {
                     base = func_lastone(by_trans_nrgintst_ls[["水路货运"]]$residual),
                     "residual")$residual
   } else { ### BAU ----
-    # 其中轿车逐渐实现电气化
-    # 推迟年份
-    trans_carprop_ls[[set_scalc]] <- 
-      data.frame(year = trans_nrgintst_ls[["公路其他汽油"]]$year)
-    trans_carprop_ls[[set_scalc]]$gasoline <-
-      func_interp_2(year = c(2019, 2035, 2040, 2055, 2060),
-                    value = c(1, 0.95, 0.9, 0.2, 0))$value
-    trans_carprop_ls[[set_scalc]]$electricity <- 
-      1 - trans_carprop_ls[[set_scalc]]$gasoline
-    # 计算相应能耗强度中汽油和电力的变化
-    trans_nrgintst_ls[["公路其他汽油"]]$electricity <-
-      func_alter(mean(trans_nrgintst_ls[["公路其他汽油"]]$gasoline),
-                 "gasoline", "electricity")
-    trans_nrgintst_ls[["公路其他汽油"]] <-
-      func_cross(trans_nrgintst_ls[["公路其他汽油"]],
-                 trans_carprop_ls[[set_scalc]])
     # 水路客运
     # 柴油和燃料油均基于历史数据和比率
     # 推迟年份
@@ -373,8 +369,8 @@ for (set_scalc in set_scalcs) {
       func_interp_2(year = c(2019, 2045, 2060), 
                     value = c(
                       func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual), 
-                      func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual), 
-                      func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual)),
+                      func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual)*0.9, 
+                      func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual)*0.9),
                     "residual")$residual
     
     # 水路货运
@@ -637,23 +633,12 @@ for (set_scalc in set_scalcs) {
   
   # Imported elec ----
   ## Emission ----
-  if (grepl("OTHER", set_scalc)) { ### OTHER ----
-    res_emisfac_df <- 
-      func_interp_2(year = c(2019, 2035, 2040, 2050, 2060), 
-                    value = c(0.39e-3, 0.218e-3, 0.186e-3, 0, 0), "electricity")
-    
-    res_emissum_ls[[set_scalc]] <- 
-      func_cross(res_emisfac_df, tfres_act[c("year", "importelec")])
-    names(res_emissum_ls[[set_scalc]])[2] <- "co2"
-  } else if (grepl("BAU", set_scalc)) { ### BAU ----
-    res_emisfac_df <- 
-      func_interp_2(year = c(2019, 2025, 2030, 2035, 2050, 2060), 
-                    value = c(0.39e-3, 0.35e-3, 0.30e-3, 0.25e-3, 0, 0), "electricity")
-    
-    res_emissum_ls[[set_scalc]] <- 
-      func_cross(res_emisfac_df, tfres_act[c("year", "importelec")])
-    names(res_emissum_ls[[set_scalc]])[2] <- "co2"
-  }
+  res_emisfac_df <- 
+    func_interp_2(year = c(2019, 2035, 2040, 2060), 
+                  value = c(0.39e-3, 0.218e-3, 0.186e-3, 0), "electricity")
+  res_emissum_ls[[set_scalc]] <- 
+    func_cross(res_emisfac_df, tfres_act[c("year", "importelec")])
+  names(res_emissum_ls[[set_scalc]])[2] <- "co2"
   
   
   # RESULT ----
