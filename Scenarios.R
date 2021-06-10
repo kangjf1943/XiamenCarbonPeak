@@ -154,8 +154,8 @@ for (set_scalc in set_scalcs) {
       for (j in global_ind_nrgclass[1:6]) {
         ind_nrgintst_ls[[i]][, j] <- 
           func_interp_3(
-            year = c(2019, 2023, 2025, 2030, 2035, 2060), 
-            scale = c(1.0, 1.1, 1.1, 1.0, 0.8, 0.6), 
+            year = c(2019, 2025, 2030, 2035, 2060), 
+            scale = c(1, 1, 1.0, 0.8, 0.6), 
             base = func_lastone(by_ind_nrgintst_ls[[i]][, j], zero.rm =  FALSE))$value
       }
     }
@@ -168,8 +168,8 @@ for (set_scalc in set_scalcs) {
       for (j in global_ind_nrgclass[1:6]) {
         ind_nrgintst_ls[[i]][, j] <- 
           func_interp_3(
-            year = c(2019, 2023, 2025, 2030, 2035, 2060), 
-            scale = c(1.0, 1.3, 1.3, 1.3, 1, 1), 
+            year = c(2019, 2025, 2030, 2035, 2060), 
+            scale = c(1.0, 1.1, 1.1, 1, 1), 
             base = func_lastone(by_ind_nrgintst_ls[[i]][, j], zero.rm =  FALSE))$value
       }
     }
@@ -179,8 +179,8 @@ for (set_scalc in set_scalcs) {
   for (i in global_ind_subsector) {
     ind_nrgintst_ls[[i]][, "gas"] <- 
       func_interp_3(
-        year = c(2019, 2022, 2025, 2030, 2035, 2060), 
-        scale = c(1.0, 1.45, 1.4, 1.2, 1.2, 1), 
+        year = c(2019, 2025, 2030, 2060), 
+        scale = c(1.0, 1.1, 1.2, 1), 
         base = func_lastone(by_ind_nrgintst_ls[[i]][, "gas"], 
                             zero.rm =  FALSE))$value
   }
@@ -188,8 +188,8 @@ for (set_scalc in set_scalcs) {
   for (i in global_ind_subsector) {
     ind_nrgintst_ls[[i]][, "electricity"] <- 
       func_interp_3(
-        year = c(2019, 2023, 2026, 2030, 2035, 2060), 
-        scale = c(1.0, 1.4, 1.4, 1.2, 1.1, 1.0), 
+        year = c(2019, 2025, 2030, 2060), 
+        scale = c(1.0, 1.2, 1.2, 1.0), 
         base = func_lastone(by_ind_nrgintst_ls[[i]][, "electricity"], 
                             zero.rm =  FALSE))$value
   }
