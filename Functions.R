@@ -938,6 +938,8 @@ func_scenarios <-
 # 升级版
 # 输入列表查看同名列差异
 func_scompplot <- function(ls_var, namecol) {
+  # 挑出内容非空的列表元素
+  ls_var <- ls_var[vapply(ls_var, Negate(is.null), NA)]
   # 转化成长数据框
   df_var <- 
     func_mrgcol(ls_var = ls_var, namemrg = namecol, namesnew = names(ls_var))
