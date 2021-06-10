@@ -1,6 +1,7 @@
 # Init ----
 # 主要措施包括工业结构优化、电动车普及、服务业节能、生活节能
-init_measures <- c("INDSTR", "ELECCAR", "COMCONS", "HHCONS", "OTHER")
+init_measures <- 
+  c("INDSTR", "ELECCAR", "COMCONS", "HHCONS", "24COAL", "26COAL", "OTHER")
 init_scenarios <- 
   func_sgen("BAU", init_measures)
 # 构建输出结果变量
@@ -26,15 +27,18 @@ rm(init_output_templatels,
 
 
 # Settings ----
-set_scalcs <- c("BAU")
+set_scalcs <- c("BAU", 
+                "BAU_INDSTR", "BAU_ELECCAR", "BAU_COMCONS", "BAU_HHCONS", 
+                "BAU_26COAL", 
+                "BAU_24COAL")
 set_plotstyle <- "base"
-set_calc_cache <- FALSE
-set_parmsim <- FALSE
+set_calc_cache <- TRUE
+set_resultout <- TRUE
 set_dataexport <- FALSE
 set_parmexport <- FALSE
 
 # Analysis ----
-for (set_scalc in set_scalcs) {
+for (set_scalc in "BAU_26COAL") {
   # Agriculture ----
   ## Activity level ----
   agri_act <- 
@@ -114,7 +118,7 @@ for (set_scalc in set_scalcs) {
       value = c(func_lastone(by_ind_ori_act_prop$"电力、热力生产和供应业"), 
                 0.9, 0.1))$value
   }
-  if (grepl("INDSTR", set_scalc)) { ### OTHER ----
+  if (grepl("INDSTR", set_scalc)) { ### INDSTR ----
     ind_ori_act_prop[, "化学工业"] <- func_interp_2(
       year = c(2019, 2030, 2045, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"化学工业"), 5, 0.5, 0))$value
@@ -127,17 +131,17 @@ for (set_scalc in set_scalcs) {
   } else { ### BAU ----
     # 时间推迟，比例不同
     ind_ori_act_prop[, "化学工业"] <- func_interp_2(
-      year = c(2019, 2030, 2050, 2060), 
+      year = c(2019, 2035, 2050, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"化学工业"), 7, 2, 0))$value
     ind_ori_act_prop[, "设备制造业"] <- func_interp_2(
-      year = c(2019, 2035, 2060), 
+      year = c(2019, 2040, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"设备制造业"), 13, 15))$value
     ind_ori_act_prop[, "电子电气制造业"] <- func_interp_2(
-      year = c(2019, 2035, 2060), 
+      year = c(2019, 2040, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"电子电气制造业"), 50, 55))$value
   }
-  ind_ori_act_prop[, "其他制造业"] <- 
-    func_saturate(ind_ori_act_prop, "value")$value
+  ind_ori_act_prop[, "其他制造业"] <- func_saturate(
+    ind_ori_act_prop[c("year", global_ind_subsector[global_ind_subsector != "其他制造业"])], "value")$value
   # 计算未来各子部门GDP
   ind_act <- 
     func_nrg_sum(ind_ori_act_prop[c("year", global_ind_subsector)], 
@@ -168,7 +172,7 @@ for (set_scalc in set_scalcs) {
       for (j in global_ind_nrgclass[1:6]) {
         ind_nrgintst_ls[[i]][, j] <- 
           func_interp_3(
-            year = c(2019, 2025, 2030, 2035, 2060), 
+            year = c(2019, 2025, 2030, 2040, 2060), 
             scale = c(1.0, 1.1, 1.1, 1, 1), 
             base = func_lastone(by_ind_nrgintst_ls[[i]][, j], zero.rm =  FALSE))$value
       }
@@ -300,12 +304,11 @@ for (set_scalc in set_scalcs) {
   }
   # 公路汽油：私家车的电气化
   trans_nrgintst_ls[["公路其他汽油"]] <- data.frame(year = c(2019: 2060))
-  for (i in c("gasoline", "electricity")) {
-    trans_nrgintst_ls[["公路其他汽油"]][, i] <- 
-      func_curve_1(baseyear = 2019, 
-        basevalue = func_lastone(by_trans_nrgintst_ls[["公路其他汽油"]][, i]), 
-        maxyear = 2040, endyear = 2060, init_rate = -0.03)$value
-  }
+  trans_nrgintst_ls[["公路其他汽油"]][, "gasoline"] <- func_interp_3(
+    year = c(2019, 2030, 2040, 2060), 
+    scale = c(1, 1, 0.8, 0.7), 
+    base = func_lastone(by_trans_nrgintst_ls[["公路其他汽油"]]$gasoline))$value
+  trans_nrgintst_ls[["公路其他汽油"]][, "electricity"] <- 0
   if (grepl("ELECCAR", set_scalc)) { ### ELECCAR ----
     # 轿车逐渐实现电气化
     trans_nrgintst_ls[["公路其他汽油"]] <- func_nrgsub(
@@ -324,7 +327,7 @@ for (set_scalc in set_scalcs) {
       namenrgsubs = list("electricity"), 
       yearsubs = list(c(2019, 2035, 2040, 2055, 2060)), 
       propsubs = list(c(0, 0.05, 0.10, 0.80, 0.80)), 
-      alterscales = list(0.9))
+      alterscales = list(1))
   }
   # 水路客货运
   if (grepl("OTHER", set_scalc)) { ### OTHER ----
@@ -369,7 +372,7 @@ for (set_scalc in set_scalcs) {
       func_interp_2(year = c(2019, 2045, 2060), 
                     value = c(
                       func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual), 
-                      func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual)*0.9, 
+                      func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual), 
                       func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual)*0.9),
                     "residual")$residual
     
@@ -437,12 +440,12 @@ for (set_scalc in set_scalcs) {
     com_nrgintst_ls <- vector("list", 2)
     names(com_nrgintst_ls) <- global_com_subsector
     com_nrgintst_ls[[1]] <- 
-      func_interp_2(year = c(2019, 2030, 2060), 
+      func_interp_2(year = c(2019, 2035, 2060), 
                     value = c(2958.967, 2958.967*1.2, 2958.967), 
                     "electricity")
     # 服务业燃气强度略有增加后减少，且逐渐为电气替代
     com_nrgintst_ls[[2]] <- 
-      func_interp_3(year = c(2019, 2025, 2060),
+      func_interp_3(year = c(2019, 2030, 2060),
                     scale = c(1, 1.5, 1.1), 
                     base = func_lastone(by_com_nrgintst_ls[[2]]$lpg), 
                     "lpg")
@@ -601,8 +604,16 @@ for (set_scalc in set_scalcs) {
                                hh_nrgsum_ls[[set_scalc]]))
   tfres_act <- tfres_act[c("year", "electricity")]
   names(tfres_act) <- c("year", "elecuse")
-  if (grepl("OTHER", set_scalc)) { ### OTHER ----
-    # 2025年开始减煤，五年内减为原来的一半
+  if (grepl("24COAL", set_scalc)) { ### 24COAL ----
+    # 2024年开始减煤，两年内减为原来的一半
+    tfres_act <- 
+      func_merge_2(list(
+        tfres_act, 
+        func_interp_2(
+          year = c(2019, 2023, 2025, 2050, 2060),
+          value = c(900371, 900371, 900371*0.5, 0, 0), "elecgen", showplot = FALSE)))
+  } else if (grepl("26COAL", set_scalc)) { ### 26COAL ----
+    # 2026年开始减煤，五年内减为原来的一半
     tfres_act <- 
       func_merge_2(list(
         tfres_act, 
@@ -610,7 +621,7 @@ for (set_scalc in set_scalcs) {
           year = c(2019, 2025, 2030, 2050, 2060),
           value = c(900371, 900371, 900371*0.5, 0, 0), "elecgen", showplot = FALSE)))
   } else { ### BAU ----
-    # 2030年开始减煤，十年内减为原来的一半
+    # 2030年开始减煤，十年内减为原来的一半，之后保持
     tfres_act <- 
       func_merge_2(list(
         tfres_act, 
@@ -676,22 +687,36 @@ for (set_scalc in set_scalcs) {
   
   # Output ----
   # 各部门达峰时间
-  cat("\n", scalc, "\n")
+  cat("\n", set_scalc, "\n")
   for (i in global_sectors[1:6]) {
     cat(i, "peak in", 
          func_peakyear(tot_emisbysec_ls[[set_scalc]], i), "\n")
   }
+  # 比较不同部门排放
+  print(ggplot(melt(tot_emisbysec_ls[[set_scalc]], id = "year")) + 
+          geom_line(aes(year, value, color = variable), size = 1.5))
 }
 
-# 比较不同部门排放
-ggplot(melt(tot_emisbysec_ls[[set_scalc]], id = "year")) + 
-  geom_line(aes(year, value, color = variable), size = 1.5)
-
-# 比较不同情景总排放和达峰时间差异
-func_scompplot(tot_emissum_ls, "co2")
-for (i in names(tot_emissum_ls)) {
-  cat(i, "peak in", func_peakyear(tot_emissum_ls[[i]], "co2"), "\n")
+if (set_resultout == TRUE) {
+  # 比较不同情景总排放和达峰时间差异
+  func_scompplot(tot_emissum_ls, "co2")
+  for (i in set_scalcs) {
+    cat(i, "peak in", func_peakyear(tot_emissum_ls[[i]], "co2"), "\n")
+  }
 }
+
+# 导出各情景达峰时间和最大值
+result_export <- data.frame(
+  scenario = init_scenarios,
+  peak_time = NA, max_value = NA)
+for (i in 1:nrow(result_export)) {
+  result_export$peak_time[i] <- 
+    func_peakyear(tot_emissum_ls[[result_export$scenario[i]]], "co2")
+  result_export$max_value[i] <- 
+    max(tot_emissum_ls[[result_export$scenario[i]]]$"co2")
+}
+result_export <- result_export[order(result_export$peak_time), ]
+write.xlsx(result_export, "a.xlsx")
 
 
 # Data export ----
