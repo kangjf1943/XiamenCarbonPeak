@@ -26,10 +26,12 @@ rm(init_output_templatels,
 
 
 # Settings ----
-set_scalcs <- init_scenarios
+set_scalcs <- c("BAU")
 set_plotstyle <- "base"
 set_calc_cache <- FALSE
 set_parmsim <- FALSE
+set_dataexport <- FALSE
+set_parmexport <- FALSE
 
 # Analysis ----
 for (set_scalc in set_scalcs) {
@@ -42,8 +44,7 @@ for (set_scalc in set_scalcs) {
                   "area")
   
   ## Energy intensity ----
-  if (grepl("OTHER", set_scalc)) {
-    ### OTHER ----
+  if (grepl("OTHER", set_scalc)) { ### OTHER ----
     # 近期由于机械化水平提高，用电强度增加，但柴油强度则依历史趋势下降
     agri_nrgintst_df <- 
       func_interp_3(year = c(2019, 2025, 2050, 2060),
@@ -52,19 +53,19 @@ for (set_scalc in set_scalcs) {
                     "diesel")
     agri_nrgintst_df$electricity <- 
       func_interp_3(year = c(2019, 2025, 2045, 2060),
-                    scale = c(1, 1.2, 1.1, 0.9), 
+                    scale = c(1, 1.1, 1.1, 0.9), 
                     base = func_lastone(by_agri_nrgintst$electricity), 
                     "electricity")$electricity
   } else { ### BAU ----
     # 效率较低
     agri_nrgintst_df <- 
-      func_interp_3(year = c(2019, 2025, 2060),
-                    scale = c(1, 1.4, 1.3), 
+      func_interp_3(year = c(2019, 2030, 2060),
+                    scale = c(1, 0.9, 0.3), 
                     base = func_lastone(by_agri_nrgintst$diesel), 
                     "diesel")
     agri_nrgintst_df$electricity <- 
       func_interp_3(year = c(2019, 2025, 2045, 2060),
-                    scale = c(1, 1.6, 1.4, 1.3), 
+                    scale = c(1, 1.2, 1.2, 1), 
                     base = func_lastone(by_agri_nrgintst$electricity), 
                     "electricity")$electricity
   }
@@ -79,29 +80,8 @@ for (set_scalc in set_scalcs) {
   # Industry ----
   ## Activity level ----
   # 先计算未来子部门GDP所占比重
-  ind_ori_act_prop <- data.frame(year = c(2019:2060))
-  if (grepl("INDSTR", set_scalc)) { ### OTHER ----
-    ind_ori_act_prop[, "化学工业"] <- func_interp_2(
-      year = c(2019, 2030, 2045, 2060), 
-      value = c(func_lastone(by_ind_ori_act_prop$"化学工业"), 5, 0.5, 0))$value
-    ind_ori_act_prop[, "设备制造业"] <- func_interp_2(
-      year = c(2019, 2030, 2060), 
-      value = c(func_lastone(by_ind_ori_act_prop$"设备制造业"), 15, 16))$value
-    ind_ori_act_prop[, "电子电气制造业"] <- func_interp_2(
-      year = c(2019, 2030, 2060), 
-      value = c(func_lastone(by_ind_ori_act_prop$"电子电气制造业"), 57, 64))$value
-  } else {
-    ind_ori_act_prop[, "化学工业"] <- func_interp_2(
-      year = c(2019, 2030, 2050, 2060), 
-      value = c(func_lastone(by_ind_ori_act_prop$"化学工业"), 7, 0.5, 0))$value
-    ind_ori_act_prop[, "设备制造业"] <- func_interp_2(
-      year = c(2019, 2030, 2060), 
-      value = c(func_lastone(by_ind_ori_act_prop$"设备制造业"), 13, 15))$value
-    ind_ori_act_prop[, "电子电气制造业"] <- func_interp_2(
-      year = c(2019, 2030, 2060), 
-      value = c(func_lastone(by_ind_ori_act_prop$"电子电气制造业"), 50, 55))$value
-  }
   if (set_calc_cache == FALSE) { ### Cache ----
+    ind_ori_act_prop <- data.frame(year = c(2019:2060))
     ind_ori_act_prop[, "食品饮料及烟草制造业"] <- func_interp_2(
       year = c(2019, 2030, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"食品饮料及烟草制造业"), 3, 2))$value
@@ -134,6 +114,28 @@ for (set_scalc in set_scalcs) {
       value = c(func_lastone(by_ind_ori_act_prop$"电力、热力生产和供应业"), 
                 0.9, 0.1))$value
   }
+  if (grepl("INDSTR", set_scalc)) { ### OTHER ----
+    ind_ori_act_prop[, "化学工业"] <- func_interp_2(
+      year = c(2019, 2030, 2045, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"化学工业"), 5, 0.5, 0))$value
+    ind_ori_act_prop[, "设备制造业"] <- func_interp_2(
+      year = c(2019, 2030, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"设备制造业"), 15, 16))$value
+    ind_ori_act_prop[, "电子电气制造业"] <- func_interp_2(
+      year = c(2019, 2030, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"电子电气制造业"), 57, 64))$value
+  } else { ### BAU ----
+    # 时间推迟，比例不同
+    ind_ori_act_prop[, "化学工业"] <- func_interp_2(
+      year = c(2019, 2030, 2050, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"化学工业"), 7, 2, 0))$value
+    ind_ori_act_prop[, "设备制造业"] <- func_interp_2(
+      year = c(2019, 2035, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"设备制造业"), 13, 15))$value
+    ind_ori_act_prop[, "电子电气制造业"] <- func_interp_2(
+      year = c(2019, 2035, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"电子电气制造业"), 50, 55))$value
+  }
   ind_ori_act_prop[, "其他制造业"] <- 
     func_saturate(ind_ori_act_prop, "value")$value
   # 计算未来各子部门GDP
@@ -143,7 +145,6 @@ for (set_scalc in set_scalcs) {
   ind_act[global_ind_subsector] <- ind_act[global_ind_subsector]/100
   
   ## Energy intensity ----
-  ### All scenarios ----
   if (grepl("OTHER", set_scalc)) { ### OTHER ----
     # 假设大部分能耗强度略有减少
     ind_nrgintst_ls <- vector("list", 13)
@@ -168,7 +169,7 @@ for (set_scalc in set_scalcs) {
         ind_nrgintst_ls[[i]][, j] <- 
           func_interp_3(
             year = c(2019, 2023, 2025, 2030, 2035, 2060), 
-            scale = c(1.0, 1.3, 1.3, 1.3, 1, 0.8), 
+            scale = c(1.0, 1.3, 1.3, 1.3, 1, 1), 
             base = func_lastone(by_ind_nrgintst_ls[[i]][, j], zero.rm =  FALSE))$value
       }
     }
@@ -203,21 +204,23 @@ for (set_scalc in set_scalcs) {
   
   # Construction ----
   ## Activity level ----
-  const_act <- prj_global_gdp[c("year", "constgdp")]
-  names(const_act)[2] <- "const_gdp"
+  if (set_calc_cache == FALSE) { ### Cache ----
+    const_act <- prj_global_gdp[c("year", "constgdp")]
+    names(const_act)[2] <- "const_gdp"
+  }
   
   ## Energy intensity ----
   if (grepl("OTHER", set_scalc)) {### OTHER ----
     const_nrgintst_df <- 
-      func_interp_3(year = c(2019, 2025, 2045, 2060), 
+      func_interp_3(year = c(2019, 2025, 2040, 2060), 
                     scale = c(1, 0.8, 0.3, 0.1), 
                     base = func_lastone(by_const_nrgintst$electricity), 
                     "electricity")
   } else { ### BAU ----
     # 效率较低
     const_nrgintst_df <- 
-      func_interp_3(year = c(2019, 2025, 2045, 2060), 
-                    scale = c(1, 1, 1, 0.5), 
+      func_interp_3(year = c(2019, 2025, 2050, 2060), 
+                    scale = c(1, 1.1, 1, 0.8), 
                     base = func_lastone(by_const_nrgintst$electricity), 
                     "electricity")
   }
@@ -233,36 +236,52 @@ for (set_scalc in set_scalcs) {
   # Transportation ----
   ## Activity level ----
   # 公路
-  trans_act <- data.frame(year = c(2019: 2060))
-  # 常规公交和快速公交以初始3%的增长率增长至2030年饱和
-  for (i in c("常规公交", "快速公交")) {
-    trans_act[, i] <- 
+  if (set_calc_cache == TRUE) { ### Cache ----
+    trans_act <- data.frame(year = c(2019: 2060))
+    # 常规公交和快速公交以初始3%的增长率增长至2030年饱和
+    for (i in c("常规公交", "快速公交")) {
+      trans_act[, i] <- 
+        func_curve_1(
+          baseyear = 2019, basevalue = func_lastone(by_trans_act[, i]), 
+          maxyear = 2030, endyear = 2060, init_rate = 0.03)$value
+    }
+    
+    # 出租车保持不变或波动
+    trans_act[, "出租车"] <- 
       func_curve_1(
-        baseyear = 2019, basevalue = func_lastone(by_trans_act[, i]), 
-        maxyear = 2030, endyear = 2060, init_rate = 0.03)$value
+        baseyear = 2019, basevalue = func_lastone(by_trans_act[, "出租车"]), 
+        maxyear = 2035, endyear = 2060, init_rate = -0.01)$value
+    
+    # 农村客运因城乡交流频繁，2025年前以初始7%的速率增长
+    trans_act[, "农村客车"] <- 
+      func_curve_1(
+        baseyear = 2019, basevalue = func_lastone(by_trans_act[, "农村客车"]), 
+        maxyear = 2025, endyear = 2060, init_rate = 0.06)$value
+    
+    # 公路其他汽油
+    # 私家车按照初始增长率5%增长，至2035年饱和
+    trans_act[, "公路其他汽油"] <- 
+      func_curve_1(
+        baseyear = 2019, basevalue = func_lastone(by_trans_act[, "公路其他汽油"]), 
+        maxyear = 2035, endyear = 2060, init_rate = 0.05)$value
+    
+    # 公路其他柴油
+    # 按照初始增长率5%增长，至2030年饱和
+    trans_act[, "公路其他柴油"] <- 
+      func_curve_1(
+        baseyear = 2019, basevalue = func_lastone(by_trans_act[, "公路其他柴油"]), 
+        maxyear = 2030, endyear = 2060, init_rate = 0.05)$value
+    
+    # 水运
+    trans_act$"水路客运" <- 
+      func_interp_2(year = c(2019, 2025, 2060), 
+                    value = c(10000, 10500, 11000))$value
+    comment(trans_act$"水路客运") <- "万人公里"
+    trans_act$"水路货运" <- 
+      func_interp_2(year = c(2019, 2025, 2060), 
+                    value = c(21538635, 21538635*1.5, 21538635*2.0))$value
+    comment(trans_act$"水路货运") <- "万吨公里"
   }
-  
-  # 出租车保持不变或波动
-  trans_act[, "出租车"] <- 
-    func_curve_1(
-      baseyear = 2019, basevalue = func_lastone(by_trans_act[, "出租车"]), 
-      maxyear = 2035, endyear = 2060, init_rate = -0.01)$value
-  
-  # 农村客运因城乡交流频繁，2025年前以初始7%的速率增长
-  trans_act[, "农村客车"] <- 
-    func_curve_1(
-      baseyear = 2019, basevalue = func_lastone(by_trans_act[, "农村客车"]), 
-      maxyear = 2025, endyear = 2060, init_rate = 0.06)$value
-  
-  # 水运
-  trans_act$"水路客运" <- 
-    func_interp_2(year = c(2019, 2025, 2060), 
-                  value = c(10000, 10500, 11000))$value
-  comment(trans_act$"水路客运") <- "万人公里"
-  trans_act$"水路货运" <- 
-    func_interp_2(year = c(2019, 2025, 2060), 
-                  value = c(21538635, 21538635*1.5, 21538635*2.0))$value
-  comment(trans_act$"水路货运") <- "万吨公里"
   
   ## Energy intensity ----
   trans_nrgintst_ls <- vector("list", length(global_trans_subsector))
@@ -287,7 +306,8 @@ for (set_scalc in set_scalcs) {
     trans_carprop_ls[[set_scalc]]$gasoline <-
       func_interp_2(year = c(2019, 2025, 2030, 2050, 2060),
                     value = c(1, 0.95, 0.9, 0.2, 0))$value
-    trans_carprop_ls[[set_scalc]]$electricity <- 1 - trans_carprop_ls[[set_scalc]]$gasoline
+    trans_carprop_ls[[set_scalc]]$electricity <- 
+      1 - trans_carprop_ls[[set_scalc]]$gasoline
     # 计算相应能耗强度中汽油和电力的变化
     trans_nrgintst_ls[["公路其他汽油"]]$electricity <-
       func_alter(mean(trans_nrgintst_ls[["公路其他汽油"]]$gasoline),
@@ -326,14 +346,14 @@ for (set_scalc in set_scalcs) {
                     "residual")$residual
   } else { ### BAU ----
     # 其中轿车逐渐实现电气化
-    # 替代比例
     # 推迟年份
     trans_carprop_ls[[set_scalc]] <- 
       data.frame(year = trans_nrgintst_ls[["公路其他汽油"]]$year)
     trans_carprop_ls[[set_scalc]]$gasoline <-
-      func_interp_2(year = c(2019, 2030, 2035, 2055, 2060),
+      func_interp_2(year = c(2019, 2035, 2040, 2055, 2060),
                     value = c(1, 0.95, 0.9, 0.2, 0))$value
-    trans_carprop_ls[[set_scalc]]$electricity <- 1 - trans_carprop_ls[[set_scalc]]$gasoline
+    trans_carprop_ls[[set_scalc]]$electricity <- 
+      1 - trans_carprop_ls[[set_scalc]]$gasoline
     # 计算相应能耗强度中汽油和电力的变化
     trans_nrgintst_ls[["公路其他汽油"]]$electricity <-
       func_alter(mean(trans_nrgintst_ls[["公路其他汽油"]]$gasoline),
@@ -345,16 +365,16 @@ for (set_scalc in set_scalcs) {
     # 柴油和燃料油均基于历史数据和比率
     # 推迟年份
     trans_nrgintst_ls[["水路客运"]] <- 
-      func_interp_3(year = c(2019, 2040, 2060), 
+      func_interp_3(year = c(2019, 2045, 2060), 
                     scale = c(1, 1, 1), 
                     base = func_lastone(by_trans_nrgintst_ls[["水路客运"]]$diesel), 
                     "diesel")
     trans_nrgintst_ls[["水路客运"]]$residual <- 
-      func_interp_2(year = c(2019, 2040, 2060), 
+      func_interp_2(year = c(2019, 2045, 2060), 
                     value = c(
                       func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual), 
-                      func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual)*0.85, 
-                      func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual)*0.80),
+                      func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual), 
+                      func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual)),
                     "residual")$residual
     
     # 水路货运
@@ -457,7 +477,7 @@ for (set_scalc in set_scalcs) {
                       c(2019, 2040, 2055, 2060)), 
       propsubs = list(c(0, 0.6, 1, 1), 
                       c(0, 0.6, 1, 1)), 
-      alterscales = list(0.9, 0.9))
+      alterscales = list(1, 1))
   }
 
   
@@ -586,20 +606,20 @@ for (set_scalc in set_scalcs) {
   tfres_act <- tfres_act[c("year", "electricity")]
   names(tfres_act) <- c("year", "elecuse")
   if (grepl("OTHER", set_scalc)) { ### OTHER ----
-    # 本地发电量减少为原来的一半
+    # 2025年开始减煤，五年内减为原来的一半
     tfres_act <- 
       func_merge_2(list(
         tfres_act, 
         func_interp_2(
-          year = c(2019, 2030, 2050, 2060),
-          value = c(900371, 900371*0.5, 0, 0), "elecgen", showplot = FALSE)))
+          year = c(2019, 2025, 2030, 2050, 2060),
+          value = c(900371, 900371, 900371*0.5, 0, 0), "elecgen", showplot = FALSE)))
   } else { ### BAU ----
-    # 本地发电量到2025年减少为原来的一半
+    # 2030年开始减煤，十年内减为原来的一半
     tfres_act <- 
       func_merge_2(list(
         tfres_act, 
         func_interp_2(year = c(2019, 2030, 2040, 2060),
-                      value = c(900371, 900371, 900371*0.7, 900371*0.3), "elecgen")))
+                      value = c(900371, 900371, 900371*0.5, 900371*0.5), "elecgen")))
   }
   # 本地发电所用电量
   tfres_act$tfelecuse <- 
@@ -612,7 +632,8 @@ for (set_scalc in set_scalcs) {
   ## Consumption and emission ----
   tf_nrgsum_ls[[set_scalc]] <- 
     func_nrg_sum(tf_nrgintst, tfres_act, "elecgen")
-  tf_emissum_ls[[set_scalc]] <- func_emissum(tf_nrgsum_ls[[set_scalc]], prj_emisfac_df)
+  tf_emissum_ls[[set_scalc]] <- 
+    func_emissum(tf_nrgsum_ls[[set_scalc]], prj_emisfac_df)
   
   # Imported elec ----
   ## Emission ----
@@ -652,16 +673,20 @@ for (set_scalc in set_scalcs) {
     func_nrg_sum(tot_elecsharebysec, tot_elecemis, "co2")
   # 汇总各部门直接排放
   tot_diremisbysec <- 
-    func_mrgcol(list(agri_emissum_dir_ls[[set_scalc]], ind_emissum_dir_ls[[set_scalc]], 
-                     const_emissum_dir_ls[[set_scalc]], trans_emissum_dir_ls[[set_scalc]], 
-                     com_emissum_dir_ls[[set_scalc]], hh_emissum_dir_ls[[set_scalc]]), 
-                "co2", namesnew = global_sectors[1:6])
+    func_mrgcol(
+      list(agri_emissum_dir_ls[[set_scalc]], ind_emissum_dir_ls[[set_scalc]], 
+           const_emissum_dir_ls[[set_scalc]], trans_emissum_dir_ls[[set_scalc]], 
+           com_emissum_dir_ls[[set_scalc]], hh_emissum_dir_ls[[set_scalc]]), 
+      "co2", namesnew = global_sectors[1:6])
   # 终端部门总排放=电力排放+直接排放
-  tot_emisbysec_ls[[set_scalc]] <- func_cross(tot_elecemisbysec, tot_diremisbysec, "sum")
+  tot_emisbysec_ls[[set_scalc]] <- 
+    func_cross(tot_elecemisbysec, tot_diremisbysec, "sum")
   # 总排放
-  tot_emissum_ls[[set_scalc]] <- data.frame(year = tot_emisbysec_ls[[set_scalc]]$year)
+  tot_emissum_ls[[set_scalc]] <- 
+    data.frame(year = tot_emisbysec_ls[[set_scalc]]$year)
   tot_emissum_ls[[set_scalc]]$co2 <- 
-    rowSums(tot_emisbysec_ls[[set_scalc]][names(tot_emisbysec_ls[[set_scalc]]) != "year"])
+    rowSums(
+      tot_emisbysec_ls[[set_scalc]][names(tot_emisbysec_ls[[set_scalc]]) != "year"])
   
   
   # Output ----
@@ -673,166 +698,157 @@ for (set_scalc in set_scalcs) {
   }
 }
 
+# 比较不同部门排放
+ggplot(melt(tot_emisbysec_ls[[set_scalc]], id = "year")) + 
+  geom_line(aes(year, value, color = variable), size = 1.5)
+
 # 比较不同情景总排放和达峰时间差异
-plot(tot_emissum_ls[["BAU"]]$year, tot_emissum_ls[["BAU"]]$co2, 
-     type = "l", ylim = c(0, 3500), col = 1)
-par(mfrow = c(2, 2))
-for (i in c(1:32)) {
-  
-  plot(tot_emissum_ls[[i]]$year, tot_emissum_ls[[i]]$co2, 
-       type = "l", ylim = c(0, 3500), color = i)
-  #print(max(tot_emissum_ls[[i]]$co2))
-  print(func_peakyear(tot_emissum_ls[[i]], "co2"))
-}
-
-
-
-plot(tot_emissum_ls[["OTHER_KEEPCOAL"]]$year, tot_emissum_ls[["OTHER_KEEPCOAL"]]$co2, 
-     type = "l", ylim = c(0, 3500), col = "orange")
-par(new = TRUE)
-plot(tot_emissum_ls[["OTHER"]]$year, tot_emissum_ls[["OTHER"]]$co2, 
-     type = "l", ylim = c(0, 3500), col = "blue")
-for (i in scenarios) {
+func_scompplot(tot_emissum_ls, "co2")
+for (i in names(tot_emissum_ls)) {
   cat(i, "peak in", func_peakyear(tot_emissum_ls[[i]], "co2"), "\n")
 }
 
+
 # Data export ----
-# 导出各情景下总排放
-tot_emis_export <- createWorkbook()
-for (i in names(tot_emissum_ls)) {
-  addWorksheet(tot_emis_export, i)
-  writeData(tot_emis_export, i, tot_emissum_ls[[i]])
+if (set_dataexport == TRUE) {
+  # 导出各情景下总排放
+  tot_emis_export <- createWorkbook()
+  for (i in names(tot_emissum_ls)) {
+    addWorksheet(tot_emis_export, i)
+    writeData(tot_emis_export, i, tot_emissum_ls[[i]])
+  }
+  if (file.exists("各情景总排放量.xlsx")) {
+    file.remove("各情景总排放量.xlsx")
+  }
+  saveWorkbook(tot_emis_export, "各情景总排放量.xlsx")
+  
+  # 导出规划情景下各部门排放量
+  tot_emisbysec_export <- createWorkbook()
+  addWorksheet(tot_emisbysec_export, "sectoremis")
+  writeData(tot_emisbysec_export, "sectoremis", tot_emisbysec_ls[["OTHER_KEEPCOAL"]])
+  if (file.exists("规划情景各部门排放量.xlsx")) {
+    file.remove("规划情景各部门排放量.xlsx")
+  }
+  saveWorkbook(tot_emisbysec_export, "规划情景各部门排放量.xlsx")
+  
+  # 导出强化情景下的总排放
+  tot_emisbysec_export <- createWorkbook()
+  addWorksheet(tot_emisbysec_export, "sectoremis")
+  writeData(tot_emisbysec_export, "sectoremis", tot_emisbysec_ls[["OTHER"]])
+  if (file.exists("强化情景各部门排放量.xlsx")) {
+    file.remove("强化情景各部门排放量.xlsx")
+  }
+  saveWorkbook(tot_emisbysec_export, "强化情景各部门排放量.xlsx")
 }
-if (file.exists("各情景总排放量.xlsx")) {
-  file.remove("各情景总排放量.xlsx")
+
+
+# Parameters export ----
+if (set_parmexport == TRUE) {
+  ## Agri
+  # 活动水平，能耗强度，能耗总量
+  par(mfrow = c(3, 2))
+  func_history_project(by_agri_act, "agri",
+                       agri_act, "area",
+                       xlab = "", ylab = "播种面积", style = set_plotstyle)
+  func_history_project(by_agri_nrgintst, "diesel",
+                       agri_nrgintst_df, "diesel",
+                       xlab = "", ylab = "柴油强度", style = set_plotstyle)
+  func_history_project(by_agri_nrgintst, "electricity",
+                       agri_nrgintst_df, "electricity",
+                       xlab = "", ylab = "用电强度", style = set_plotstyle)
+  func_history_project(by_agri_nrgsum_df, "diesel",
+                       agri_nrgsum_ls[[set_scalc]], "diesel",
+                       xlab = "", ylab = "柴油总量", style = set_plotstyle)
+  func_history_project(by_agri_nrgsum_df, "electricity",
+                       agri_nrgsum_ls[[set_scalc]], "electricity",
+                       xlab = "", ylab = "用电总量", style = set_plotstyle)
+  
+  ## Ind
+  # 各行业GDP变化
+  par(mfrow = c(4, 4))
+  for (i in global_ind_subsector) {
+    func_history_project(by_ind_act, i, ind_act, i,
+                         xlab = "", ylab = i, style = set_plotstyle)
+  }
+  
+  ## Const
+  # 活动水平，能耗强度，能耗总量
+  par(mfrow = c(2, 2))
+  func_history_project(by_const_act, "const_gdp",
+                       const_act, "const_gdp",
+                       xlab = "", ylab = "建筑业GDP", style = set_plotstyle)
+  func_history_project(by_const_nrgintst, "electricity",
+                       const_nrgintst_df, "electricity",
+                       xlab = "", ylab = "用电强度", style = set_plotstyle)
+  func_history_project(by_const_nrgsum_df, "electricity",
+                       const_nrgsum_ls[[set_scalc]], "electricity",
+                       xlab = "", ylab = "用电总量", style = set_plotstyle)
+  
+  ### Trans
+  par(mfrow = c(3, 3))
+  for (i in global_trans_subsector) {
+    func_history_project(by_trans_act, i, trans_act, i,
+                         xlab = "", ylab = i, style = set_plotstyle)
+  }
+  
+  ## Service
+  par(mfrow = c(3, 3))
+  func_history_project(by_com_act, "com_employee", com_act, "com_employee",
+                       xlab = "", ylab = "服务业从业人数", style = set_plotstyle)
+  func_history_project(by_com_act, "com_gdp", com_act, "com_gdp",
+                       xlab = "", ylab = "服务业GDP", style = set_plotstyle)
+  func_history_project(by_com_nrgintst_ls[["electricity"]], "electricity",
+                       com_nrgintst_ls[["electricity"]], "electricity",
+                       xlab = "", ylab = "从业人均用电强度", style = set_plotstyle)
+  for (i in c("lpg", "gas", "electricity")) {
+    func_history_project(by_com_nrgintst_ls[["lpg_and_gas"]], i,
+                         com_nrgintst_ls[["lpg_and_gas"]], i,
+                         xlab = "", ylab = paste0("单位GDP", i, "强度"), style = set_plotstyle)
+  }
+  for (i in c("lpg", "gas", "electricity")) {
+    func_history_project(by_com_nrgsum_df, i,
+                         com_nrgsum_ls[[set_scalc]], i,
+                         xlab = "", ylab = paste0(i, "总量"), style = set_plotstyle)
+  }
+  
+  ## Household
+  par(mfrow = c(3, 4))
+  # 活动水平
+  for (i in c("household", "lpg", "gas")) {
+    func_history_project(by_hh_act, i, hh_act, i,
+                         xlab = "", ylab = paste0(i, "用户"), style = set_plotstyle)
+  }
+  # 能耗强度
+  for (i in c("electricity", "rawcoal")) {
+    func_history_project(by_hh_nrgintst_ls[["household"]], i,
+                         hh_nrgintst_ls[["hh_coal_elec"]], i,
+                         xlab = "", ylab = paste0(i, "强度"), style = set_plotstyle)
+  }
+  func_history_project(by_hh_nrgintst_ls[["lpg"]], "lpg",
+                       hh_nrgintst_ls[["hh_lpg"]], "lpg",
+                       xlab = "", ylab = paste0("lpg", "强度"), style = set_plotstyle)
+  func_history_project(by_hh_nrgintst_ls[["gas"]], "gas",
+                       hh_nrgintst_ls[["hh_gas"]], "gas",
+                       xlab = "", ylab = paste0("gas", "强度"), style = set_plotstyle)
+  # 能耗总量
+  for (i in c("electricity", "rawcoal", "lpg", "gas")) {
+    func_history_project(by_hh_nrgsum_df, i,
+                         hh_nrgsum_ls[[set_scalc]], i,
+                         xlab = "", ylab = paste0(i, "总量"), style = set_plotstyle)
+  }
+  
+  # 各部门排放量和总排放量
+  par(mfrow = c(3, 3))
+  for (i in global_sectors[1:6]) {
+    func_history_project(by_tot_emisbysec, i, tot_emisbysec_ls[[set_scalc]], i,
+                         xlab = "", ylab = i, style = set_plotstyle)
+  }
+  func_history_project(by_tf_emissum_df, "co2", tf_emissum_ls[[set_scalc]], "co2",
+                       xlab = "", ylab = "本地发电排放", style = set_plotstyle)
+  func_history_project(by_res_emissum_df, "co2", res_emissum_ls[[set_scalc]], "co2",
+                       xlab = "", ylab = "外调电力排放", style = set_plotstyle)
+  func_history_project(by_tot_emis, "co2", tot_emissum_ls[[set_scalc]], "co2",
+                       xlab = "", ylab = "全市总排放", style = set_plotstyle)
 }
-saveWorkbook(tot_emis_export, "各情景总排放量.xlsx")
-
-# 导出规划情景下各部门排放量
-tot_emisbysec_export <- createWorkbook()
-addWorksheet(tot_emisbysec_export, "sectoremis")
-writeData(tot_emisbysec_export, "sectoremis", tot_emisbysec_ls[["OTHER_KEEPCOAL"]])
-if (file.exists("规划情景各部门排放量.xlsx")) {
-  file.remove("规划情景各部门排放量.xlsx")
-}
-saveWorkbook(tot_emisbysec_export, "规划情景各部门排放量.xlsx")
-
-# 导出强化情景下的总排放
-tot_emisbysec_export <- createWorkbook()
-addWorksheet(tot_emisbysec_export, "sectoremis")
-writeData(tot_emisbysec_export, "sectoremis", tot_emisbysec_ls[["OTHER"]])
-if (file.exists("强化情景各部门排放量.xlsx")) {
-  file.remove("强化情景各部门排放量.xlsx")
-}
-saveWorkbook(tot_emisbysec_export, "强化情景各部门排放量.xlsx")
-
-
-  # ## Agri
-  # # 活动水平，能耗强度，能耗总量
-  # par(mfrow = c(3, 2))
-  # func_history_project(by_agri_act, "agri",
-  #                      agri_act, "area",
-  #                      xlab = "", ylab = "播种面积", style = set_plotstyle)
-  # func_history_project(by_agri_nrgintst, "diesel",
-  #                      agri_nrgintst_df, "diesel",
-  #                      xlab = "", ylab = "柴油强度", style = set_plotstyle)
-  # func_history_project(by_agri_nrgintst, "electricity",
-  #                      agri_nrgintst_df, "electricity",
-  #                      xlab = "", ylab = "用电强度", style = set_plotstyle)
-  # func_history_project(by_agri_nrgsum_df, "diesel",
-  #                      agri_nrgsum_ls[[set_scalc]], "diesel",
-  #                      xlab = "", ylab = "柴油总量", style = set_plotstyle)
-  # func_history_project(by_agri_nrgsum_df, "electricity",
-  #                      agri_nrgsum_ls[[set_scalc]], "electricity",
-  #                      xlab = "", ylab = "用电总量", style = set_plotstyle)
-  # 
-  # ## Ind
-  # # 各行业GDP变化
-  # par(mfrow = c(4, 4))
-  # for (i in global_ind_subsector) {
-  #   func_history_project(by_ind_act, i, ind_act, i, 
-  #                        xlab = "", ylab = i, style = set_plotstyle)
-  # }
-  # 
-  # ## Const
-  # # 活动水平，能耗强度，能耗总量
-  # par(mfrow = c(2, 2))
-  # func_history_project(by_const_act, "const_gdp", 
-  #                      const_act, "const_gdp", 
-  #                      xlab = "", ylab = "建筑业GDP", style = set_plotstyle)
-  # func_history_project(by_const_nrgintst, "electricity", 
-  #                      const_nrgintst_df, "electricity", 
-  #                      xlab = "", ylab = "用电强度", style = set_plotstyle)
-  # func_history_project(by_const_nrgsum_df, "electricity", 
-  #                      const_nrgsum_ls[[set_scalc]], "electricity", 
-  #                      xlab = "", ylab = "用电总量", style = set_plotstyle)
-  # 
-  # ### Trans
-  # par(mfrow = c(3, 3))
-  # for (i in global_trans_subsector) {
-  #   func_history_project(by_trans_act, i, trans_act, i, 
-  #                        xlab = "", ylab = i, style = set_plotstyle)
-  # }
-  # 
-  # ## Service
-  # par(mfrow = c(3, 3))
-  # func_history_project(by_com_act, "com_employee", com_act, "com_employee", 
-  #                      xlab = "", ylab = "服务业从业人数", style = set_plotstyle)
-  # func_history_project(by_com_act, "com_gdp", com_act, "com_gdp", 
-  #                      xlab = "", ylab = "服务业GDP", style = set_plotstyle)
-  # func_history_project(by_com_nrgintst_ls[["electricity"]], "electricity", 
-  #                      com_nrgintst_ls[["electricity"]], "electricity", 
-  #                      xlab = "", ylab = "从业人均用电强度", style = set_plotstyle)
-  # for (i in c("lpg", "gas", "electricity")) {
-  #   func_history_project(by_com_nrgintst_ls[["lpg_and_gas"]], i,  
-  #                        com_nrgintst_ls[["lpg_and_gas"]], i, 
-  #                        xlab = "", ylab = paste0("单位GDP", i, "强度"), style = set_plotstyle)
-  # }
-  # for (i in c("lpg", "gas", "electricity")) {
-  #   func_history_project(by_com_nrgsum_df, i,  
-  #                        com_nrgsum_ls[[set_scalc]], i, 
-  #                        xlab = "", ylab = paste0(i, "总量"), style = set_plotstyle)
-  # }
-  # 
-  # ## Household
-  # par(mfrow = c(3, 4))
-  # # 活动水平
-  # for (i in c("household", "lpg", "gas")) {
-  #   func_history_project(by_hh_act, i, hh_act, i, 
-  #                        xlab = "", ylab = paste0(i, "用户"), style = set_plotstyle)
-  # }
-  # # 能耗强度
-  # for (i in c("electricity", "rawcoal")) {
-  #   func_history_project(by_hh_nrgintst_ls[["household"]], i, 
-  #                        hh_nrgintst_ls[["hh_coal_elec"]], i, 
-  #                        xlab = "", ylab = paste0(i, "强度"), style = set_plotstyle)
-  # }
-  # func_history_project(by_hh_nrgintst_ls[["lpg"]], "lpg", 
-  #                      hh_nrgintst_ls[["hh_lpg"]], "lpg", 
-  #                      xlab = "", ylab = paste0("lpg", "强度"), style = set_plotstyle)
-  # func_history_project(by_hh_nrgintst_ls[["gas"]], "gas", 
-  #                      hh_nrgintst_ls[["hh_gas"]], "gas", 
-  #                      xlab = "", ylab = paste0("gas", "强度"), style = set_plotstyle)
-  # # 能耗总量
-  # for (i in c("electricity", "rawcoal", "lpg", "gas")) {
-  #   func_history_project(by_hh_nrgsum_df, i, 
-  #                        hh_nrgsum_ls[[set_scalc]], i, 
-  #                        xlab = "", ylab = paste0(i, "总量"), style = set_plotstyle)
-  # }
-  # 
-  # # 各部门排放量和总排放量
-  # par(mfrow = c(3, 3))
-  # for (i in global_sectors[1:6]) {
-  #   func_history_project(by_tot_emisbysec, i, tot_emisbysec_ls[[set_scalc]], i,
-  #                        xlab = "", ylab = i, style = set_plotstyle)
-  # }
-  # func_history_project(by_tf_emissum_df, "co2", tf_emissum_ls[[set_scalc]], "co2", 
-  #                      xlab = "", ylab = "本地发电排放", style = set_plotstyle)
-  # func_history_project(by_res_emissum_df, "co2", res_emissum_ls[[set_scalc]], "co2", 
-  #                      xlab = "", ylab = "外调电力排放", style = set_plotstyle)
-  # func_history_project(by_tot_emis, "co2", tot_emissum_ls[[set_scalc]], "co2",
-  #                      xlab = "", ylab = "全市总排放", style = set_plotstyle)
-func_history_project(by_trans_nrgintst_ls)
-
 
 
