@@ -493,7 +493,7 @@ func_alter <- function(nrg_in, name_in, name_out) {
 func_toce <- function(nrg_df) {
   out_df <- data.frame(year = nrg_df[, "year"])
   factors <- 
-    data.frame(nrg = c("coal", "coalproduct", 
+    data.frame(nrg = c("rawcoal", "coalproduct", 
                        "gasoline", "diesel", "kerosene", "residual", "lpg", 
                        "gas"), 
                factor = c(0.7143, 0.6072, 
