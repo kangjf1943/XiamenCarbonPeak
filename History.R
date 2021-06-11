@@ -886,13 +886,12 @@ by_tf_nrgintst <- func_nrg_intst(by_tf_nrgsum_df, by_tfres_act, "elecgen")
 # 问题：此处的发电能耗强度是火电投入量和全部发电量之和
 
 # Imported elec ----
-## Consumption ----
+## Energy intensity ----
 # 读取省电网发电能耗量
 global_provelecgen_nrgsum <- 
   func_read_trans("S3CNPRZE")[c("year", "原煤", "柴油", "燃料油", "天然气")]
 names(global_provelecgen_nrgsum) <- c("year", "rawcoal", "diesel", "residual", "gas")
 
-## Energy intensity ----
 # 火电能耗系数
 by_res_nrgintst <- 
   func_nrg_intst(global_provelecgen_nrgsum, global_provelecgen, "火电")
