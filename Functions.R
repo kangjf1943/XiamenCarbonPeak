@@ -283,6 +283,8 @@ func_cross <- function(df1, df2, method = "product") {
     dfout
   }
 }
+comment(func_cross) <- 
+  "可选计算方式：“sum”，“product”，“rate”和“difference”，默认为“product”"
 
 
 ## 构建插值函数
