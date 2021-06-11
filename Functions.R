@@ -556,10 +556,10 @@ func_rowsums <- function(df, namevalue = "value") {
 func_ratecalc <- function(in_df, name_value) {
   out_df <- data.frame(year = in_df$year)
   out_df$now <- in_df[, name_value]
-  # 将带计算数据错位放在另一列
+  # 将待计算数据错位放在另一列
   out_df$before <- 
     c(NA, head(in_df[, name_value], length(in_df[, name_value])-1))
-  out_df$rate <- (out_df$now - out_df$before) / out_df$now
+  out_df$rate <- (out_df$now - out_df$before) / out_df$before
   out_df <- out_df[c("year", "rate")]
   out_df
 }
