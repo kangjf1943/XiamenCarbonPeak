@@ -28,11 +28,12 @@ rm(init_output_templatels,
 
 # Settings ----
 set_scalcs <- c("BAU", 
-                "BAU_INDSTR", "BAU_ELECCAR", "BAU_COMCONS", "BAU_HHCONS", 
+                "BAU_INDSTR", "BAU_ELECCAR", "BAU_COMCONS", "BAU_HHCONS",
+                "BAU_INDSTR_ELECCAR_COMCONS_HHCONS_OTHER", 
                 "BAU_26COAL", 
                 "BAU_24COAL")
 set_plotstyle <- "base"
-set_calc_cache <- TRUE
+set_calc_cache <- F
 set_resultout <- TRUE
 set_dataexport <- FALSE
 set_parmexport <- FALSE
@@ -132,13 +133,13 @@ for (set_scalc in "BAU_26COAL") {
     # 时间推迟，比例不同
     ind_ori_act_prop[, "化学工业"] <- func_interp_2(
       year = c(2019, 2035, 2050, 2060), 
-      value = c(func_lastone(by_ind_ori_act_prop$"化学工业"), 7, 2, 0))$value
+      value = c(func_lastone(by_ind_ori_act_prop$"化学工业"), 7, 3, 0))$value
     ind_ori_act_prop[, "设备制造业"] <- func_interp_2(
       year = c(2019, 2040, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"设备制造业"), 13, 15))$value
     ind_ori_act_prop[, "电子电气制造业"] <- func_interp_2(
       year = c(2019, 2040, 2060), 
-      value = c(func_lastone(by_ind_ori_act_prop$"电子电气制造业"), 50, 55))$value
+      value = c(func_lastone(by_ind_ori_act_prop$"电子电气制造业"), 50, 52))$value
   }
   ind_ori_act_prop[, "其他制造业"] <- func_saturate(
     ind_ori_act_prop[c("year", global_ind_subsector[global_ind_subsector != "其他制造业"])], "value")$value
@@ -173,29 +174,51 @@ for (set_scalc in "BAU_26COAL") {
         ind_nrgintst_ls[[i]][, j] <- 
           func_interp_3(
             year = c(2019, 2025, 2030, 2040, 2060), 
-            scale = c(1.0, 1.1, 1.1, 1, 1), 
+            scale = c(1.0, 1.1, 1.2, 1, 1), 
             base = func_lastone(by_ind_nrgintst_ls[[i]][, j], zero.rm =  FALSE))$value
       }
     }
   }
-  
   # 但是天然气在短期内有所上升
-  for (i in global_ind_subsector) {
-    ind_nrgintst_ls[[i]][, "gas"] <- 
-      func_interp_3(
-        year = c(2019, 2025, 2030, 2060), 
-        scale = c(1.0, 1.1, 1.2, 1), 
-        base = func_lastone(by_ind_nrgintst_ls[[i]][, "gas"], 
-                            zero.rm =  FALSE))$value
+  if (grepl("OTHER", set_scalc)) {
+    for (i in global_ind_subsector) {
+      ind_nrgintst_ls[[i]][, "gas"] <- 
+        func_interp_3(
+          year = c(2019, 2025, 2030, 2060), 
+          scale = c(1.0, 1.1, 1.2, 1), 
+          base = func_lastone(by_ind_nrgintst_ls[[i]][, "gas"], 
+                              zero.rm =  FALSE))$value
+    }
+  } else {
+    for (i in global_ind_subsector) {
+      ind_nrgintst_ls[[i]][, "gas"] <- 
+        func_interp_3(
+          year = c(2019, 2025, 2030, 2060), 
+          scale = c(1.0, 1.3, 1.5, 1), 
+          base = func_lastone(by_ind_nrgintst_ls[[i]][, "gas"], 
+                              zero.rm =  FALSE))$value
+    }
   }
+  
   # 电力在短期内有所上升，但比天然气上升幅度小
-  for (i in global_ind_subsector) {
-    ind_nrgintst_ls[[i]][, "electricity"] <- 
-      func_interp_3(
-        year = c(2019, 2025, 2030, 2060), 
-        scale = c(1.0, 1.2, 1.2, 1.0), 
-        base = func_lastone(by_ind_nrgintst_ls[[i]][, "electricity"], 
-                            zero.rm =  FALSE))$value
+  if (grepl("OTHER", set_scalc)) {
+    for (i in global_ind_subsector) {
+      ind_nrgintst_ls[[i]][, "electricity"] <- 
+        func_interp_3(
+          year = c(2019, 2025, 2030, 2060), 
+          scale = c(1.0, 1.2, 1.2, 1.0), 
+          base = func_lastone(by_ind_nrgintst_ls[[i]][, "electricity"], 
+                              zero.rm =  FALSE))$value
+    }
+  } else {
+    for (i in global_ind_subsector) {
+      ind_nrgintst_ls[[i]][, "electricity"] <- 
+        func_interp_3(
+          year = c(2019, 2025, 2030, 2060), 
+          scale = c(1.0, 1.2, 1.3, 1.0), 
+          base = func_lastone(by_ind_nrgintst_ls[[i]][, "electricity"], 
+                              zero.rm =  FALSE))$value
+    }
   }
   
   ## Energy and emission ----
@@ -317,10 +340,9 @@ for (set_scalc in "BAU_26COAL") {
       namenrgsubs = list("electricity"), 
       yearsubs = list(c(2019, 2025, 2030, 2050, 2060)), 
       propsubs = list(c(0, 0.05, 0.10, 0.80, 1)), 
-      alterscales = list(0.9))
+      alterscales = list(0.8))
   } else { ### BAU ----
-    # 其中轿车逐渐实现电气化
-    # 推迟年份
+    # 其中轿车逐渐实现电气化较晚
     trans_nrgintst_ls[["公路其他汽油"]] <- func_nrgsub(
       nrgori = trans_nrgintst_ls[["公路其他汽油"]], 
       namenrgoris = list("gasoline"), 
@@ -415,10 +437,10 @@ for (set_scalc in "BAU_26COAL") {
   }
   
   ## Energy intensity ----
+  com_nrgintst_ls <- vector("list", 2)
+  names(com_nrgintst_ls) <- global_com_subsector
   if (grepl("OTHER", set_scalc)) { ### OTHER ----
     # 服务业用电强度略有增加
-    com_nrgintst_ls <- vector("list", 2)
-    names(com_nrgintst_ls) <- global_com_subsector
     com_nrgintst_ls[[1]] <- 
       func_interp_2(year = c(2019, 2025, 2060), 
                     value = c(2958.967, 2958.967, 2958.967*0.7), 
@@ -435,10 +457,7 @@ for (set_scalc in "BAU_26COAL") {
                     base = func_lastone(by_com_nrgintst_ls[[2]]$gas), 
                     "gas")$gas
   } else { ### BAU ----
-    # 服务业用电强度略有增加
     # 效率较低，推迟年份
-    com_nrgintst_ls <- vector("list", 2)
-    names(com_nrgintst_ls) <- global_com_subsector
     com_nrgintst_ls[[1]] <- 
       func_interp_2(year = c(2019, 2035, 2060), 
                     value = c(2958.967, 2958.967*1.2, 2958.967), 
@@ -465,7 +484,7 @@ for (set_scalc in "BAU_26COAL") {
                       c(2019, 2030, 2050, 2060)), 
       propsubs = list(c(0, 0.6, 1, 1), 
                       c(0, 0.6, 1, 1)), 
-      alterscales = list(0.9, 0.9))
+      alterscales = list(0.8, 0.8))
   } else { ### BAU ----
     # 燃气的电气化推迟
     com_nrgintst_ls[[2]] <- func_nrgsub(
@@ -495,76 +514,77 @@ for (set_scalc in "BAU_26COAL") {
   )
   
   ## Activity level ----
-  # hh_elec
-  hh_ori_household <- prj_global_population[c("year", "household")]
-  # hh_lpg
-  hh_ori_lpguser <- 
-    func_cross(prj_global_population[c("year", "household")], 
-               func_interp_3(year = c(2019, 2033, 2060), 
-                             scale = c(1, 0.65, 0.30), 
-                             base = func_lastone(
-                               by_hh_ori_users_prop[c("year", "lpg")])))
-  names(hh_ori_lpguser)[2] <- "lpg"
-  # hh_gas
-  hh_ori_gasuser <- 
-    func_cross(prj_global_population[c("year", "household")], 
-               func_interp_3(year = c(2019, 2030, 2060), 
-                             scale = c(1, 2, 2), 
-                             base = func_lastone(
-                               by_hh_ori_users_prop[c("year", "gas")])))
-  names(hh_ori_gasuser)[2] <- "gas"
-  # 合并
-  hh_act <- func_merge_2(list(hh_ori_household, 
-                                     hh_ori_lpguser, 
-                                     hh_ori_gasuser))
+  if (set_calc_cache == TRUE) { ### Cache ----
+    # hh_elec
+    hh_ori_household <- prj_global_population[c("year", "household")]
+    # hh_lpg
+    hh_ori_lpguser <- 
+      func_cross(prj_global_population[c("year", "household")], 
+                 func_interp_3(year = c(2019, 2033, 2060), 
+                               scale = c(1, 0.65, 0.30), 
+                               base = func_lastone(
+                                 by_hh_ori_users_prop[c("year", "lpg")])))
+    names(hh_ori_lpguser)[2] <- "lpg"
+    # hh_gas
+    hh_ori_gasuser <- 
+      func_cross(prj_global_population[c("year", "household")], 
+                 func_interp_3(year = c(2019, 2030, 2060), 
+                               scale = c(1, 2, 2), 
+                               base = func_lastone(
+                                 by_hh_ori_users_prop[c("year", "gas")])))
+    names(hh_ori_gasuser)[2] <- "gas"
+    # 合并
+    hh_act <- func_merge_2(list(hh_ori_household, 
+                                hh_ori_lpguser, 
+                                hh_ori_gasuser))
+  }
   
   ## Energy intensity ----
+  hh_nrgintst_ls <- vector("list", length(global_hh_subsector))
+  names(hh_nrgintst_ls) <- global_hh_subsector
+  # 生活用电强度
   if (grepl("HHCONS", set_scalc)) { ### HHCONS ----
-    hh_nrgintst_ls <- vector("list", length(global_hh_subsector))
-    names(hh_nrgintst_ls) <- global_hh_subsector
-    # house_coal_elec
-    # 生活用电强度
-    hh_nrgintst_ls[[1]] <- 
-      func_interp_2(year = c(2019, 2030, 2060), 
-                    value = c(3900, 3900*1.2, 3900*1.4))
-    names(hh_nrgintst_ls[[1]])[2] <- "electricity"
-    # 生活用煤强度
-    hh_nrgintst_ls[[1]]$rawcoal <- 0
-    
-    # hh_lpg
+    hh_nrgintst_ls[[1]] <- func_interp_3(
+      year = c(2019, 2035, 2060), 
+      scale = c(1, 1.2, 1.4), 
+      base = func_lastone(by_hh_nrgintst_ls[["household"]][, "electricity"]))
+  } else { ### BAU ----
+    hh_nrgintst_ls[[1]] <- func_interp_3(
+      year = c(2019, 2035, 2060), 
+      scale = c(1, 1.4, 1.6), 
+      base = func_lastone(by_hh_nrgintst_ls[["household"]][, "electricity"]))
+  }
+  names(hh_nrgintst_ls[[1]])[2] <- "electricity"
+  
+  # 生活用煤强度
+  hh_nrgintst_ls[[1]]$rawcoal <- 0
+  
+  # 生活液化石油气
+  if (grepl("HHCONS", set_scalc)) { ### HHCONS ----
     hh_nrgintst_ls[[2]] <- 
-      func_interp_3(year = c(2019, 2030, 2060), 
+      func_interp_3(year = c(2019, 2035, 2060), 
                     scale = c(1, 0.8, 0.5), 
                     base = func_lastone(by_hh_nrgintst_ls[["lpg"]]$lpg), 
                     "lpg")
-    # hh_gas
+  } else { ### BAU ----
+    hh_nrgintst_ls[[2]] <- 
+      func_interp_3(year = c(2019, 2040, 2060), 
+                    scale = c(1, 1.2, 0.7), 
+                    base = func_lastone(by_hh_nrgintst_ls[["lpg"]]$lpg), 
+                    "lpg")
+  }
+  
+  # 生活天然气
+  if (grepl("HHCONS", set_scalc)) { ### HHCONS ----
     hh_nrgintst_ls[[3]] <- 
-      func_interp_3(year = c(2019, 2030, 2060), 
+      func_interp_3(year = c(2019, 2035, 2060), 
                     scale = c(1, 0.8, 0.5), 
                     base = func_lastone(by_hh_nrgintst_ls[["gas"]]$gas), 
                     "gas")
   } else { ### BAU ----
-    hh_nrgintst_ls <- vector("list", length(global_hh_subsector))
-    names(hh_nrgintst_ls) <- global_hh_subsector
-    # house_coal_elec
-    # 生活用电强度
-    hh_nrgintst_ls[[1]] <- 
-      func_interp_2(year = c(2019, 2030, 2060), 
-                    value = c(3900, 3900*1.3, 3900*1.4))
-    names(hh_nrgintst_ls[[1]])[2] <- "electricity"
-    # 生活用煤强度
-    hh_nrgintst_ls[[1]]$rawcoal <- 0
-    
-    # hh_lpg
-    hh_nrgintst_ls[[2]] <- 
-      func_interp_3(year = c(2019, 2030, 2060), 
-                    scale = c(1, 1.3, 0.7), 
-                    base = func_lastone(by_hh_nrgintst_ls[["lpg"]]$lpg), 
-                    "lpg")
-    # hh_gas
     hh_nrgintst_ls[[3]] <- 
-      func_interp_3(year = c(2019, 2030, 2060), 
-                    scale = c(1, 1.3, 0.7), 
+      func_interp_3(year = c(2019, 2040, 2060), 
+                    scale = c(1, 1.2, 0.7), 
                     base = func_lastone(by_hh_nrgintst_ls[["gas"]]$gas), 
                     "gas")
   }
@@ -578,12 +598,6 @@ for (set_scalc in "BAU_26COAL") {
   
   
   # Power generation ----
-  ## Parameter ----
-  tf_parm_ls[[set_scalc]] <- c(
-    # 本地发电两到什么时候减少为原来的一半
-    sample(2025: 2045, 1)
-  )
-  
   ## Energy intensity ----
   # 逐渐下降
   tf_nrgintst <- data.frame(year = c(2019: 2060))
@@ -611,7 +625,8 @@ for (set_scalc in "BAU_26COAL") {
         tfres_act, 
         func_interp_2(
           year = c(2019, 2023, 2025, 2050, 2060),
-          value = c(900371, 900371, 900371*0.5, 0, 0), "elecgen", showplot = FALSE)))
+          value = c(900371, 900371, 900371*0.5, 0, 0), "elecgen", 
+          showplot = FALSE)))
   } else if (grepl("26COAL", set_scalc)) { ### 26COAL ----
     # 2026年开始减煤，五年内减为原来的一半
     tfres_act <- 
@@ -619,7 +634,8 @@ for (set_scalc in "BAU_26COAL") {
         tfres_act, 
         func_interp_2(
           year = c(2019, 2025, 2030, 2050, 2060),
-          value = c(900371, 900371, 900371*0.5, 0, 0), "elecgen", showplot = FALSE)))
+          value = c(900371, 900371, 900371*0.5, 0, 0), "elecgen", 
+          showplot = FALSE)))
   } else { ### BAU ----
     # 2030年开始减煤，十年内减为原来的一半，之后保持
     tfres_act <- 
@@ -699,56 +715,35 @@ for (set_scalc in "BAU_26COAL") {
 
 if (set_resultout == TRUE) {
   # 比较不同情景总排放和达峰时间差异
-  func_scompplot(tot_emissum_ls, "co2")
+  print(func_scompplot(tot_emissum_ls, "co2"))
   for (i in set_scalcs) {
     cat(i, "peak in", func_peakyear(tot_emissum_ls[[i]], "co2"), "\n")
   }
 }
 
-# 导出各情景达峰时间和最大值
-result_export <- data.frame(
-  scenario = init_scenarios,
-  peak_time = NA, max_value = NA)
-for (i in 1:nrow(result_export)) {
-  result_export$peak_time[i] <- 
-    func_peakyear(tot_emissum_ls[[result_export$scenario[i]]], "co2")
-  result_export$max_value[i] <- 
-    max(tot_emissum_ls[[result_export$scenario[i]]]$"co2")
-}
-result_export <- result_export[order(result_export$peak_time), ]
-write.xlsx(result_export, "a.xlsx")
-
 
 # Data export ----
 if (set_dataexport == TRUE) {
   # 导出各情景下总排放
-  tot_emis_export <- createWorkbook()
-  for (i in names(tot_emissum_ls)) {
-    addWorksheet(tot_emis_export, i)
-    writeData(tot_emis_export, i, tot_emissum_ls[[i]])
-  }
+  export <- createWorkbook()
+  func_mrgcol(tot_emissum_ls[set_scalcs], "co2", set_scalcs)
+  addWorksheet(export, "总排放")
+  writeData(export, "总排放", 
+            func_mrgcol(tot_emissum_ls[set_scalcs], "co2", set_scalcs))
   if (file.exists("各情景总排放量.xlsx")) {
     file.remove("各情景总排放量.xlsx")
   }
-  saveWorkbook(tot_emis_export, "各情景总排放量.xlsx")
+  saveWorkbook(export, "各情景总排放量.xlsx")
   
-  # 导出规划情景下各部门排放量
-  tot_emisbysec_export <- createWorkbook()
-  addWorksheet(tot_emisbysec_export, "sectoremis")
-  writeData(tot_emisbysec_export, "sectoremis", tot_emisbysec_ls[["OTHER_KEEPCOAL"]])
-  if (file.exists("规划情景各部门排放量.xlsx")) {
-    file.remove("规划情景各部门排放量.xlsx")
+  # 导出特定情景下各部门排放量
+  export <- createWorkbook()
+  addWorksheet(export, "sectoremis")
+  writeData(export, "sectoremis", 
+            tot_emisbysec_ls[["BAU_26COAL"]])
+  if (file.exists("26减煤情景各部门排放量.xlsx")) {
+    file.remove("26减煤情景各部门排放量.xlsx")
   }
-  saveWorkbook(tot_emisbysec_export, "规划情景各部门排放量.xlsx")
-  
-  # 导出强化情景下的总排放
-  tot_emisbysec_export <- createWorkbook()
-  addWorksheet(tot_emisbysec_export, "sectoremis")
-  writeData(tot_emisbysec_export, "sectoremis", tot_emisbysec_ls[["OTHER"]])
-  if (file.exists("强化情景各部门排放量.xlsx")) {
-    file.remove("强化情景各部门排放量.xlsx")
-  }
-  saveWorkbook(tot_emisbysec_export, "强化情景各部门排放量.xlsx")
+  saveWorkbook(export, "26减煤情景各部门排放量.xlsx")
 }
 
 
