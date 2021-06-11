@@ -36,6 +36,7 @@ set_plotstyle <- "base"
 set_calc_cache <- F
 set_resultout <- TRUE
 set_dataexport <- FALSE
+set_figureexport <- FALSE
 set_parmexport <- FALSE
 
 # Analysis ----
@@ -701,7 +702,7 @@ for (set_scalc in "BAU_26COAL") {
       tot_emisbysec_ls[[set_scalc]][names(tot_emisbysec_ls[[set_scalc]]) != "year"])
   
   
-  # Output ----
+  ## Output ----
   # 各部门达峰时间
   cat("\n", set_scalc, "\n")
   for (i in global_sectors[1:6]) {
@@ -746,6 +747,43 @@ if (set_dataexport == TRUE) {
   saveWorkbook(export, "26减煤情景各部门排放量.xlsx")
 }
 
+
+# Figure export ----
+if (set_figureexport == TRUE) {
+  # 导出历史产业结构图
+  png(
+    filename = "历史产业结构图.png",
+    type = "cairo", # 抗锯齿
+    res = 300, # 300ppi 分辨率
+    width = 1600, height = 1000,
+    bg = "transparent" # 透明背景
+  )
+  ggplot(melt(
+    global_gdp[c("year", "agrigdp_prop", "secgdp_prop", "comgdp_prop")], 
+    id = "year")) + 
+    geom_area(aes(year, value, fill = variable), stat = "identity") + 
+    labs(x = "", y = "GDP占比") +
+    scale_fill_manual(name = "", 
+                       breaks = c("agrigdp_prop", "secgdp_prop", "comgdp_prop"), 
+                       labels = c("第一产业", "第二产业", "第三产业"), 
+                       values = c("#34bf49", "#ff4c4c", "#0099e5")) +
+    scale_y_continuous(breaks = seq(0, 100, by = 20)) + 
+    scale_x_continuous(breaks = seq(1950, 2020, by = 10)) +
+    theme(axis.title = element_text(size = 10, family = "STSongti"), 
+          legend.text = element_text(size = 9, family = "STSongti"), 
+          legend.title = element_text(size = 9, family = "STSongti"), 
+          legend.background = element_blank(),
+          legend.position = "top", 
+          axis.line = element_line(colour = "black"), 
+          panel.grid.major.x = element_blank(), 
+          panel.grid.major.y = element_line(color = "grey"), 
+          panel.grid.minor=element_blank(), 
+          panel.background = element_blank(), 
+          axis.ticks.length=unit(-0.25, "cm"), 
+          axis.text.x = element_text(margin=unit(c(0.5,0.5,0.5,0.5), "cm")), 
+          axis.text.y = element_text(margin=unit(c(0.5,0.5,0.5,0.5), "cm")))
+  dev.off()
+}
 
 # Parameters export ----
 if (set_parmexport == TRUE) {
