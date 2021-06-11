@@ -308,6 +308,9 @@ global_roadnonoper_diesel[c("非营运客车", "货车")] <-
   func_addnote(global_roadnonoper_diesel[c("非营运客车", "货车")], 
                rep("吨", 2))
 
+# 读取全省发电量
+global_provelecgen <- func_read_trans("S3CNPRZE", "发电量")
+
 # NRG BALANCE ----
 # 构建空能源平衡表
 by_nrgbal_years <- as.character(c(2015: 2019))
@@ -831,12 +834,8 @@ by_hh_nrgintst_ls <-
 by_tfres_act <- func_read_trans("2I4DKY2A", "全市发电量")
 # 发电行业外用电量，能源行业用电量，本地发电量，外调电量
 by_tfres_ori_elecuse <- 
-  func_ls2df(list(by_agri_nrgsum_df,
-                  by_ind_nrgsum_df, 
-                  by_const_nrgsum_df, 
-                  by_trans_nrgsum_df, 
-                  by_com_nrgsum_df, 
-                  by_hh_nrgsum_df))
+  func_ls2df(list(by_agri_nrgsum_df, by_ind_nrgsum_df, by_const_nrgsum_df, 
+                  by_trans_nrgsum_df, by_com_nrgsum_df, by_hh_nrgsum_df))
 by_tfres_ori_elecuse <- by_tfres_ori_elecuse[c("year", "electricity")]
 names(by_tfres_ori_elecuse)[2] <- "elecuse"
 
@@ -850,13 +849,33 @@ by_tfres_ori_elecgen <-
   global_elecgen[c("year", "合计")]
 names(by_tfres_ori_elecgen)[2] <- "elecgen"
 
-# 合并
+# 合并以上几项
 by_tfres_act <- 
   func_merge_2(
     list(by_tfres_ori_elecuse, by_tfres_ori_tfelecuse, by_tfres_ori_elecgen))
+
+# 计算所需外调电力并将其分成火力发电和清洁发电
+# 生成省电网发电结构
+by_tfres_ori_provelecgenstr <- global_provelecgen
+by_tfres_ori_provelecgenstr$sum <- 
+  by_tfres_ori_provelecgenstr$"火电" + by_tfres_ori_provelecgenstr$"其他"
+by_tfres_ori_provelecgenstr$thrm_prop <- 
+  by_tfres_ori_provelecgenstr$"火电"/by_tfres_ori_provelecgenstr$sum
+by_tfres_ori_provelecgenstr$clean_prop <- 
+  by_tfres_ori_provelecgenstr$"其他"/by_tfres_ori_provelecgenstr$sum
 # 计算所需外调电力
-by_tfres_act$importelec <- 
-  by_tfres_act$elecuse + by_tfres_act$tfelecuse - by_tfres_act$elecgen
+by_tfres_ori_importelec <- 
+  data.frame(
+    year = by_tfres_act$year, 
+    importelec = by_tfres_act$elecuse + by_tfres_act$tfelecuse - by_tfres_act$elecgen)
+by_tfres_ori_importelec <- 
+  func_nrg_sum(by_tfres_ori_provelecgenstr[c("year", "thrm_prop","clean_prop")],
+               by_tfres_ori_importelec, "importelec")
+names(by_tfres_ori_importelec) <- c("year", "importthrm", "importclean")
+
+# 合并活动水平
+by_tfres_act <- func_merge_2(list(by_tfres_act, by_tfres_ori_importelec))
+
 
 ## Consumption and emission ----
 by_tf_nrgsum_df <- global_indscale_nrg_bysecagg$"电力、热力生产和供应业"
@@ -867,14 +886,21 @@ by_tf_nrgintst <- func_nrg_intst(by_tf_nrgsum_df, by_tfres_act, "elecgen")
 # 问题：此处的发电能耗强度是火电投入量和全部发电量之和
 
 # Imported elec ----
-## Emission ----
-# 读取福建省电力生产排放因子
-by_res_emifac_df <- func_read_trans("M7IB8W4U")[c("year", "co2")]
-by_res_emifac_df[2] <- by_res_emifac_df[2]/10000
-comment(by_res_emifac_df$co2) <- "万吨二氧化碳/万千瓦时"
-by_res_emissum_df <- func_cross(by_tfres_act[c("year", "importelec")], 
-                          by_res_emifac_df)
-names(by_res_emissum_df)[2] <- "co2"
+## Consumption ----
+# 读取省电网发电能耗量
+global_provelecgen_nrgsum <- 
+  func_read_trans("S3CNPRZE")[c("year", "原煤", "柴油", "燃料油", "天然气")]
+names(global_provelecgen_nrgsum) <- c("year", "rawcoal", "diesel", "residual", "gas")
+
+## Energy intensity ----
+# 火电能耗系数
+by_res_nrgintst <- 
+  func_nrg_intst(global_provelecgen_nrgsum, global_provelecgen, "火电")
+
+## Consumption and emission ----
+by_res_nrgsum_df <- func_nrg_sum(by_res_nrgintst, by_tfres_act, "importthrm")
+by_res_emissum_df <- func_emissum(by_res_nrgsum_df, global_emisfac_df)
+
 
 # RESULT ----
 ## Total emission ----
