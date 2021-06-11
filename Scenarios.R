@@ -690,14 +690,19 @@ for (set_scalc in "BAU_26COAL") {
   
   
   # RESULT ----
-  ## Total energy ----
-  # tot_nrgsum_ls[[set_scalc]] <- func_ls2df(
-  #   agri_nrgsum_ls[[set_scalc]], ind_nrgsum_ls[[set_scalc]], 
-  #   const_nrgsum_ls[[set_scalc]], trans_nrgsum_ls[[set_scalc]], 
-  #   com_nrgsum_ls[[set_scalc]], hh_nrgsum_ls[[set_scalc]], 
-  #   tf_nrgsum_ls[[set_scalc]], res_nrgsum_ls[[set_scalc]], 
-  #   agri_nrgsum_ls[[set_scalc]], agri_nrgsum_ls[[set_scalc]]
-  # )
+  # Total energy ----
+  # 除电力外的其他能耗之和
+  tot_nrgsum_byfuel <- func_ls2df(list(
+    agri_nrgsum_ls[[set_scalc]], ind_nrgsum_ls[[set_scalc]],
+    const_nrgsum_ls[[set_scalc]], trans_nrgsum_ls[[set_scalc]],
+    com_nrgsum_ls[[set_scalc]], hh_nrgsum_ls[[set_scalc]],
+    tf_nrgsum_ls[[set_scalc]], res_nrgsum_ls[[set_scalc]]))
+  # 换算成标准煤
+  tot_nrgsum_byfuel_ce <- func_toce(tot_nrgsum_byfuel)
+  # 换算成各年份总和
+  tot_nrgsum_ls[[set_scalc]] <- data.frame(
+    year = tot_nrgsum_byfuel_ce$year, 
+    energyconsump = rowSums(tot_nrgsum_byfuel[names(tot_nrgsum_byfuel) != "year"]))
   
   
   ## Total emission ----
