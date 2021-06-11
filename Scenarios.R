@@ -649,9 +649,24 @@ for (set_scalc in "BAU_26COAL") {
   tfres_act$tfelecuse <- 
     func_nrg_sum(tf_nrgintst[c("year", "electricity")], 
                  tfres_act, "elecgen")$electricity
-  # 外调电力
-  tfres_act$importelec <- 
-    tfres_act$elecuse - tfres_act$elecgen - tfres_act$tfelecuse
+  
+  # 生成省电网发电结构
+  tfres_provelecgenstr <- data.frame(
+    year = c(2019: 2060), 
+    thrm_prop = func_interp_2(
+      year = c(2019, 2035, 2040, 2050, 2060),
+      value = c(0.546504985, 0.291973506, 0.249449437, 0.161468824, 0))$value)
+  tfres_provelecgenstr$clean_prop <- 1 - tfres_provelecgenstr$thrm_prop
+  
+  # 计算外调电力需求并将其分成煤电和清洁能源发电
+  tfres_importelec <- data.frame(
+    year = c(2019: 2060), 
+    importelec = tfres_act$elecuse - tfres_act$elecgen - tfres_act$tfelecuse)
+  tfres_importelec <- 
+    func_nrg_sum(tfres_provelecgenstr, tfres_importelec, "importelec")
+  names(tfres_importelec) <- c("year", "importthrm", "importclean")
+  # 合并活动水平
+  tfres_act <- func_merge_2(list(tfres_act, tfres_importelec))
   
   ## Consumption and emission ----
   tf_nrgsum_ls[[set_scalc]] <- 
@@ -660,16 +675,32 @@ for (set_scalc in "BAU_26COAL") {
     func_emissum(tf_nrgsum_ls[[set_scalc]], prj_emisfac_df)
   
   # Imported elec ----
-  ## Emission ----
-  res_emisfac_df <- 
-    func_interp_2(year = c(2019, 2035, 2040, 2060), 
-                  value = c(0.39e-3, 0.218e-3, 0.186e-3, 0), "electricity")
+  ## Energy intensity ----
+  # 省电网煤电发电效率保持不变
+  res_nrgintst <- data.frame(year = c(2019: 2060))
+  for (i in names(by_res_nrgintst)[names(by_res_nrgintst) != "year"]) {
+    res_nrgintst[, i] <- func_lastone(by_res_nrgintst[, i])
+  }
+  
+  ## Consumption and emission ----
+  res_nrgsum_ls[[set_scalc]] <- 
+    func_nrg_sum(res_nrgintst, tfres_act, "importthrm")
   res_emissum_ls[[set_scalc]] <- 
-    func_cross(res_emisfac_df, tfres_act[c("year", "importelec")])
-  names(res_emissum_ls[[set_scalc]])[2] <- "co2"
+    func_emissum(res_nrgsum_ls[[set_scalc]], prj_emisfac_df)
   
   
   # RESULT ----
+  ## Total energy ----
+  # tot_nrgsum_ls[[set_scalc]] <- func_ls2df(
+  #   agri_nrgsum_ls[[set_scalc]], ind_nrgsum_ls[[set_scalc]], 
+  #   const_nrgsum_ls[[set_scalc]], trans_nrgsum_ls[[set_scalc]], 
+  #   com_nrgsum_ls[[set_scalc]], hh_nrgsum_ls[[set_scalc]], 
+  #   tf_nrgsum_ls[[set_scalc]], res_nrgsum_ls[[set_scalc]], 
+  #   agri_nrgsum_ls[[set_scalc]], agri_nrgsum_ls[[set_scalc]]
+  # )
+  
+  
+  ## Total emission ----
   # 各部门用电量
   tot_elecbysec <- 
     func_mrgcol(list(agri_nrgsum_ls[[set_scalc]], ind_nrgsum_ls[[set_scalc]], 
