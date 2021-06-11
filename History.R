@@ -903,6 +903,21 @@ by_res_emissum_df <- func_emissum(by_res_nrgsum_df, global_emisfac_df)
 
 
 # RESULT ----
+## Total energy ----
+# 除电力外的其他能耗之和
+by_tot_nrgsum_byfuel <- 
+  func_ls2df(list(by_agri_nrgsum_df, by_ind_nrgsum_df, by_const_nrgsum_df, 
+                  by_trans_nrgsum_df, by_com_nrgsum_df, by_hh_nrgsum_df, 
+                  by_tf_nrgsum_df, by_res_nrgsum_df))
+by_tot_nrgsum_byfuel <- by_tot_nrgsum_byfuel[names(by_tot_nrgsum_byfuel) != "electricity"]
+# 换算成标准煤
+by_tot_nrgsum_byfuel_ce <- func_toce(by_tot_nrgsum_byfuel)
+# 换算成各年份总和
+by_tot_nrgsum_ce <- data.frame(
+  year = by_tot_nrgsum_byfuel_ce$year, 
+  energyconsump = rowSums(by_tot_nrgsum_byfuel[names(by_tot_nrgsum_byfuel) != "year"]))
+
+
 ## Total emission ----
 # 各部门用电量
 by_tot_elecbysec <- 
@@ -932,5 +947,4 @@ by_tot_emisbysec <- func_cross(by_tot_elecemisbysec, by_tot_diremisbysec, "sum")
 # 总排放
 by_tot_emis <- data.frame(year = by_tot_emisbysec$year)
 by_tot_emis$co2 <- rowSums(by_tot_emisbysec[names(by_tot_emisbysec) != "year"])
-
 
