@@ -4,6 +4,7 @@ library(ggplot2)
 library(ggthemes)
 library(reshape2)
 library(ggpubr)
+library(RColorBrewer)
 Sys.setlocale("LC_ALL", "chinese")
 
 
