@@ -837,30 +837,18 @@ if (set_figureexport == TRUE) {
     width = 1600, height = 1000,
     bg = "transparent" # 透明背景
   )
-  ggplot(melt(
+  export_plot <- ggplot(melt(
     global_gdp[c("year", "agrigdp_prop", "secgdp_prop", "comgdp_prop")], 
     id = "year")) + 
     geom_area(aes(year, value, fill = variable), stat = "identity") + 
     labs(x = "", y = "GDP占比") +
     scale_fill_manual(name = "", 
-                       breaks = c("agrigdp_prop", "secgdp_prop", "comgdp_prop"), 
-                       labels = c("第一产业", "第二产业", "第三产业"), 
-                       values = c("#34bf49", "#ff4c4c", "#0099e5")) +
+                      breaks = c("agrigdp_prop", "secgdp_prop", "comgdp_prop"), 
+                      labels = c("第一产业", "第二产业", "第三产业"), 
+                      values = c("#34bf49", "#ff4c4c", "#0099e5")) +
     scale_y_continuous(breaks = seq(0, 100, by = 20)) + 
-    scale_x_continuous(breaks = seq(1950, 2020, by = 10)) +
-    theme(axis.title = element_text(size = 10, family = "STSongti"), 
-          legend.text = element_text(size = 9, family = "STSongti"), 
-          legend.title = element_text(size = 9, family = "STSongti"), 
-          legend.background = element_blank(),
-          legend.position = "top", 
-          axis.line = element_line(colour = "black"), 
-          panel.grid.major.x = element_blank(), 
-          panel.grid.major.y = element_line(color = "grey"), 
-          panel.grid.minor=element_blank(), 
-          panel.background = element_blank(), 
-          axis.ticks.length=unit(-0.25, "cm"), 
-          axis.text.x = element_text(margin=unit(c(0.5,0.5,0.5,0.5), "cm")), 
-          axis.text.y = element_text(margin=unit(c(0.5,0.5,0.5,0.5), "cm")))
+    scale_x_continuous(breaks = seq(1950, 2020, by = 10))
+  func_excelplot(export_plot)
   dev.off()
   
   # 导出历史工业产业结构图
@@ -871,29 +859,17 @@ if (set_figureexport == TRUE) {
     width = 1600, height = 1000,
     bg = "transparent" # 透明背景
   )
-  ggplot(melt(by_ind_ori_act_prop, id = "year")) + 
+  export_plot <- ggplot(melt(by_ind_ori_act_prop, id = "year")) + 
     geom_area(aes(year, value, fill = variable), stat = "identity") + 
     labs(x = "", y = "GDP占比") +
-    scale_fill_manual(name = "", 
-      values = c(brewer.pal(name="Spectral", n = 11), brewer.pal(name="Set3", n = 3))) +
+    scale_fill_manual(
+      name = "", 
+      values = c(brewer.pal(name="Spectral", n = 11), 
+                 brewer.pal(name="Set3", n = 3))) +
     scale_y_continuous(breaks = seq(0, 100, by = 20)) + 
-    scale_x_continuous(breaks = seq(2000, 2020, by = 5)) +
-    theme(axis.title = element_text(size = 10, family = "STSongti"), 
-          legend.text = element_text(size = 5, family = "STSongti"), 
-          legend.title = element_text(size = 9, family = "STSongti"), 
-          legend.background = element_blank(),
-          legend.position = "right", 
-          legend.key.size = unit(0.5, "cm"), 
-          axis.line = element_line(colour = "black"), 
-          panel.grid.major.x = element_blank(), 
-          panel.grid.major.y = element_line(color = "grey"), 
-          panel.grid.minor=element_blank(), 
-          panel.background = element_blank(), 
-          axis.ticks.length=unit(-0.25, "cm"), 
-          axis.text.x = element_text(margin=unit(c(0.5,0.5,0.5,0.5), "cm")), 
-          axis.text.y = element_text(margin=unit(c(0.5,0.5,0.5,0.5), "cm")))
+    scale_x_continuous(breaks = seq(2000, 2020, by = 5))
+  func_excelplot(export_plot)
   dev.off()
-  
 }
 
 # Parameters export ----
