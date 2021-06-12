@@ -862,6 +862,38 @@ if (set_figureexport == TRUE) {
           axis.text.x = element_text(margin=unit(c(0.5,0.5,0.5,0.5), "cm")), 
           axis.text.y = element_text(margin=unit(c(0.5,0.5,0.5,0.5), "cm")))
   dev.off()
+  
+  # 导出历史工业产业结构图
+  png(
+    filename = "历史工业产业结构图.png",
+    type = "cairo", # 抗锯齿
+    res = 300, # 300ppi 分辨率
+    width = 1600, height = 1000,
+    bg = "transparent" # 透明背景
+  )
+  ggplot(melt(by_ind_ori_act_prop, id = "year")) + 
+    geom_area(aes(year, value, fill = variable), stat = "identity") + 
+    labs(x = "", y = "GDP占比") +
+    scale_fill_manual(name = "", 
+      values = c(brewer.pal(name="Spectral", n = 11), brewer.pal(name="Set3", n = 3))) +
+    scale_y_continuous(breaks = seq(0, 100, by = 20)) + 
+    scale_x_continuous(breaks = seq(2000, 2020, by = 5)) +
+    theme(axis.title = element_text(size = 10, family = "STSongti"), 
+          legend.text = element_text(size = 5, family = "STSongti"), 
+          legend.title = element_text(size = 9, family = "STSongti"), 
+          legend.background = element_blank(),
+          legend.position = "right", 
+          legend.key.size = unit(0.5, "cm"), 
+          axis.line = element_line(colour = "black"), 
+          panel.grid.major.x = element_blank(), 
+          panel.grid.major.y = element_line(color = "grey"), 
+          panel.grid.minor=element_blank(), 
+          panel.background = element_blank(), 
+          axis.ticks.length=unit(-0.25, "cm"), 
+          axis.text.x = element_text(margin=unit(c(0.5,0.5,0.5,0.5), "cm")), 
+          axis.text.y = element_text(margin=unit(c(0.5,0.5,0.5,0.5), "cm")))
+  dev.off()
+  
 }
 
 # Parameters export ----
