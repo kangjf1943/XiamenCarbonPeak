@@ -969,6 +969,26 @@ func_scompplot <- function(ls_var, namecol) {
   ggplot(df_var_long) + geom_line(aes(year, value, color = variable))
 }
 
+# 模仿Excel的作图风格
+# 输入原始图像，输出增加特定主题的图像
+func_excelplot <- function(oriplot, name_legend_position = "right") {
+  oriplot + 
+    theme(axis.title = element_text(size = 10, family = "STSongti"), 
+          legend.text = element_text(size = 9, family = "STSongti"), 
+          legend.title = element_text(size = 9, family = "STSongti"), 
+          legend.background = element_blank(),
+          legend.position = name_legend_position, 
+          axis.line = element_line(colour = "black"), 
+          panel.grid.major.x = element_blank(), 
+          panel.grid.major.y = element_line(color = "grey"), 
+          panel.grid.minor=element_blank(), 
+          panel.background = element_blank(), 
+          axis.ticks.length=unit(-0.25, "cm"), 
+          axis.text.x = element_text(margin=unit(c(0.5,0.5,0.5,0.5), "cm")), 
+          axis.text.y = element_text(margin=unit(c(0.5,0.5,0.5,0.5), "cm")))
+}
+
+
 ## 查看数据框中不同数据的变化趋势
 # 数据框版本
 func_show_trend <- function(var_df, commontitle = NULL) {
