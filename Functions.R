@@ -488,6 +488,23 @@ func_alter <- function(nrg_in, name_in, name_out) {
   nrg_out
 }
 
+## 计算电力等价值
+# 需要输入本地发电各类能耗物理量，外调电力对应发电投入量物理量，全社会电力使用量
+func_elecequalfac <- function(tf_nrg_df, res_nrg_df, elecuse_df) {
+  # 本地发电和外调电力对应一次能源投入量
+  tot_nrg_df <- func_ls2df(list(tf_nrg_df, res_nrg_df))
+  # 转化成标准量
+  tot_nrg_df <- func_toce(tot_nrg_df)
+  # 计算标准量之和
+  tot_nrg_df_ce <- data.frame(year = tot_nrg_df$year)
+  tot_nrg_df_ce[, "nrg_input"] <- 
+    rowSums(tot_nrg_df[, -1])
+  # 计算电力等价值
+  elecequalfac <- func_cross(tot_nrg_df_ce, elecuse_df, method = "rate")
+  elecequalfac
+}
+func_elecequalfac(tf_nrg_df = by_tf_nrgsum_df, res_nrg_df = by_res_nrgsum_df, elecuse_df = by_tfres_act[c("year", "elecuse")])
+
 ## 转化成标准煤
 # 输入能源数据框单位：吨/万立方米/百万千焦/万千瓦时
 # 输出单位：吨标准煤
