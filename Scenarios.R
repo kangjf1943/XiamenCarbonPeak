@@ -33,14 +33,14 @@ set_scalcs <- c("BAU",
                 "BAU_26COAL", 
                 "BAU_24COAL")
 set_plotstyle <- "base"
-set_calc_cache <- F
+set_calc_cache <- T
 set_resultout <- TRUE
 set_dataexport <- FALSE
 set_figureexport <- FALSE
 set_parmexport <- FALSE
 
 # Analysis ----
-for (set_scalc in "BAU_26COAL") {
+for (set_scalc in set_scalcs) {
   # Agriculture ----
   ## Activity level ----
   agri_act <- 
@@ -754,33 +754,76 @@ if (set_resultout == TRUE) {
   # 比较不同情景总排放和达峰时间差异
   print(func_scompplot(tot_emissum_ls, "co2"))
   for (i in set_scalcs) {
-    cat(i, "peak in", func_peakyear(tot_emissum_ls[[i]], "co2"), "\n")
+    cat(i, "\n", 
+        "energy peak in", func_peakyear(tot_nrgsum_ls[[i]], "energyconsump"), "\n", 
+        "emission peak in", func_peakyear(tot_emissum_ls[[i]], "co2"), "\n")
   }
 }
 
 
 # Data export ----
 if (set_dataexport == TRUE) {
+  # 导出各情景下能耗和排放达峰时间
+  exportname <- "各情景下能耗和排放达峰时间.xlsx"
+  exportwb <- createWorkbook()
+  addWorksheet(exportwb, "peaktime")
+  exportvar <- data.frame(scenario = set_scalcs, nrg_peak = NA, emis_peak = NA)
+  for (i in set_scalcs) {
+    exportvar[which(exportvar$scenario == i), "nrg_peak"] <- 
+              func_peakyear(tot_nrgsum_ls[[i]], "energyconsump")
+    exportvar[which(exportvar$scenario == i), "emis_peak"] <- 
+              func_peakyear(tot_emissum_ls[[i]], "co2")
+  }
+  writeData(exportwb, "peaktime", exportvar)
+  if (file.exists(exportname)) {
+    file.remove(exportname)
+  }
+  saveWorkbook(exportwb, exportname)
+  
   # 导出各情景下总排放
+  exportname <- "各情景总排放量.xlsx"
   export <- createWorkbook()
   func_mrgcol(tot_emissum_ls[set_scalcs], "co2", set_scalcs)
   addWorksheet(export, "总排放")
   writeData(export, "总排放", 
             func_mrgcol(tot_emissum_ls[set_scalcs], "co2", set_scalcs))
-  if (file.exists("各情景总排放量.xlsx")) {
-    file.remove("各情景总排放量.xlsx")
+  if (file.exists(exportname)) {
+    file.remove(exportname)
   }
-  saveWorkbook(export, "各情景总排放量.xlsx")
+  saveWorkbook(exportwb, exportname)
   
   # 导出特定情景下各部门排放量
+  exportname <- "26减煤情景各部门排放量.xlsx"
   export <- createWorkbook()
   addWorksheet(export, "sectoremis")
   writeData(export, "sectoremis", 
             tot_emisbysec_ls[["BAU_26COAL"]])
-  if (file.exists("26减煤情景各部门排放量.xlsx")) {
-    file.remove("26减煤情景各部门排放量.xlsx")
+  if (file.exists(exportname)) {
+    file.remove(exportname)
   }
-  saveWorkbook(export, "26减煤情景各部门排放量.xlsx")
+  saveWorkbook(export, exportname)
+  
+  # 导出各情景下每隔五年GDP和能耗总量
+  exportname <- "各情景下每隔五年GDP和能耗总量.xlsx"
+  exportwb <- createWorkbook()
+  addWorksheet(exportwb, "nrg_per_gdp")
+  # 选取可被5整除的年份
+  exportvar <- 
+    prj_global_gdp[which(prj_global_gdp$year %% 5 == 0), c("year", "GDP")]
+  for (i in set_scalcs) {
+    exportvar[, paste0(i, "nrg (万吨标煤)")] <- 
+      tot_nrgsum_ls[[i]][which(tot_nrgsum_ls[[i]]$year %% 5 == 0), ]$energyconsump/10000
+    exportvar[, paste0(i, " (吨标煤/万元GDP)")] <- 
+      exportvar[, paste0(i, "nrg (万吨标煤)")]*10000 / exportvar[, "GDP"]
+    exportvar[, paste0(i, " 变化率")] <- 
+      func_ratecalc(exportvar[, c("year", paste0(i, " (吨标煤/万元GDP)"))], 
+                    paste0(i, " (吨标煤/万元GDP)"))$rate
+  }
+  writeData(exportwb, "nrg_per_gdp", exportvar)
+  if (file.exists(exportname)) {
+    file.remove(exportname)
+  }
+  saveWorkbook(exportwb, exportname)
 }
 
 
