@@ -34,6 +34,7 @@ set_scalcs <- c("BAU",
                 "BAU_24COAL")
 set_plotstyle <- "base"
 set_calc_cache <- T
+set_elecfac_meth <- TRUE
 set_resultout <- TRUE
 set_dataexport <- FALSE
 set_figureexport <- FALSE
@@ -690,19 +691,50 @@ for (set_scalc in set_scalcs) {
   
   
   # RESULT ----
-  # Total energy ----
-  # 除电力外的其他能耗之和
-  tot_nrgsum_byfuel <- func_ls2df(list(
-    agri_nrgsum_ls[[set_scalc]], ind_nrgsum_ls[[set_scalc]],
-    const_nrgsum_ls[[set_scalc]], trans_nrgsum_ls[[set_scalc]],
-    com_nrgsum_ls[[set_scalc]], hh_nrgsum_ls[[set_scalc]],
-    tf_nrgsum_ls[[set_scalc]], res_nrgsum_ls[[set_scalc]]))
-  # 换算成标准煤
-  tot_nrgsum_byfuel_ce <- func_toce(tot_nrgsum_byfuel)
-  # 换算成各年份总和
-  tot_nrgsum_ls[[set_scalc]] <- data.frame(
-    year = tot_nrgsum_byfuel_ce$year, 
-    energyconsump = rowSums(tot_nrgsum_byfuel[names(tot_nrgsum_byfuel) != "year"]))
+  ## Total energy ----
+  if (set_elecfac_meth == TRUE) {
+    # 一次能源能耗之和
+    tot_nrgsum_byfuel <- func_ls2df(list(
+      agri_nrgsum_ls[[set_scalc]], ind_nrgsum_ls[[set_scalc]],
+      const_nrgsum_ls[[set_scalc]], trans_nrgsum_ls[[set_scalc]],
+      com_nrgsum_ls[[set_scalc]], hh_nrgsum_ls[[set_scalc]],
+      tf_nrgsum_ls[[set_scalc]], res_nrgsum_ls[[set_scalc]]))
+    # 换算成标准煤
+    tot_nrgsum_byfuel_ce <- func_toce(tot_nrgsum_byfuel)
+    # 换算成各年份总和
+    tot_nrgsum_ls[[set_scalc]] <- data.frame(
+      year = tot_nrgsum_byfuel_ce$year, 
+      energyconsump = rowSums(tot_nrgsum_byfuel[names(tot_nrgsum_byfuel) != "year"]))
+  } else {
+    # 除了外调电力外其他部门一次能源之和
+    tot_nrgsum_byfuel <- func_ls2df(list(
+      agri_nrgsum_ls[[set_scalc]], ind_nrgsum_ls[[set_scalc]],
+      const_nrgsum_ls[[set_scalc]], trans_nrgsum_ls[[set_scalc]],
+      com_nrgsum_ls[[set_scalc]], hh_nrgsum_ls[[set_scalc]],
+      tf_nrgsum_ls[[set_scalc]]))
+    # 换算成标准煤
+    tot_nrgsum_byfuel_ce <- func_toce(tot_nrgsum_byfuel)
+    # 换算成各年份总和
+    tot_nrgsum_ce <- data.frame(
+      year = tot_nrgsum_byfuel_ce$year, 
+      energyconsump = 
+        rowSums(tot_nrgsum_byfuel_ce[names(tot_nrgsum_byfuel_ce) != "year"]))
+    # 计算外调电力火电折标煤系数
+    tot_ori_elecequalfac <- 
+      func_elecequalfac(res_nrgsum_ls[[set_scalc]], tfres_act[c("year", "importthrm")])
+    # 最后一年省电网火电发电为0，故电力折标煤系数也为0
+    tot_ori_elecequalfac[which(
+      tot_ori_elecequalfac$year == 2060), "nrg_input"] <- 0
+    # 计算外调电力折标煤量
+    tot_ori_elecequal <- func_cross(
+      tot_ori_elecequalfac, 
+      func_cross(tfres_act[c("year", "importthrm")], 
+                 tfres_act[c("year", "importclean")], method = "sum"), 
+      method = "product")
+    # 本地一次能源和外调电力一次能源之和
+    tot_nrgsum_ls[[set_scalc]] <- 
+      func_cross(tot_nrgsum_ce, tot_ori_elecequal, method = "sum")
+  }
   
   
   ## Total emission ----
