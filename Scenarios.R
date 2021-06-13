@@ -33,11 +33,11 @@ set_scalcs <- c("BAU",
                 "BAU_26COAL", 
                 "BAU_24COAL")
 set_plotstyle <- "base"
-set_calc_cache <- T
+set_calc_cache <- TRUE
 set_elecfac_meth <- TRUE
 set_resultout <- TRUE
 set_dataexport <- FALSE
-set_figureexport <- FALSE
+set_figureexport <- TRUE
 set_parmexport <- FALSE
 
 # Analysis ----
@@ -265,7 +265,7 @@ for (set_scalc in set_scalcs) {
   # Transportation ----
   ## Activity level ----
   # 公路
-  if (set_calc_cache == TRUE) { ### Cache ----
+  if (set_calc_cache == FALSE) { ### Cache ----
     trans_act <- data.frame(year = c(2019: 2060))
     # 常规公交和快速公交以初始3%的增长率增长至2030年饱和
     for (i in c("常规公交", "快速公交")) {
@@ -509,14 +509,8 @@ for (set_scalc in set_scalcs) {
   
   
   # Household ----
-  ## Parameter ----
-  hh_parm_ls[[set_scalc]] <- c(
-    # LPG用户数下降到2019年的65%的年份
-    sample(2025: 2035, 1)
-  )
-  
   ## Activity level ----
-  if (set_calc_cache == TRUE) { ### Cache ----
+  if (set_calc_cache == FALSE) { ### Cache ----
     # hh_elec
     hh_ori_household <- prj_global_population[c("year", "household")]
     # hh_lpg
@@ -769,9 +763,7 @@ for (set_scalc in set_scalcs) {
     rowSums(
       tot_emisbysec_ls[[set_scalc]][names(tot_emisbysec_ls[[set_scalc]]) != "year"])
   
-  
-  ## Output ----
-  # 各部门达峰时间
+  # 输出各部门达峰时间
   cat("\n", set_scalc, "\n")
   for (i in global_sectors[1:6]) {
     cat(i, "peak in", 
@@ -911,14 +903,47 @@ if (set_figureexport == TRUE) {
     width = 1600, height = 1000,
     bg = "transparent" # 透明背景
   )
-  export_plot <- func_scompplot(tot_nrgsum_ls, "energyconsump") +  
-    labs(x = "", y = "能耗总量（吨标准煤）") + 
+  export_var <- tot_nrgsum_ls
+  for (i in set_scalcs) {
+    export_var[[i]][, "energyconsump"] <- 
+      export_var[[i]][, "energyconsump"]/10000
+  }
+  export_plot <- func_scompplot(export_var, "energyconsump") +  
+    labs(x = "", y = "能耗总量（万吨标准煤）") + 
     scale_color_manual(
-      name = "", values = c("#800000", 
-                            "#FF0000", "#FFA500", "#FFD700", "#FFFF00", 
-                            "#50C878", 
-                            "#007FFF", "#003399"))
+      name = "", 
+      breaks = set_scalcs, 
+      labels = c("惯性情景", paste0("单部门减排-", c(1:4)), 
+                 "多部门减排", "退煤情景", "提前退煤情景"), 
+      values = c("#800000", 
+                 "#FF0000", "#FFA500", "#FFD700", "#FFFF00", 
+                 "#50C878", 
+                 "#007FFF", "#003399"))
   func_excelplot(export_plot)
+  dev.off()
+  
+  # 输各情景排放总量图
+  png(
+    filename = "各情景总排放总量.png",
+    type = "cairo", # 抗锯齿
+    res = 300, # 300ppi 分辨率
+    width = 1600, height = 900,
+    bg = "transparent" # 透明背景
+  )
+  
+  func_excelplot(func_scompplot(tot_emissum_ls, "co2"), "top") + 
+    labs(x = "", y = "二氧化碳排放（万吨）") +
+    scale_y_continuous(breaks = seq(0, 3500, by = 500)) + 
+    scale_x_continuous(breaks = seq(2015, 2060, by = 5)) +
+    scale_color_manual(
+      name = "", 
+      breaks = set_scalcs, 
+      labels = c("惯性情景", paste0("单部门减排-", c(1:4)), 
+                 "多部门减排", "退煤情景", "提前退煤情景"), 
+      values = c("#800000", 
+                 "#FF0000", "#FFA500", "#FFD700", "#FFFF00", 
+                 "#50C878", 
+                 "#007FFF", "#003399"))
   dev.off()
 }
 
