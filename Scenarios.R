@@ -41,6 +41,7 @@ set_figureexport <- TRUE
 set_parmexport <- FALSE
 
 # Analysis ----
+global_starttime <- Sys.time()
 for (set_scalc in set_scalcs) {
   # Agriculture ----
   ## Activity level ----
@@ -686,7 +687,7 @@ for (set_scalc in set_scalcs) {
   
   # RESULT ----
   ## Total energy ----
-  if (set_elecfac_meth == TRUE) {
+  if (set_elecfac_meth == FALSE) {
     # 一次能源能耗之和
     tot_nrgsum_byfuel <- func_ls2df(list(
       agri_nrgsum_ls[[set_scalc]], ind_nrgsum_ls[[set_scalc]],
@@ -773,7 +774,11 @@ for (set_scalc in set_scalcs) {
   print(ggplot(melt(tot_emisbysec_ls[[set_scalc]], id = "year")) + 
           geom_line(aes(year, value, color = variable), size = 1.5))
 }
+# 查看运行时间
+Sys.time() - global_starttime
 
+
+# Result output ----
 if (set_resultout == TRUE) {
   # 比较不同情景总排放和达峰时间差异
   print(func_scompplot(tot_emissum_ls, "co2"))
@@ -782,6 +787,44 @@ if (set_resultout == TRUE) {
         "energy peak in", func_peakyear(tot_nrgsum_ls[[i]], "energyconsump"), "\n", 
         "emission peak in", func_peakyear(tot_emissum_ls[[i]], "co2"), "\n")
   }
+  
+  # 查看特定年份服务业能耗中电力占比
+  com_nrgsum_ce_ls <- com_nrgsum_ls
+  for (i in set_scalcs) {
+    # 将LPG和天然气换算成标准量
+    com_nrgsum_ce_ls[[i]][c("year", "lpg", "gas")] <- 
+      func_toce(com_nrgsum_ce_ls[[i]][c("year", "lpg", "gas")])
+    # 将电力换算成标准量
+    # 问题：直接用最后一个情景的电力换算系数
+    com_nrgsum_ce_ls[[i]][c("year", "electricity")] <- 
+      func_cross(com_nrgsum_ce_ls[[i]][c("year", "electricity")], 
+                 tot_ori_elecequalfac, method = "product")
+    # 计算电力占比
+    com_nrgsum_ce_ls[[i]][, "elecprop"] <- 
+      com_nrgsum_ce_ls[[i]][, "electricity"]/
+      (rowSums(com_nrgsum_ce_ls[[i]][names(com_nrgsum_ce_ls[[i]]) != "year"]))
+  }
+  result_var <- func_mrgcol(com_nrgsum_ce_ls[set_scalcs], "elecprop", set_scalcs)
+  result_var[which(result_var$year %in% c(2019, 2025, 2030, 2035)), ]
+  
+  # 查看特定年份生活能耗中电力占比
+  hh_nrgsum_ce_ls <- hh_nrgsum_ls
+  for (i in set_scalcs) {
+    # 将LPG和天然气换算成标准量
+    hh_nrgsum_ce_ls[[i]][c("year", "lpg", "gas")] <- 
+      func_toce(hh_nrgsum_ce_ls[[i]][c("year", "lpg", "gas")])
+    # 将电力换算成标准量
+    # 问题：直接用最后一个情景的电力换算系数
+    hh_nrgsum_ce_ls[[i]][c("year", "electricity")] <- 
+      func_cross(hh_nrgsum_ce_ls[[i]][c("year", "electricity")], 
+                 tot_ori_elecequalfac, method = "product")
+    # 计算电力占比
+    hh_nrgsum_ce_ls[[i]][, "elecprop"] <- 
+      hh_nrgsum_ce_ls[[i]][, "electricity"]/
+      (rowSums(hh_nrgsum_ce_ls[[i]][names(hh_nrgsum_ce_ls[[i]]) != "year"]))
+  }
+  result_var <- func_mrgcol(hh_nrgsum_ce_ls[set_scalcs], "elecprop", set_scalcs)
+  result_var[which(result_var$year %in% c(2019, 2025, 2030, 2035)), ]
 }
 
 
