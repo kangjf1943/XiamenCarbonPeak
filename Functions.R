@@ -354,7 +354,6 @@ func_curve_1 <- function(baseyear, basevalue, maxyear, endyear,  init_rate) {
   # 输出结果
   out_df
 }
-a <- func_curve_1(baseyear=2015, basevalue=300, maxyear=2030, endyear=2050,  init_rate=0.02)
 
 ## 平滑插值函数
 func_smooth <- function(year, value, name_value = "value") {
@@ -558,14 +557,14 @@ func_nrgsub <-
   }
 
 
-# 计算除年份外的各行之和
-func_rowsums <- function(df, namevalue = "value") {
-  new_df <- data.frame(year = df$year)
-  df <- df[names(df) %in% year == FALSE]
-  new_df$value <- rowSums(df)
-  names(new_df)[2] <- namevalue
-  new_df
-}
+# # 计算除年份外的各行之和
+# func_rowsums <- function(df, namevalue = "value") {
+#   new_df <- data.frame(year = df$year)
+#   df <- df[names(df) %in% year == FALSE]
+#   new_df$value <- rowSums(df)
+#   names(new_df)[2] <- namevalue
+#   new_df
+# }
 
 
 # 计算生长率
@@ -581,8 +580,6 @@ func_ratecalc <- function(in_df, name_value) {
 }
 
 # 生成方案组合名称的函数
-measures <- c("a", "b")
-basescenario <- "bau"
 func_sgen <- function(basescenario, measures) {
   # 生成组合矩阵
   # 该代码来自网络
