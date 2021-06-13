@@ -870,6 +870,24 @@ if (set_figureexport == TRUE) {
     scale_x_continuous(breaks = seq(2000, 2020, by = 5))
   func_excelplot(export_plot)
   dev.off()
+  
+  # 输出各情景能耗总量变化图
+  png(
+    filename = "各情景能耗总量变化图.png",
+    type = "cairo", # 抗锯齿
+    res = 300, # 300ppi 分辨率
+    width = 1600, height = 1000,
+    bg = "transparent" # 透明背景
+  )
+  export_plot <- func_scompplot(tot_nrgsum_ls, "energyconsump") +  
+    labs(x = "", y = "能耗总量（吨标准煤）") + 
+    scale_color_manual(
+      name = "", values = c("#800000", 
+                            "#FF0000", "#FFA500", "#FFD700", "#FFFF00", 
+                            "#50C878", 
+                            "#007FFF", "#003399"))
+  func_excelplot(export_plot)
+  dev.off()
 }
 
 # Parameters export ----
