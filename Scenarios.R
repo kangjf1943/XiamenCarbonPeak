@@ -831,7 +831,7 @@ if (set_resultout == TRUE) {
 # Data export ----
 if (set_dataexport == TRUE) {
   # 导出各情景下能耗和排放达峰时间
-  exportname <- "各情景下能耗和排放达峰时间.xlsx"
+  exportname <- paste0("各情景下能耗和排放达峰时间", Sys.Date(), ".xlsx")
   exportwb <- createWorkbook()
   addWorksheet(exportwb, "peaktime")
   exportvar <- data.frame(scenario = set_scalcs, nrg_peak = NA, emis_peak = NA)
@@ -848,7 +848,7 @@ if (set_dataexport == TRUE) {
   saveWorkbook(exportwb, exportname)
   
   # 导出各情景下总排放
-  exportname <- "各情景总排放量.xlsx"
+  exportname <- paste0("各情景总排放量", Sys.Date(), ".xlsx")
   export <- createWorkbook()
   func_mrgcol(tot_emissum_ls[set_scalcs], "co2", set_scalcs)
   addWorksheet(export, "总排放")
@@ -860,7 +860,7 @@ if (set_dataexport == TRUE) {
   saveWorkbook(exportwb, exportname)
   
   # 导出特定情景下各部门排放量
-  exportname <- "26减煤情景各部门排放量.xlsx"
+  exportname <- paste0("提前退煤情景各部门排放量", Sys.Date(), ".xlsx")
   export <- createWorkbook()
   addWorksheet(export, "sectoremis")
   writeData(export, "sectoremis", 
@@ -871,7 +871,7 @@ if (set_dataexport == TRUE) {
   saveWorkbook(export, exportname)
   
   # 导出各情景下每隔五年GDP和能耗总量
-  exportname <- "各情景下每隔五年GDP和能耗总量.xlsx"
+  exportname <- paste0("各情景下每隔五年GDP和能耗总量", Sys.Date(), ".xlsx")
   exportwb <- createWorkbook()
   addWorksheet(exportwb, "nrg_per_gdp")
   # 选取可被5整除的年份
@@ -898,7 +898,7 @@ if (set_dataexport == TRUE) {
 if (set_figureexport == TRUE) {
   # 导出历史产业结构图
   png(
-    filename = "历史产业结构图.png",
+    filename = paste0("历史产业结构图", Sys.Date(), ".png"), 
     type = "cairo", # 抗锯齿
     res = 300, # 300ppi 分辨率
     width = 1600, height = 1000,
@@ -920,7 +920,7 @@ if (set_figureexport == TRUE) {
   
   # 导出历史工业产业结构图
   png(
-    filename = "历史工业产业结构图.png",
+    filename = paste0("历史工业产业结构图", Sys.Date(), ".png"),
     type = "cairo", # 抗锯齿
     res = 300, # 300ppi 分辨率
     width = 1600, height = 1000,
@@ -940,7 +940,7 @@ if (set_figureexport == TRUE) {
   
   # 输出各情景能耗总量变化图
   png(
-    filename = "各情景能耗总量变化图.png",
+    filename = paste0("各情景能耗总量变化图", Sys.Date(), ".png"),
     type = "cairo", # 抗锯齿
     res = 300, # 300ppi 分辨率
     width = 1600, height = 1000,
@@ -967,7 +967,7 @@ if (set_figureexport == TRUE) {
   
   # 输各情景排放总量图
   png(
-    filename = "各情景总排放总量.png",
+    filename = paste0("各情景总排放总", Sys.Date(), ".png"),
     type = "cairo", # 抗锯齿
     res = 300, # 300ppi 分辨率
     width = 1600, height = 900,
