@@ -807,7 +807,7 @@ for (set_scalc in set_scalcs) {
 Sys.time() - global_starttime
 
 
-# Result output ----
+# Output ----
 if (set_resultout == TRUE) {
   # 比较不同情景总排放和达峰时间差异
   print(func_scompplot(tot_emissum_ls, "co2"))
@@ -854,12 +854,31 @@ if (set_resultout == TRUE) {
   }
   result_var <- func_mrgcol(hh_nrgsum_ce_ls[set_scalcs], "elecprop", set_scalcs)
   result_var[which(result_var$year %in% c(2019, 2025, 2030, 2035)), ]
+  
+  # 输出关键指标
+  # 构建指标数据框
+  idx_all <- data.frame(
+    year = c(2019: 2060),
+    ind_nrgpergdp = tot_nrgbysec_ls[[set_scalc]]$ind / 
+      prj_global_gdp$indgdp[prj_global_gdp$year %in% c(2019: 2060)], 
+    com_nrgpergdp = tot_nrgbysec_ls[[set_scalc]]$com / 
+      prj_global_gdp$comgdp[prj_global_gdp$year %in% c(2019: 2060)], 
+    hh_nrgpercap = tot_nrgbysec_ls[[set_scalc]]$hh / 
+      prj_global_population$population[prj_global_population$year %in% c(2019: 2060)])
+  # 输出特定年份结果
+  idx_output <- 
+    idx_all[which(idx_all$year %in% c(2019, 2025, 2030, 2035)), ]
+  # 添加相对值
+  for (i in c("ind_nrgpergdp", "com_nrgpergdp", "hh_nrgpercap")) {
+    idx_output[, paste0(i, "_changerate")] <- 
+      func_conservrate(idx_output[, i])
+  }
 }
 
 
 # Data export ----
 if (set_dataexport == TRUE) {
-  # 导出各情景下能耗和排放达峰时间
+  ## Peak year of nrg and emis by scenarios ----
   exportname <- paste0("各情景下能耗和排放达峰时间", Sys.Date(), ".xlsx")
   exportwb <- createWorkbook()
   addWorksheet(exportwb, "peaktime")
@@ -876,7 +895,7 @@ if (set_dataexport == TRUE) {
   }
   saveWorkbook(exportwb, exportname)
   
-  # 导出各情景下总排放
+  # Tot emis of scenarios ----
   exportname <- paste0("各情景总排放量", Sys.Date(), ".xlsx")
   export <- createWorkbook()
   func_mrgcol(tot_emissum_ls[set_scalcs], "co2", set_scalcs)
@@ -888,7 +907,7 @@ if (set_dataexport == TRUE) {
   }
   saveWorkbook(exportwb, exportname)
   
-  # 导出特定情景下各部门排放量
+  # Tot emis of secs of certain scenario ----
   exportname <- paste0("提前退煤情景各部门排放量", Sys.Date(), ".xlsx")
   export <- createWorkbook()
   addWorksheet(export, "sectoremis")
@@ -899,7 +918,7 @@ if (set_dataexport == TRUE) {
   }
   saveWorkbook(export, exportname)
   
-  # 导出各情景下每隔五年GDP和能耗总量
+  # Five year change rate of emis ----
   exportname <- paste0("各情景下每隔五年GDP和能耗总量", Sys.Date(), ".xlsx")
   exportwb <- createWorkbook()
   addWorksheet(exportwb, "nrg_per_gdp")
@@ -925,7 +944,7 @@ if (set_dataexport == TRUE) {
 
 # Figure export ----
 if (set_figureexport == TRUE) {
-  # 导出历史产业结构图
+  ## History GDP str plot ---- 
   png(
     filename = paste0("历史产业结构图", Sys.Date(), ".png"), 
     type = "cairo", # 抗锯齿
@@ -947,7 +966,7 @@ if (set_figureexport == TRUE) {
   func_excelplot(export_plot)
   dev.off()
   
-  # 导出历史工业产业结构图
+  ## History ind str plot ----
   png(
     filename = paste0("历史工业产业结构图", Sys.Date(), ".png"),
     type = "cairo", # 抗锯齿
@@ -967,7 +986,7 @@ if (set_figureexport == TRUE) {
   func_excelplot(export_plot)
   dev.off()
   
-  # 输出各情景能耗总量变化图
+  ## Tot nrg of scenarios ----
   png(
     filename = paste0("各情景能耗总量变化图", Sys.Date(), ".png"),
     type = "cairo", # 抗锯齿
@@ -994,7 +1013,7 @@ if (set_figureexport == TRUE) {
   func_excelplot(export_plot)
   dev.off()
   
-  # 输各情景排放总量图
+  ## Emis of scenarios ----
   png(
     filename = paste0("各情景总排放总", Sys.Date(), ".png"),
     type = "cairo", # 抗锯齿
