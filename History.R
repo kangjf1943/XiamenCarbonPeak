@@ -311,6 +311,10 @@ global_roadnonoper_diesel[c("非营运客车", "货车")] <-
 # 读取全省发电量
 global_provelecgen <- func_read_trans("S3CNPRZE", "发电量")
 
+
+# SETTING ----
+set_by_elecequalfac_meth <- TRUE
+
 # NRG BALANCE ----
 # 构建空能源平衡表
 by_nrgbal_years <- as.character(c(2015: 2019))
@@ -903,18 +907,82 @@ by_res_emissum_df <- func_emissum(by_res_nrgsum_df, global_emisfac_df)
 
 # RESULT ----
 ## Total energy ----
-# 除电力外的其他能耗之和
-by_tot_nrgsum_byfuel <- 
-  func_ls2df(list(by_agri_nrgsum_df, by_ind_nrgsum_df, by_const_nrgsum_df, 
-                  by_trans_nrgsum_df, by_com_nrgsum_df, by_hh_nrgsum_df, 
-                  by_tf_nrgsum_df, by_res_nrgsum_df))
-by_tot_nrgsum_byfuel <- by_tot_nrgsum_byfuel[names(by_tot_nrgsum_byfuel) != "electricity"]
-# 换算成标准煤
-by_tot_nrgsum_byfuel_ce <- func_toce(by_tot_nrgsum_byfuel)
-# 换算成各年份总和
-by_tot_nrgsum_ce <- data.frame(
-  year = by_tot_nrgsum_byfuel_ce$year, 
-  energyconsump = rowSums(by_tot_nrgsum_byfuel[names(by_tot_nrgsum_byfuel) != "year"]))
+if (set_by_elecequalfac_meth == TRUE) {
+  ### Energy by secs ----
+  # 计算外调电力火电折标煤系数
+  by_tot_ori_elecequalfac <- 
+    func_elecequalfac(by_res_nrgsum_df, by_tfres_act[c("year", "importthrm")])
+  # 计算外调电力折标煤量
+  by_tot_ori_elecequal <- func_cross(
+    by_tot_ori_elecequalfac, 
+    func_cross(by_tfres_act[c("year", "importthrm")], 
+               by_tfres_act[c("year", "importclean")], method = "sum"), 
+    method = "product")
+  
+  # 计算本地发电标准煤量
+  by_tot_ori_elecgenequal <- 
+    func_toce(by_tf_nrgsum_df, agg = TRUE)
+  # 计算本地发电和外调电力标准煤量之和
+  by_tot_ori_elecstdcoal <- 
+    func_cross(by_tot_ori_elecequal, by_tot_ori_elecgenequal, method = "sum")
+  
+  # 各部门电力消费占比
+  by_tot_elecbysec <- 
+    func_mrgcol(list(by_agri_nrgsum_df, by_ind_nrgsum_df, 
+                     by_const_nrgsum_df, by_trans_nrgsum_df, 
+                     by_com_nrgsum_df, by_hh_nrgsum_df), 
+                "electricity", namesnew = global_sectors[1:6])
+  by_tot_elecsharebysec <- 
+    func_nrg_intst(by_tot_elecbysec, by_tfres_act, "elecuse")
+  
+  # 分配电力标准煤量到各部门
+  by_tot_elecstdcoalbysec <- 
+    func_nrg_sum(by_tot_elecsharebysec, by_tot_ori_elecstdcoal, "nrg_input")
+  
+  # 计算各部门能耗标准量
+  by_agri_nrgsumce <- func_cross(
+    func_toce(by_agri_nrgsum_df, agg = TRUE), 
+    by_tot_elecstdcoalbysec[c("year", "agri")], method = "sum")
+  by_ind_nrgsumce <- func_cross(
+    func_toce(by_ind_nrgsum_df, agg = TRUE), 
+    by_tot_elecstdcoalbysec[c("year", "ind")], method = "sum")
+  by_const_nrgsumce <- func_cross(
+    func_toce(by_const_nrgsum_df, agg = TRUE), 
+    by_tot_elecstdcoalbysec[c("year", "const")], method = "sum")
+  by_trans_nrgsumce <- func_cross(
+    func_toce(by_trans_nrgsum_df, agg = TRUE), 
+    by_tot_elecstdcoalbysec[c("year", "trans")], method = "sum")
+  by_com_nrgsumce <- func_cross(
+    func_toce(by_com_nrgsum_df, agg = TRUE), 
+    by_tot_elecstdcoalbysec[c("year", "com")], method = "sum")
+  by_hh_nrgsumce <- func_cross(
+    func_toce(by_hh_nrgsum_df, agg = TRUE), 
+    by_tot_elecstdcoalbysec[c("year", "hh")], method = "sum")
+  # 合并各部门
+  by_tot_nrgsecce <- func_mrgcol(list(
+    by_agri_nrgsumce, by_ind_nrgsumce, by_const_nrgsumce, 
+    by_trans_nrgsumce, by_com_nrgsumce, by_hh_nrgsumce), 
+    "stdcoal", global_sectors[1: 6])
+  
+  ### Total energy ----
+  # 计算能耗标准量之和
+  by_tot_nrgsumce <- data.frame(
+    year = by_tot_nrgsecce$year, 
+    energyconsump = rowSums(by_tot_nrgsecce[, -1]))
+} else {
+  # 除电力外的其他能耗之和
+  by_tot_nrgsum_byfuel <- 
+    func_ls2df(list(by_agri_nrgsum_df, by_ind_nrgsum_df, by_const_nrgsum_df, 
+                    by_trans_nrgsum_df, by_com_nrgsum_df, by_hh_nrgsum_df, 
+                    by_tf_nrgsum_df, by_res_nrgsum_df))
+  by_tot_nrgsum_byfuel <- by_tot_nrgsum_byfuel[names(by_tot_nrgsum_byfuel) != "electricity"]
+  # 换算成标准煤
+  by_tot_nrgsum_byfuel_ce <- func_toce(by_tot_nrgsum_byfuel)
+  # 换算成各年份总和
+  by_tot_nrgsum_ce <- data.frame(
+    year = by_tot_nrgsum_byfuel_ce$year, 
+    energyconsump = rowSums(by_tot_nrgsum_byfuel[names(by_tot_nrgsum_byfuel) != "year"]))
+}
 
 
 ## Total emission ----
