@@ -585,6 +585,17 @@ func_ratecalc <- function(in_df, name_value) {
   out_df
 }
 
+# 计算和基准年相比的变化率
+# 针对数字向量
+# 本质上是第二个到最后一个数字与第一个数字相比的变化率
+func_conservrate <- function(numbers) {
+  new_numbers <- numeric()
+  for (i in c(1: length(numbers))) {
+    new_numbers[i] <- (numbers[i] - numbers[1]) / numbers[1]
+  }
+  new_numbers
+}
+
 # 生成方案组合名称的函数
 func_sgen <- function(basescenario, measures) {
   # 生成组合矩阵
