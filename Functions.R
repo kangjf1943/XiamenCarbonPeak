@@ -505,7 +505,7 @@ func_elecequalfac <- function(nrg_input, elecgen_df) {
 ## 转化成标准煤
 # 输入能源数据框单位：吨/万立方米/百万千焦/万千瓦时
 # 输出单位：吨标准煤
-func_toce <- function(nrg_df) {
+func_toce <- function(nrg_df, agg = FALSE) {
   out_df <- data.frame(year = nrg_df[, "year"])
   factors <- 
     data.frame(nrg = c("rawcoal", "coalproduct", 
@@ -524,6 +524,12 @@ func_toce <- function(nrg_df) {
   # 将能源数据框能耗转化为标准煤
   for (i in name_scope) {
     out_df[, i] <- nrg_df[, i] * factors$factor[which(factors$nrg == i)]
+  }
+  # 是否加和各类能源标准煤量
+  if (agg == TRUE) {
+    out_df_mid <- data.frame(year = out_df$year)
+    out_df_mid$stdcoal <- rowSums(out_df[names(out_df) != "year"])
+    out_df <- out_df_mid
   }
   out_df
 }
