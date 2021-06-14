@@ -20,6 +20,7 @@ for (i in c(global_sectors, "tot")) {
 for (i in c("tot_emisbysec_ls", "trans_carprop_ls")) {
   assign(i, init_output_templatels)
 }
+tot_nrgbysec_ls <- init_output_templatels
 # 删除不必要的包装盒
 # 电力等不区分直接排放和间接排放故删除
 rm(init_output_templatels, 
@@ -701,34 +702,62 @@ for (set_scalc in set_scalcs) {
       year = tot_nrgsum_byfuel_ce$year, 
       energyconsump = rowSums(tot_nrgsum_byfuel[names(tot_nrgsum_byfuel) != "year"]))
   } else {
-    # 除了外调电力外其他部门一次能源之和
-    tot_nrgsum_byfuel <- func_ls2df(list(
-      agri_nrgsum_ls[[set_scalc]], ind_nrgsum_ls[[set_scalc]],
-      const_nrgsum_ls[[set_scalc]], trans_nrgsum_ls[[set_scalc]],
-      com_nrgsum_ls[[set_scalc]], hh_nrgsum_ls[[set_scalc]],
-      tf_nrgsum_ls[[set_scalc]]))
-    # 换算成标准煤
-    tot_nrgsum_byfuel_ce <- func_toce(tot_nrgsum_byfuel)
-    # 换算成各年份总和
-    tot_nrgsum_ce <- data.frame(
-      year = tot_nrgsum_byfuel_ce$year, 
-      energyconsump = 
-        rowSums(tot_nrgsum_byfuel_ce[names(tot_nrgsum_byfuel_ce) != "year"]))
     # 计算外调电力火电折标煤系数
     tot_ori_elecequalfac <- 
       func_elecequalfac(res_nrgsum_ls[[set_scalc]], tfres_act[c("year", "importthrm")])
-    # 最后一年省电网火电发电为0，故电力折标煤系数也为0
+    # 最后一年省电网火电发电为0，但电力折标煤系数设为和之前年份等同
     tot_ori_elecequalfac[which(
-      tot_ori_elecequalfac$year == 2060), "nrg_input"] <- 0
+      tot_ori_elecequalfac$year == 2060), "nrg_input"] <- 
+      tot_ori_elecequalfac[which(
+        tot_ori_elecequalfac$year == 2059), "nrg_input"]
     # 计算外调电力折标煤量
     tot_ori_elecequal <- func_cross(
       tot_ori_elecequalfac, 
       func_cross(tfres_act[c("year", "importthrm")], 
                  tfres_act[c("year", "importclean")], method = "sum"), 
       method = "product")
-    # 本地一次能源和外调电力一次能源之和
-    tot_nrgsum_ls[[set_scalc]] <- 
-      func_cross(tot_nrgsum_ce, tot_ori_elecequal, method = "sum")
+    
+    # 计算本地发电标准煤量
+    tot_ori_elecgenequal <- 
+      func_toce(tf_nrgsum_ls[[set_scalc]], agg = TRUE)
+    
+    # 计算本地发电和外调电力标准煤量之和
+    tot_ori_elecstdcoal <- 
+      func_cross(tot_ori_elecequal, tot_ori_elecgenequal, method = "sum")
+    
+    # 各部门电力消费占比
+    tot_elecbysec <- 
+      func_mrgcol(list(agri_nrgsum_ls[[set_scalc]], ind_nrgsum_ls[[set_scalc]], 
+                       const_nrgsum_ls[[set_scalc]], trans_nrgsum_ls[[set_scalc]], 
+                       com_nrgsum_ls[[set_scalc]], hh_nrgsum_ls[[set_scalc]]), 
+                  "electricity", namesnew = global_sectors[1:6])
+    tot_elecsharebysec <- 
+      func_nrg_intst(tot_elecbysec, tfres_act, "elecuse")
+    
+    # 分配电力标准煤量到各部门
+    tot_elecstdcoalbysec <- 
+      func_nrg_sum(tot_elecsharebysec, tot_ori_elecstdcoal, "nrg_input")
+    
+    # 计算各部门能耗标准量
+    tot_nrgbysec_ls[[set_scalc]] <- data.frame(
+      year = c(2019: 2060), 
+      agri = func_toce(agri_nrgsum_ls[[set_scalc]], agg = TRUE)$stdcoal + 
+        tot_elecstdcoalbysec["agri"], 
+      ind = func_toce(ind_nrgsum_ls[[set_scalc]], agg = TRUE)$stdcoal + 
+        tot_elecstdcoalbysec["ind"], 
+      const = func_toce(const_nrgsum_ls[[set_scalc]], agg = TRUE)$stdcoal + 
+        tot_elecstdcoalbysec["const"], 
+      trans = func_toce(trans_nrgsum_ls[[set_scalc]], agg = TRUE)$stdcoal + 
+        tot_elecstdcoalbysec["trans"], 
+      com = func_toce(com_nrgsum_ls[[set_scalc]], agg = TRUE)$stdcoal + 
+        tot_elecstdcoalbysec["com"], 
+      hh = func_toce(hh_nrgsum_ls[[set_scalc]], agg = TRUE)$stdcoal + 
+        tot_elecstdcoalbysec["hh"]
+    )
+    # 计算当前情景能耗标准量之和
+    tot_nrgsum_ls[[set_scalc]] <- data.frame(
+      year = tot_nrgbysec_ls[[set_scalc]]$year, 
+      energyconsump = rowSums(tot_nrgbysec_ls[[set_scalc]][, -1]))
   }
   
   
