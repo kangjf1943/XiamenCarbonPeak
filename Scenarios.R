@@ -688,20 +688,7 @@ for (set_scalc in set_scalcs) {
   
   # RESULT ----
   ## Total energy ----
-  if (set_elecfac_meth == FALSE) {
-    # 一次能源能耗之和
-    tot_nrgsum_byfuel <- func_ls2df(list(
-      agri_nrgsum_ls[[set_scalc]], ind_nrgsum_ls[[set_scalc]],
-      const_nrgsum_ls[[set_scalc]], trans_nrgsum_ls[[set_scalc]],
-      com_nrgsum_ls[[set_scalc]], hh_nrgsum_ls[[set_scalc]],
-      tf_nrgsum_ls[[set_scalc]], res_nrgsum_ls[[set_scalc]]))
-    # 换算成标准煤
-    tot_nrgsum_byfuel_ce <- func_toce(tot_nrgsum_byfuel)
-    # 换算成各年份总和
-    tot_nrgsum_ls[[set_scalc]] <- data.frame(
-      year = tot_nrgsum_byfuel_ce$year, 
-      energyconsump = rowSums(tot_nrgsum_byfuel[names(tot_nrgsum_byfuel) != "year"]))
-  } else {
+  if (set_elecfac_meth == TRUE) {
     # 计算外调电力火电折标煤系数
     tot_ori_elecequalfac <- 
       func_elecequalfac(res_nrgsum_ls[[set_scalc]], tfres_act[c("year", "importthrm")])
@@ -758,6 +745,19 @@ for (set_scalc in set_scalcs) {
     tot_nrgsum_ls[[set_scalc]] <- data.frame(
       year = tot_nrgbysec_ls[[set_scalc]]$year, 
       energyconsump = rowSums(tot_nrgbysec_ls[[set_scalc]][, -1]))
+  } else {
+    # 一次能源能耗之和
+    tot_nrgsum_byfuel <- func_ls2df(list(
+      agri_nrgsum_ls[[set_scalc]], ind_nrgsum_ls[[set_scalc]],
+      const_nrgsum_ls[[set_scalc]], trans_nrgsum_ls[[set_scalc]],
+      com_nrgsum_ls[[set_scalc]], hh_nrgsum_ls[[set_scalc]],
+      tf_nrgsum_ls[[set_scalc]], res_nrgsum_ls[[set_scalc]]))
+    # 换算成标准煤
+    tot_nrgsum_byfuel_ce <- func_toce(tot_nrgsum_byfuel)
+    # 换算成各年份总和
+    tot_nrgsum_ls[[set_scalc]] <- data.frame(
+      year = tot_nrgsum_byfuel_ce$year, 
+      energyconsump = rowSums(tot_nrgsum_byfuel[names(tot_nrgsum_byfuel) != "year"]))
   }
   
   
