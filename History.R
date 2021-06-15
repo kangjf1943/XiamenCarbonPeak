@@ -969,6 +969,23 @@ if (set_by_elecequalfac_meth == TRUE) {
   by_tot_nrgsumce <- data.frame(
     year = by_tot_nrgsecce$year, 
     energyconsump = rowSums(by_tot_nrgsecce[, -1]))
+  
+  ### Energy by fuels ----
+  # 除了电力外其他能耗物理量及标准煤
+  by_tot_nrgfuel <- 
+    func_ls2df(list(by_agri_nrgsum_df, by_ind_nrgsum_df, by_const_nrgsum_df, 
+                    by_trans_nrgsum_df, by_com_nrgsum_df, by_hh_nrgsum_df, 
+                    by_tf_nrgsum_df))
+  by_tot_nrgfuelce <- func_toce(by_tot_nrgsec)
+  # 加上电力标准量
+  by_tot_nrgfuelce <- 
+    func_merge_2(list(by_tot_nrgfuelce, by_tot_ori_elecequal))
+  names(by_tot_nrgfuelce)[names(by_tot_nrgfuelce) == "nrg_input"] <- "electricity"
+    
+  # 聚合成煤油气电
+  by_tot_nrgaggfuel <- func_secagg(by_tot_nrgfuel, global_nrg_lookup)
+  by_tot_nrgaggfuelce <- func_secagg(by_tot_nrgfuelce, global_nrg_lookup)
+  
 } else {
   # 除电力外的其他能耗之和
   by_tot_nrgsum_byfuel <- 
