@@ -1009,7 +1009,13 @@ if (set_figureexport == TRUE) {
       values = c("#800000", 
                  "#FF0000", "#FFA500", "#FFD700", "#FFFF00", 
                  "#50C878", 
-                 "#007FFF", "#003399"))
+                 "#007FFF", "#003399")) + 
+    # 添加峰值年份线
+    geom_vline(xintercept = 
+                 c(func_peakyear(tot_nrgsum_ls[["BAU"]], "energyconsump"), 
+                   func_peakyear(tot_nrgsum_ls[["BAU_INDSTR"]], "energyconsump"), 
+                   func_peakyear(tot_nrgsum_ls[["BAU_ELECCAR"]], "energyconsump")), 
+               color = c("#800000", "#FF0000", "#FFA500"), alpha = 0.3)
   func_excelplot(export_plot)
   dev.off()
   
