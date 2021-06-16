@@ -927,7 +927,7 @@ by_tfres_ori_elecgen <-
   global_elecgen[c("year", "合计")]
 by_tfres_ori_elecgen <- 
   func_nrg_sum(global_elecgen[c("year", "thrm_prop", "clean_prop")], 
-               by_tfres_ori_elecgen, "elecgen")
+               by_tfres_ori_elecgen, "合计")
 names(by_tfres_ori_elecgen) <- c("year", "elecgen_thrm", "elecgen_clean")
 
 # 合并以上几项
