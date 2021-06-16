@@ -617,36 +617,49 @@ for (set_scalc in set_scalcs) {
                                hh_nrgsum_ls[[set_scalc]]))
   tfres_act <- tfres_act[c("year", "electricity")]
   names(tfres_act) <- c("year", "elecuse")
+  # 本地发电量
   if (grepl("24COAL", set_scalc)) { ### 24COAL ----
     # 2024年开始减煤，两年内减为原来的一半
     tfres_act <- 
       func_merge_2(list(
         tfres_act, 
-        func_interp_2(
-          year = c(2019, 2023, 2025, 2050, 2060),
-          value = c(900371, 900371, 900371*0.5, 0, 0), "elecgen", 
-          showplot = FALSE)))
+        func_interp_3(
+          year = c(2019, 2023, 2025, 2050, 2060), scale = c(1, 1, 0.5, 0, 0), 
+          base = func_lastone(by_tfres_act$elecgen_thrm), "elecgen_thrm")))
   } else if (grepl("26COAL", set_scalc)) { ### 26COAL ----
     # 2026年开始减煤，五年内减为原来的一半
     tfres_act <- 
       func_merge_2(list(
         tfres_act, 
-        func_interp_2(
-          year = c(2019, 2025, 2030, 2050, 2060),
-          value = c(900371, 900371, 900371*0.5, 0, 0), "elecgen", 
-          showplot = FALSE)))
+        func_interp_3(
+          year = c(2019, 2025, 2030, 2050, 2060), scale = c(1, 1, 0.5, 0, 0), 
+          base = func_lastone(by_tfres_act$elecgen_thrm), "elecgen_thrm")))
   } else { ### BAU ----
     # 2030年开始减煤，十年内减为原来的一半，之后保持
     tfres_act <- 
       func_merge_2(list(
         tfres_act, 
-        func_interp_2(year = c(2019, 2030, 2040, 2060),
-                      value = c(900371, 900371, 900371*0.5, 900371*0.5), "elecgen")))
+        func_interp_3(
+          year = c(2019, 2030, 2040, 2060), scale = c(1, 1, 0.5, 0.5), 
+          base = func_lastone(by_tfres_act$elecgen_thrm), "elecgen_thrm")))
   }
-  # 本地发电所用电量
+  
+  # 本地清洁发电量
+  tfres_act$elecgen_clean <- 
+    # 太阳能发电量：刘洋预测
+    func_interp_2(year = c(2019, global_solarelecgen_fut$year), 
+                  value = c(func_lastone(global_elecgen$"#太阳能"), 
+                            global_solarelecgen_fut$"潜在发电量"*10000))$value + 
+    # 加上垃圾发电量：继续扩容
+    func_interp_3(year = c(2019, 2035, 2060), scale = c(1, 1.5, 1.7), 
+                  base = func_lastone(global_elecgen$"#垃圾发电"))$value + 
+    # 加上水电：假设不变
+    func_lastone(global_elecgen$"#水电")
+  
+  # 本地火力发电所用电量
   tfres_act$tfelecuse <- 
     func_nrg_sum(tf_nrgintst[c("year", "electricity")], 
-                 tfres_act, "elecgen")$electricity
+                 tfres_act, "elecgen_thrm")$electricity
   
   # 生成省电网发电结构
   tfres_provelecgenstr <- data.frame(
@@ -659,7 +672,8 @@ for (set_scalc in set_scalcs) {
   # 计算外调电力需求并将其分成煤电和清洁能源发电
   tfres_importelec <- data.frame(
     year = c(2019: 2060), 
-    importelec = tfres_act$elecuse - tfres_act$elecgen - tfres_act$tfelecuse)
+    importelec = tfres_act$elecuse + tfres_act$tfelecuse - 
+      tfres_act$elecgen_thrm - tfres_act$elecgen_clean)
   tfres_importelec <- 
     func_nrg_sum(tfres_provelecgenstr, tfres_importelec, "importelec")
   names(tfres_importelec) <- c("year", "importthrm", "importclean")
@@ -668,7 +682,7 @@ for (set_scalc in set_scalcs) {
   
   ## Consumption and emission ----
   tf_nrgsum_ls[[set_scalc]] <- 
-    func_nrg_sum(tf_nrgintst, tfres_act, "elecgen")
+    func_nrg_sum(tf_nrgintst, tfres_act, "elecgen_thrm")
   tf_emissum_ls[[set_scalc]] <- 
     func_emissum(tf_nrgsum_ls[[set_scalc]], prj_emisfac_df)
   
