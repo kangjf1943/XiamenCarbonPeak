@@ -840,24 +840,26 @@ by_hh_nrgintst_ls <-
 
 # Power generation ----
 ## Activity level ----
-# 读取本地发电量数据
-by_tfres_act <- func_read_trans("2I4DKY2A", "全市发电量")
-# 发电行业外用电量，能源行业用电量，本地发电量，外调电量
+# 分成4部分计算：发电外用电，本地发电用电，本地发电，外调电量
+# 发电外用电量
 by_tfres_ori_elecuse <- 
   func_ls2df(list(by_agri_nrgsum_df, by_ind_nrgsum_df, by_const_nrgsum_df, 
                   by_trans_nrgsum_df, by_com_nrgsum_df, by_hh_nrgsum_df))
 by_tfres_ori_elecuse <- by_tfres_ori_elecuse[c("year", "electricity")]
 names(by_tfres_ori_elecuse)[2] <- "elecuse"
 
-# 发电行业用电量
+# 本地发电用电量
 by_tfres_ori_tfelecuse <- 
   global_indscale_nrg_bysecagg$"电力、热力生产和供应业"[c("year", "electricity")]
 names(by_tfres_ori_tfelecuse)[2] <- "tfelecuse"
 
-# 本地发电量
+# 本地发电量：继续拆分成清洁发电和火电
 by_tfres_ori_elecgen <- 
   global_elecgen[c("year", "合计")]
-names(by_tfres_ori_elecgen)[2] <- "elecgen"
+by_tfres_ori_elecgen <- 
+  func_nrg_sum(global_elecgen[c("year", "thrm_prop", "clean_prop")], 
+               by_tfres_ori_elecgen, "elecgen")
+names(by_tfres_ori_elecgen) <- c("year", "elecgen_thrm", "elecgen_clean")
 
 # 合并以上几项
 by_tfres_act <- 
@@ -877,7 +879,8 @@ by_tfres_ori_provelecgenstr$clean_prop <-
 by_tfres_ori_importelec <- 
   data.frame(
     year = by_tfres_act$year, 
-    importelec = by_tfres_act$elecuse + by_tfres_act$tfelecuse - by_tfres_act$elecgen)
+    importelec = by_tfres_act$elecuse + by_tfres_act$tfelecuse - 
+      by_tfres_act$elecgen_thrm - by_tfres_act$elecgen_clean)
 by_tfres_ori_importelec <- 
   func_nrg_sum(by_tfres_ori_provelecgenstr[c("year", "thrm_prop","clean_prop")],
                by_tfres_ori_importelec, "importelec")
@@ -892,8 +895,7 @@ by_tf_nrgsum_df <- global_indscale_nrg_bysecagg$"电力、热力生产和供应�
 by_tf_emissum_df <- func_emissum(by_tf_nrgsum_df, global_emisfac_df)
 
 ## Energy intensity ----
-by_tf_nrgintst <- func_nrg_intst(by_tf_nrgsum_df, by_tfres_act, "elecgen")
-# 问题：此处的发电能耗强度是火电投入量和全部发电量之和
+by_tf_nrgintst <- func_nrg_intst(by_tf_nrgsum_df, by_tfres_act, "elecgen_thrm")
 
 # Imported elec ----
 ## Energy intensity ----
