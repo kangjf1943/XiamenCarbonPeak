@@ -78,9 +78,15 @@ global_ind_subsector <- c("食品饮料及烟草制造业",
 global_ind_nrgclass <- c("rawcoal", "coalproduct", 
                          "gasoline", "diesel", "residual", "lpg", 
                          "gas", "electricity")
-global_trans_subsector <- c("常规公交", "快速公交", "出租车", "农村客车", 
-                            "公路其他汽油", "公路其他柴油", 
-                            "水路客运", "水路货运")
+if (set_by_nrgplng_scope == TRUE) {
+  global_trans_subsector <- c("常规公交", "快速公交", "出租车", "农村客车", 
+                              "公路其他汽油", "公路其他柴油", 
+                              "水路客运", "水路货运", "航空")
+} else {
+  global_trans_subsector <- c("常规公交", "快速公交", "出租车", "农村客车", 
+                              "公路其他汽油", "公路其他柴油", 
+                              "水路客运", "水路货运")
+}
 
 # 服务业子部门
 global_com_subsector <- c("electricity", "lpg_and_gas")
@@ -248,7 +254,36 @@ global_agri_diesel <- func_read_trans("4NJ97NS9")[, c("year", "农用柴油使�
 comment(global_agri_diesel$"农用柴油使用量")
 
 # 读取厦航煤油
+# 问题：能源平衡表煤油到底包含不包含福州机场煤油消费？
 global_trans_kerosene <- func_read_trans("M8UPDTJN")
+
+# 读取航空煤油数据并整理出不含福州机场部分的煤油消费量之和
+global_avnnrg <- func_read_trans("JXG6KGSA")
+# 其中“厦航煤油”项可能是包含福州机场的煤油消费量之和
+# 补全国际航班合计之和
+global_avnnrg[which(global_avnnrg$year %in% c(2011: 2017)), "国际航班合计"] <- 
+  global_avnnrg[which(global_avnnrg$year %in% c(2011: 2017)), "#国内国际段航班"] +
+  global_avnnrg[which(global_avnnrg$year %in% c(2011: 2017)), "#外航航班"]
+# 生成国内国际航班之和
+global_avnnrg$kerosene <- 
+  global_avnnrg$"国内航班" + global_avnnrg$"国际航班合计"
+# 补全2018-2019年国内航班之和
+# 假设国内国际航空煤油消费量和包含福州机场在内的消费量比例同2017年
+global_avnnrg[which(global_avnnrg$year %in% c(2018: 2019)), "kerosene"] <- 
+  func_lastone(global_avnnrg[which(global_avnnrg$year == 2017), "kerosene"] / 
+                 global_avnnrg[which(global_avnnrg$year == 2017), "厦航煤油"]) * 
+  global_avnnrg[which(global_avnnrg$year %in% c(2018: 2019)), "厦航煤油"]
+global_avnnrg <- global_avnnrg[c("year", "kerosene")]
+
+# 读取航空客货运周转量
+global_avn_act <- 
+  func_read_trans("U737THYU")[c("year", "客运周转量", "货运周转量")]
+names(global_avn_act) <- c("year", "avn_rpk", "avn_rftk")
+
+# 读取水运客货运周转量
+global_water_act <- 
+  func_read_trans("P6KQQFUP")[c("year", "客运周转量", "货运周转量")]
+names(global_water_act) <- c("year", "water_rpk", "water_rftk")
 
 # 读取园林局LPG数据
 global_ind_com_hh_lpg <- func_read_trans("SRYBIXUY")
@@ -323,6 +358,7 @@ global_provelecgen <- func_read_trans("S3CNPRZE", "发电量")
 
 # SETTING ----
 set_by_elecequalfac_meth <- TRUE
+set_by_nrgplng_scope <- TRUE
 
 # NRG BALANCE ----
 # 构建空能源平衡表
@@ -646,8 +682,7 @@ names(by_trans_act_nonoperation)[2] <- global_trans_subsector[5]
 by_trans_ori_turnover <- data.frame("year" = c(2017:2019), 
                                     "公路其他柴油" = c(1919251, 2037836, 2216748))
 # 水路客运周转量和水路货运周转量
-by_trans_act_water <- func_read_trans("P6KQQFUP")
-by_trans_act_water <- by_trans_act_water[, c("year", "客运周转量", "货运周转量")]
+by_trans_act_water <- global_water_act
 names(by_trans_act_water) <- c("year", global_trans_subsector[7:8])
 # 合并为活动水平数据框
 by_trans_act <- 
@@ -655,7 +690,14 @@ by_trans_act <-
                     by_trans_act_nonoperation,
                     by_trans_ori_turnover, 
                     by_trans_act_water))
-# 假设营运车辆2018-2019年数据为历史数据线性外推
+# 能源规划口径下增加航空客运周转量一列
+if (set_by_nrgplng_scope == TRUE) { ## Nrgplng scope ----
+  by_trans_ori_avn <- global_avn_act[c("year", "avn_rpk")]
+  names(by_trans_ori_avn) <- c("year", global_trans_subsector[9])
+  by_trans_act <- func_merge_2(list(by_trans_act, by_trans_ori_avn))
+}
+
+# 假设：营运车辆2018-2019年数据为历史数据线性外推
 for (i in global_trans_subsector[1:3]) {
   by_trans_act[which(by_trans_act$year > 2017), i] <- 
     tail(func_linear(by_trans_act, i, startyear = 2018, endyear = 2019)[, i], 2)
@@ -663,6 +705,7 @@ for (i in global_trans_subsector[1:3]) {
 by_trans_act[which(by_trans_act$year > 2014), "农村客车"] <- 
   tail(func_linear(by_trans_act, "农村客车", 
                    startyear = 2015, endyear = 2019)[, "农村客车"], 5)
+
 
 ## Consumption and emission ---- 
 # 定义存储数据框
@@ -700,17 +743,35 @@ for (i in by_nrgbal_years) {
 by_trans_nrgsum_ls[["公路其他汽油"]]$electricity <- 0
 
 # 水路客运能耗
-by_trans_nrgsum_ls[["水路客运"]] <- 
-  func_merge_2(list(
-    global_water_railway_diesel[c("year", "水运国内客运")], 
-    global_trans_residual[c("year", "国内客运")]))
+if (set_by_nrgplng_scope == TRUE) {
+  by_trans_nrgsum_ls[["水路客运"]] <- 
+    func_merge_2(list(
+      func_cross(global_water_railway_diesel[c("year", "水运国内客运")], 
+                 global_water_railway_diesel[c("year", "水运国际客运")], "sum"), 
+      func_cross(global_trans_residual[c("year", "国内客运")], 
+                 global_trans_residual[c("year", "国际客运")], "sum")))
+} else {
+  by_trans_nrgsum_ls[["水路客运"]] <- 
+    func_merge_2(list(
+      global_water_railway_diesel[c("year", "水运国内客运")], 
+      global_trans_residual[c("year", "国内客运")]))
+}
 names(by_trans_nrgsum_ls$水路客运)[2:3] <- c("diesel", "residual")
 
 # 水路货运能耗
-by_trans_nrgsum_ls[["水路货运"]] <- 
-  func_merge_2(list(
-    global_water_railway_diesel[c("year", "水运国内货运")], 
-    global_trans_residual[c("year", "国内货运")]))
+if (set_by_nrgplng_scope == TRUE) {
+  by_trans_nrgsum_ls[["水路货运"]] <- 
+    func_merge_2(list(
+      func_cross(global_water_railway_diesel[c("year", "水运国内货运")], 
+                 global_water_railway_diesel[c("year", "水运国际货运")], "sum"), 
+      func_cross(global_trans_residual[c("year", "国内货运")], 
+                 global_trans_residual[c("year", "国际货运")], "sum")))
+} else {
+  by_trans_nrgsum_ls[["水路货运"]] <- 
+    func_merge_2(list(
+      global_water_railway_diesel[c("year", "水运国内货运")], 
+      global_trans_residual[c("year", "国内货运")]))
+}
 names(by_trans_nrgsum_ls$水路货运)[2:3] <- c("diesel", "residual")
 
 # 其他柴油 = 能源平衡表柴油总量扣除当前柴油之和
@@ -730,7 +791,12 @@ for (i in by_nrgbal_years) {
     # 水路货运柴油消费
     by_trans_nrgsum_ls[["水路货运"]][which(
       by_trans_nrgsum_ls[["水路货运"]]$year == i), "diesel"]
-    
+}
+
+# 能源规划口径下：计算航空煤油
+if (set_by_nrgplng_scope == TRUE) {
+  by_trans_nrgsum_ls[["航空"]] <- 
+    global_avnnrg
 }
 
 # 能耗总量和排放
@@ -918,7 +984,7 @@ by_res_emissum_df <- func_emissum(by_res_nrgsum_df, global_emisfac_df)
 
 # RESULT ----
 ## Total energy ----
-if (set_by_elecequalfac_meth == TRUE) {
+if (set_by_elecequalfac_meth == TRUE) { ### Elecequalfac meth ----
   ### Energy by secs ----
   # 计算外调电力火电折标煤系数
   by_tot_ori_elecequalfac <- 
@@ -996,7 +1062,6 @@ if (set_by_elecequalfac_meth == TRUE) {
   # 聚合成煤油气电
   by_tot_nrgaggfuel <- func_secagg(by_tot_nrgfuel, global_nrg_lookup)
   by_tot_nrgaggfuelce <- func_secagg(by_tot_nrgfuelce, global_nrg_lookup)
-  
 } else {
   # 除电力外的其他能耗之和
   by_tot_nrgsum_byfuel <- 
