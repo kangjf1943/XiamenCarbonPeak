@@ -267,11 +267,17 @@ global_com_hh_gas[c("服务业", "生活消费")] <- func_addnote(
 # 读取交通天然气
 global_trans_gas <- func_read_trans("QH2KBX3X")
 
-# 读取发电用电数据
+# 读取用电数据
 global_electricity_sec <- func_read_trans("2I4DKY2A", "全市电力消费情况表")
 global_electricity_finesec <- 
   func_read_trans("2I4DKY2A", "全市电力消费情况表分具体行业")
+
+# 读取本地发电数据并计算清洁和非清洁发电比例
 global_elecgen <- func_read_trans("2I4DKY2A", "全市发电量")
+global_elecgen$clean <- 
+  global_elecgen$"#水电" + global_elecgen$"#垃圾发电" + global_elecgen$"#太阳能"
+global_elecgen$clean_prop <- global_elecgen$clean / global_elecgen$"合计"
+global_elecgen$thrm_prop <- 1 - global_elecgen$clean_prop
 
 # 读取水运燃料油
 global_trans_residual <- func_read_trans("68Z975NU")
@@ -896,7 +902,7 @@ global_provelecgen_nrgsum <-
   func_read_trans("S3CNPRZE")[c("year", "原煤", "柴油", "燃料油", "天然气")]
 names(global_provelecgen_nrgsum) <- c("year", "rawcoal", "diesel", "residual", "gas")
 
-# 火电能耗系数
+# 火电能耗强度
 by_res_nrgintst <- 
   func_nrg_intst(global_provelecgen_nrgsum, global_provelecgen, "火电")
 
