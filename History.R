@@ -129,18 +129,26 @@ global_indscale_gdp[which(
 comment(global_indscale_gdp) <- "规上工业总GDP"
 
 # 全市各产业GDP
-global_gdp <- func_read_trans("2VHEE264", "GDP")[1:7]
+global_gdp <- func_read_trans("2VHEE264", "GDP")
+global_gdp <- global_gdp[names(global_gdp) != "人均GDP"]
 names(global_gdp)[names(global_gdp) == "#第一产业"] <- "agrigdp"
 names(global_gdp)[names(global_gdp) == "#第二产业"] <- "secgdp"
 names(global_gdp)[names(global_gdp) == "##工业"] <- "indgdp"
 names(global_gdp)[names(global_gdp) == "##建筑业"] <- "constgdp"
 names(global_gdp)[names(global_gdp) == "#第三产业"] <- "comgdp"
-# 各产业比重
+# 基于当年价计算各产业比重
 global_gdp$agrigdp_prop <- global_gdp$agrigdp/global_gdp$GDP*100
 global_gdp$secgdp_prop <- global_gdp$secgdp/global_gdp$GDP*100
 global_gdp$indgdp_prop <- global_gdp$indgdp/global_gdp$GDP*100
 global_gdp$constgdp_prop <- global_gdp$constgdp/global_gdp$GDP*100
 global_gdp$comgdp_prop <- global_gdp$comgdp/global_gdp$GDP*100
+# 转换为2015年可比价
+global_gdp$GDP <- func_compprice(global_gdp, "地区生产总值指数", 2015)$GDP
+global_gdp$agrigdp <- global_gdp$GDP * global_gdp$agrigdp_prop
+global_gdp$secgdp <- global_gdp$GDP * global_gdp$secgdp_prop
+global_gdp$indgdp <- global_gdp$GDP * global_gdp$indgdp_prop
+global_gdp$constgdp <- global_gdp$GDP * global_gdp$constgdp_prop
+global_gdp$comgdp <- global_gdp$GDP * global_gdp$comgdp_prop
 
 # 预测GDP相关项目变化
 # 预测GDP
@@ -148,10 +156,10 @@ prj_global_gdp <-
   func_rate(baseyear = 2019, 
             basevalue = global_gdp$GDP[global_gdp$year == 2019], 
             rate_df = # 未来GDP增长率减缓
-              func_interp_2(year = c(2020, 2025, 2030, 2035, 2040, 2060),
-                            value = c(6.00, 6.00, 5.00, 4.00, 3.00, 2.00)))
+              func_interp_2(year = c(2020, 2021, 2025, 2030, 2035, 2040, 2060),
+                            value = c(5.8, 7.5, 7.00, 6.00, 5.00, 3.00, 2.00)))
 names(prj_global_gdp)[2] <- "GDP"
-comment(prj_global_gdp$GDP) <- "万元当年价"
+comment(prj_global_gdp$GDP) <- "2015可比价万元"
 # 预测各产业所占比重
 prj_global_gdp$secgdp_prop <- 
   func_interp_2(year = c(2019, 2025, 2030, 2040, 2060), 
