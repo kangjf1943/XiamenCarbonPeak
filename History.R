@@ -260,10 +260,6 @@ comment(global_hh_coal$"生活用煤") <- "吨"
 global_agri_diesel <- func_read_trans("4NJ97NS9")[, c("year", "农用柴油使用量")]
 comment(global_agri_diesel$"农用柴油使用量")
 
-# 读取厦航煤油
-# 问题：能源平衡表煤油到底包含不包含福州机场煤油消费？
-global_trans_kerosene <- func_read_trans("M8UPDTJN")
-
 # 读取航空煤油数据并整理出不含福州机场部分的煤油消费量之和
 global_avnnrg <- func_read_trans("JXG6KGSA")
 # 其中“厦航煤油”项可能是包含福州机场的煤油消费量之和
@@ -401,7 +397,7 @@ for (i in by_nrgbal_years) {
     global_agri_diesel[which(global_agri_diesel$year == i), "农用柴油使用量"]
   # 1.4 Trans kerosene ----
   by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "kerosene"] <- 
-    global_trans_kerosene[which(global_trans_kerosene$year == i), "厦航煤油"]
+    global_avnnrg[which(global_avnnrg$year == i), "kerosene"]
   # 1.5 Ind & Com & Household LPG ----
   by_nrgbal_ls[[i]][which(
     by_nrgbal_ls[[i]]$iterm %in% c("ind", "com", "hh")), "lpg"] <- 
