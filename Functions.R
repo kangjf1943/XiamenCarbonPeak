@@ -474,10 +474,10 @@ func_linear <- function(df_history, col_dependent, startyear, endyear) {
 # 计算可比价的函数
 # 方法：递归
 # 输入：一个含有年份、GDP当年价和GDP指数的数据框，以及基准年份
-func_comprice <- function(ori_df, name_gdpindex, baseyear) {
+func_compprice <- function(ori_df, name_gdpindex, baseyear) {
   # 取数据框所需部分
   ori_df <- ori_df[c("year", "GDP", name_gdpindex)]
-  names(ori_df) <- c("year", "GDP", "rate")
+  names(ori_df) <- c("year", "ori", "rate")
   # 基准年GDP不变
   ori_df$out <- ori_df$ori
   # 基准年之前年份的计算
