@@ -35,7 +35,7 @@ set_scalcs <- c("BAU",
                 "BAU_26COAL", 
                 "BAU_24COAL")
 set_plotstyle <- "base"
-set_calc_cache <- TRUE
+set_calc_cache <- FALSE
 set_elecfac_meth <- TRUE
 set_resultout <- TRUE
 set_dataexport <- FALSE
@@ -313,6 +313,16 @@ for (set_scalc in set_scalcs) {
       func_interp_2(year = c(2019, 2025, 2060), 
                     value = c(21538635, 21538635*1.5, 21538635*2.0))$value
     comment(trans_act$"水路货运") <- "万吨公里"
+    
+    # 能源规划口径下：航空
+    if (set_nrgplng_scope == TRUE) {
+      trans_act$"航空" <- 
+        func_rate(
+          baseyear = 2019, basevalue = func_lastone(global_avn_act$avn_rpk), 
+          rate_df = func_stage(
+            year = c(2019, 2024, 2029, 2034, 2040, 2050, 2060), 
+            value = c(0.0902, 0.0833, 0.0768, 0.0730, 0.04, 0.02, 0.02)))$value
+    }
   }
   
   ## Energy intensity ----
@@ -417,6 +427,14 @@ for (set_scalc in set_scalcs) {
                     scale = c(1, 1, 1), 
                     base = func_lastone(by_trans_nrgintst_ls[["水路货运"]]$residual),
                     "residual")$residual
+  }
+  
+  # 能源规划口径下：航空
+  if (set_nrgplng_scope == TRUE) {
+    trans_nrgintst_ls[["航空"]] <- 
+      func_interp_3(
+        year = c(2019, 2040, 2060), scale = c(1, 0.8, 0.7), 
+        base = func_lastone(by_trans_nrgintst_ls[["航空"]]$kerosene), "kerosene")
   }
   
   ## Energy and emission ----
@@ -700,10 +718,13 @@ for (set_scalc in set_scalcs) {
   res_emissum_ls[[set_scalc]] <- 
     func_emissum(res_nrgsum_ls[[set_scalc]], prj_emisfac_df)
   
+  # Other nrg consumption ----
+  
+  
   
   # RESULT ----
   ## Total energy ----
-  if (set_elecfac_meth == TRUE) {
+  if (set_elecfac_meth == TRUE) { ### Elecfac meth ----
     # 计算外调电力火电折标煤系数
     tot_ori_elecequalfac <- 
       func_elecequalfac(res_nrgsum_ls[[set_scalc]], tfres_act[c("year", "importthrm")])
@@ -760,7 +781,7 @@ for (set_scalc in set_scalcs) {
     tot_nrgsum_ls[[set_scalc]] <- data.frame(
       year = tot_nrgbysec_ls[[set_scalc]]$year, 
       energyconsump = rowSums(tot_nrgbysec_ls[[set_scalc]][, -1]))
-  } else {
+  } else { ### Equal meth ----
     # 一次能源能耗之和
     tot_nrgsum_byfuel <- func_ls2df(list(
       agri_nrgsum_ls[[set_scalc]], ind_nrgsum_ls[[set_scalc]],
@@ -914,7 +935,22 @@ if (set_dataexport == TRUE) {
   }
   saveWorkbook(exportwb, export_wbname)
   
-  # Tot emis of scenarios ----
+  ## Nrg per GDP of BAU
+  export_wbname <- paste0("惯性情景单位GDP能耗", Sys.Date(), ".xlsx")
+  export_wb <- createWorkbook()
+  addWorksheet(export_wb, "nrg_per_gdp")
+  export_var <- 
+    func_merge_2(list(tot_nrgsum_ls[["BAU"]], prj_global_gdp[c("year", "GDP")]))
+  # 根据统计局基准年数据校正
+  export_var$energyconsump <- export_var$energyconsump * 1536/1274
+  export_var$nrg_per_gdp <- export_var$energyconsump / export_var$GDP
+  writeData(export_wb, "nrg_per_gdp", export_var)
+  if (file.exists(export_wbname)) {
+    file.remove(export_wbname)
+  }
+  saveWorkbook(export_wb, export_wbname)
+  
+  ## Tot emis of scenarios ----
   export_wbname <- paste0("各情景总排放量", Sys.Date(), ".xlsx")
   export <- createWorkbook()
   func_mrgcol(tot_emissum_ls[set_scalcs], "co2", set_scalcs)
