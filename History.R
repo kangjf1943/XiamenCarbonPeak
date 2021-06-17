@@ -1,3 +1,7 @@
+# SETTING ----
+set_by_elecequalfac_meth <- TRUE
+set_nrgplng_scope <- FALSE # 是否计算能源规划口径能耗
+
 # GLOBAL VAR ----
 ## Names ----
 # 能源类别
@@ -7,6 +11,22 @@ global_nrg_class <- c("rawcoal", "coalproduct",
 global_sectors <- c("agri", "ind", "const", "trans", "com", "hh", "tf", "res")
 
 ## Subsector ----
+# 能源合并方式
+global_nrg_lookup <- 
+  Reduce(rbind, 
+         list(data.frame(ind_agg = c("煤炭"), 
+                         ind_ori = c("coal", 
+                                     "coalproduct")),
+              data.frame(ind_agg = c("油品"), 
+                         ind_ori = c("gasolline", 
+                                     "diesel", 
+                                     "residual", 
+                                     "lpg")), 
+              data.frame(ind_agg = c("天然气"), 
+                         ind_ori = c("gas")), 
+              data.frame(ind_agg = c("电力"), 
+                         ind_ori = c("electricity"))))
+
 # 工业行业聚合方式
 global_ind_lookup <- 
   Reduce(rbind, 
@@ -144,11 +164,11 @@ global_gdp$constgdp_prop <- global_gdp$constgdp/global_gdp$GDP*100
 global_gdp$comgdp_prop <- global_gdp$comgdp/global_gdp$GDP*100
 # 转换为2015年可比价
 global_gdp$GDP <- func_compprice(global_gdp, "地区生产总值指数", 2015)$GDP
-global_gdp$agrigdp <- global_gdp$GDP * global_gdp$agrigdp_prop
-global_gdp$secgdp <- global_gdp$GDP * global_gdp$secgdp_prop
-global_gdp$indgdp <- global_gdp$GDP * global_gdp$indgdp_prop
-global_gdp$constgdp <- global_gdp$GDP * global_gdp$constgdp_prop
-global_gdp$comgdp <- global_gdp$GDP * global_gdp$comgdp_prop
+global_gdp$agrigdp <- global_gdp$GDP * global_gdp$agrigdp_prop/100
+global_gdp$secgdp <- global_gdp$GDP * global_gdp$secgdp_prop/100
+global_gdp$indgdp <- global_gdp$GDP * global_gdp$indgdp_prop/100
+global_gdp$constgdp <- global_gdp$GDP * global_gdp$constgdp_prop/100
+global_gdp$comgdp <- global_gdp$GDP * global_gdp$comgdp_prop/100
 
 # 预测GDP相关项目变化
 # 预测GDP
@@ -276,7 +296,11 @@ global_avnnrg[which(global_avnnrg$year %in% c(2018: 2019)), "kerosene"] <-
   func_lastone(global_avnnrg[which(global_avnnrg$year == 2017), "kerosene"] / 
                  global_avnnrg[which(global_avnnrg$year == 2017), "厦航煤油"]) * 
   global_avnnrg[which(global_avnnrg$year %in% c(2018: 2019)), "厦航煤油"]
-global_avnnrg <- global_avnnrg[c("year", "kerosene")]
+# 补全包含福州机场消费量在内的总消费量
+global_avnnrg[which(global_avnnrg$year %in% c(2005: 2009)), "厦航煤油"] <- 
+  global_avnnrg[which(global_avnnrg$year %in% c(2005: 2009)), "国内航班"] +
+  global_avnnrg[which(global_avnnrg$year %in% c(2005: 2009)), "国际航班合计"]
+global_avnnrg <- global_avnnrg[c("year", "kerosene", "厦航煤油")]
 
 # 读取航空客货运周转量
 global_avn_act <- 
@@ -359,10 +383,6 @@ global_solarelecgen_fut <- func_read_trans("4R9XNW4Z")
 global_provelecgen <- func_read_trans("S3CNPRZE", "发电量")
 
 
-# SETTING ----
-set_by_elecequalfac_meth <- TRUE
-set_nrgplng_scope <- TRUE # 是否计算能源规划口径能耗
-
 # NRG BALANCE ----
 # 构建空能源平衡表
 by_nrgbal_years <- as.character(c(2015: 2019))
@@ -381,7 +401,9 @@ for (i in by_nrgbal_years) {
 # 1.1 Transformation input ----
 # 输入发电那一行
 for (j in by_nrgbal_years) {
-  for (i in global_nrg_class[c(1:5, 7)]) {
+  for (i in c("rawcoal", "coalproduct", 
+              "gasoline", "diesel", "residual", "lpg", 
+              "gas", "electricity")) {
     by_nrgbal_ls[[j]][which(by_nrgbal_ls[[j]]$iterm == "tf"),i] <- 
       global_indscale_nrg_bysecagg$"电力、热力生产和供应业"[which(
         global_indscale_nrg_bysecagg$"电力、热力生产和供应业"$year == j), i]
@@ -397,7 +419,7 @@ for (i in by_nrgbal_years) {
     global_agri_diesel[which(global_agri_diesel$year == i), "农用柴油使用量"]
   # 1.4 Trans kerosene ----
   by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "kerosene"] <- 
-    global_avnnrg[which(global_avnnrg$year == i), "kerosene"]
+    global_avnnrg[which(global_avnnrg$year == i), "厦航煤油"]
   # 1.5 Ind & Com & Household LPG ----
   by_nrgbal_ls[[i]][which(
     by_nrgbal_ls[[i]]$iterm %in% c("ind", "com", "hh")), "lpg"] <- 
@@ -524,14 +546,13 @@ for (i in by_nrgbal_years) {
 
 # 3.5 Trans gasoline ----
 # 18 = 交通汽油柴油合计量 = 全部油品总量-目前已有的数据
-trans_gasolin_diesel_ls <- 
-  for (i in by_nrgbal_years) {
-    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "gasoline"] <- 
-      # 各年份油品总量
-      nrgcheck_total[which(nrgcheck_total$year == i), "油品消费量"] - 
-      # 目前已有的各类油耗数据
-      sum(by_nrgbal_ls[[i]][, c("gasoline", "diesel", "kerosene","residual","lpg")])
-  }
+for (i in by_nrgbal_years) {
+  by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "gasoline"] <- 
+    # 各年份油品总量
+    nrgcheck_total[which(nrgcheck_total$year == i), "油品消费量"] - 
+    # 目前已有的各类油耗数据
+    sum(by_nrgbal_ls[[i]][, c("gasoline", "diesel", "kerosene","residual","lpg")])
+}
 
 # 3.6  Ind gas----
 # 7 = 若谷天然气总量-生活消费-服务业-交通-发电
@@ -1056,7 +1077,7 @@ if (set_by_elecequalfac_meth == TRUE) { ### Elecequalfac meth ----
     func_ls2df(list(by_agri_nrgsum_df, by_ind_nrgsum_df, by_const_nrgsum_df, 
                     by_trans_nrgsum_df, by_com_nrgsum_df, by_hh_nrgsum_df, 
                     by_tf_nrgsum_df))
-  by_tot_nrgfuelce <- func_toce(by_tot_nrgsec)
+  by_tot_nrgfuelce <- func_toce(by_tot_nrgfuel)
   # 加上电力标准量
   by_tot_nrgfuelce <- 
     func_merge_2(list(by_tot_nrgfuelce, by_tot_ori_elecequal))
