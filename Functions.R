@@ -471,6 +471,32 @@ func_linear <- function(df_history, col_dependent, startyear, endyear) {
   proj_df
 }
 
+# 计算可比价的函数
+# 方法：递归
+# 输入：一个含有年份、GDP当年价和GDP指数的数据框，以及基准年份
+func_comprice <- function(ori_df, name_gdpindex, baseyear) {
+  # 取数据框所需部分
+  ori_df <- ori_df[c("year", "GDP", name_gdpindex)]
+  names(ori_df) <- c("year", "GDP", "rate")
+  # 基准年GDP不变
+  ori_df$out <- ori_df$ori
+  # 基准年之前年份的计算
+  for (i in c((baseyear-1): min(ori_df$year))) {
+    ori_df[which(ori_df$year == i), "out"] <- 
+      ori_df[which(ori_df$year == (i+1)), "out"]/
+      ori_df[which(ori_df$year == (i+1)), "rate"]*100
+  }
+  # 基准年之后年份的计算
+  for (i in c((baseyear+1):max(ori_df$year))) {
+    ori_df[which(ori_df$year == i), "out"] <- 
+      ori_df[which(ori_df$year == (i-1)), "out"]*
+      ori_df[which(ori_df$year == i), "rate"]/100
+  }
+  ori_df <- ori_df[c("year", "out")]
+  names(ori_df) <- c("year", "GDP")
+  ori_df
+}
+
 ## 转化能源类型
 func_alter <- function(nrg_in, name_in, name_out) {
   # 输入折标煤系数
@@ -1043,7 +1069,20 @@ func_datacomp <- function(var_1, name_source_1, var_2, name_source_2, name_comp)
     geom_point(aes(year, mrg_data[, c(name_comp)], color = Source, alpha = 0.5))
 }
 
-
+# 导出结果数据的函数
+# 输入；工作簿名，内含工作表名（默认为“new”），待导出数据
+func_dataexp <- function(wbname, shtname = "new", mydata) {
+  # 添加工作表后缀：导出时间戳和文件类型
+  wbname <- paste0(wbname, Sys.Date(), "-", format(Sys.time(), "%H%M%S"), ".xlsx")
+  # 创建工作簿变量
+  wb <- createWorkbook()
+  # 创建工作表
+  addWorksheet(wb = wb, sheetName = shtname)
+  # 写入数据
+  writeData(wb = wb, sheet = shtname, x = mydata)
+  # 导出Excel文件
+  saveWorkbook(wb = wb, file = wbname, returnValue = T)
+}
 
 # # 考虑废弃的函数
 # # 计算乘积：可能跟上面的函数重复了 - 废弃？
