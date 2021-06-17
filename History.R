@@ -78,7 +78,7 @@ global_ind_subsector <- c("食品饮料及烟草制造业",
 global_ind_nrgclass <- c("rawcoal", "coalproduct", 
                          "gasoline", "diesel", "residual", "lpg", 
                          "gas", "electricity")
-if (set_by_nrgplng_scope == TRUE) {
+if (set_nrgplng_scope == TRUE) {
   global_trans_subsector <- c("常规公交", "快速公交", "出租车", "农村客车", 
                               "公路其他汽油", "公路其他柴油", 
                               "水路客运", "水路货运", "航空")
@@ -358,7 +358,7 @@ global_provelecgen <- func_read_trans("S3CNPRZE", "发电量")
 
 # SETTING ----
 set_by_elecequalfac_meth <- TRUE
-set_by_nrgplng_scope <- TRUE
+set_nrgplng_scope <- TRUE # 是否计算能源规划口径能耗
 
 # NRG BALANCE ----
 # 构建空能源平衡表
@@ -691,7 +691,7 @@ by_trans_act <-
                     by_trans_ori_turnover, 
                     by_trans_act_water))
 # 能源规划口径下增加航空客运周转量一列
-if (set_by_nrgplng_scope == TRUE) { ## Nrgplng scope ----
+if (set_nrgplng_scope == TRUE) { ## Nrgplng scope ----
   by_trans_ori_avn <- global_avn_act[c("year", "avn_rpk")]
   names(by_trans_ori_avn) <- c("year", global_trans_subsector[9])
   by_trans_act <- func_merge_2(list(by_trans_act, by_trans_ori_avn))
@@ -743,7 +743,7 @@ for (i in by_nrgbal_years) {
 by_trans_nrgsum_ls[["公路其他汽油"]]$electricity <- 0
 
 # 水路客运能耗
-if (set_by_nrgplng_scope == TRUE) {
+if (set_nrgplng_scope == TRUE) {
   by_trans_nrgsum_ls[["水路客运"]] <- 
     func_merge_2(list(
       func_cross(global_water_railway_diesel[c("year", "水运国内客运")], 
@@ -759,7 +759,7 @@ if (set_by_nrgplng_scope == TRUE) {
 names(by_trans_nrgsum_ls$水路客运)[2:3] <- c("diesel", "residual")
 
 # 水路货运能耗
-if (set_by_nrgplng_scope == TRUE) {
+if (set_nrgplng_scope == TRUE) {
   by_trans_nrgsum_ls[["水路货运"]] <- 
     func_merge_2(list(
       func_cross(global_water_railway_diesel[c("year", "水运国内货运")], 
@@ -794,7 +794,7 @@ for (i in by_nrgbal_years) {
 }
 
 # 能源规划口径下：计算航空煤油
-if (set_by_nrgplng_scope == TRUE) {
+if (set_nrgplng_scope == TRUE) {
   by_trans_nrgsum_ls[["航空"]] <- 
     global_avnnrg
 }
