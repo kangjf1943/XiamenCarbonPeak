@@ -330,8 +330,8 @@ global_com_hh_gas[c("服务业", "生活消费")] <- func_addnote(
 global_trans_gas <- func_read_trans("IZM9FWIY", "天然气消费量")
 
 # 读取用电数据
-global_electricity_sec <- func_read_trans("2I4DKY2A", "全市电力消费情况表")
-global_electricity_finesec <- 
+global_elecaggsec <- func_read_trans("2I4DKY2A", "全市电力消费情况表")
+global_elecfinesec <- 
   func_read_trans("2I4DKY2A", "全市电力消费情况表分具体行业")
 
 # 读取本地发电数据并计算清洁和非清洁发电比例
@@ -442,20 +442,20 @@ for (i in by_nrgbal_years) {
     global_elecgen[which(global_elecgen$year == i), "合计"]
   # 农业用电
   by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "agri"), "electricity"] <- 
-    global_electricity_sec[which(global_electricity_sec$year == i), "##第一产业"]
+    global_elecaggsec[which(global_elecaggsec$year == i), "##第一产业"]
   # 建筑业用电
   by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "const"), "electricity"] <- 
-    global_electricity_finesec[which(global_electricity_finesec$year == i), "建筑业"]
+    global_elecfinesec[which(global_elecfinesec$year == i), "建筑业"]
   # 工业用电
   by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "ind"), "electricity"] <- 
-    global_electricity_sec[which(global_electricity_sec$year == i), "##第二产业"] - 
-    global_electricity_finesec[which(global_electricity_finesec$year == i), "建筑业"]
+    global_elecaggsec[which(global_elecaggsec$year == i), "##第二产业"] - 
+    global_elecfinesec[which(global_elecfinesec$year == i), "建筑业"]
   # 服务业用电
   by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "com"), "electricity"] <- 
-    global_electricity_sec[which(global_electricity_sec$year == i), "##第三产业"]
+    global_elecaggsec[which(global_elecaggsec$year == i), "##第三产业"]
   # 生活用电
   by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "hh"), "electricity"] <- 
-    global_electricity_sec[which(global_electricity_sec$year == i), "##第三产业"]
+    global_elecaggsec[which(global_elecaggsec$year == i), "##第三产业"]
 }
 
 # 2.1 Ind oil ----
@@ -599,7 +599,7 @@ comment(by_agri_act$agri) <- "平方公里"
 by_agri_ori_diesel <- global_agri_diesel
 names(by_agri_ori_diesel)[2] <- "diesel"
 # 读取《厦门市电力数据》
-by_agri_ori_electricity <- global_electricity_sec[, c("year", "##第一产业")]
+by_agri_ori_electricity <- global_elecaggsec[, c("year", "##第一产业")]
 names(by_agri_ori_electricity)[2] <- "electricity"
 # 合并活动水平
 by_agri_nrgfuel <- 
@@ -680,7 +680,7 @@ names(by_const_act)[2] <- "const_gdp"
 
 ## Consumption and emission ----
 # 读取《厦门市电力数据》
-by_const_nrgfuel <- global_electricity_finesec[, c("year", "建筑业")]
+by_const_nrgfuel <- global_elecfinesec[, c("year", "建筑业")]
 names(by_const_nrgfuel) <- c("year", "electricity")
 by_const_emissum <- 
   func_emissum(by_const_nrgfuel, global_emisfac_df)
@@ -851,7 +851,7 @@ names(by_com_act)[3] <- "com_gdp"
 by_com_nrgsum_ls <- vector("list", 2)
 names(by_com_nrgsum_ls) <- global_com_subsector
 # 读取厦门市用电数据
-by_com_nrgsum_ls[[1]] <- global_electricity_sec[c("year", "##第三产业")]
+by_com_nrgsum_ls[[1]] <- global_elecaggsec[c("year", "##第三产业")]
 names(by_com_nrgsum_ls[[1]])[2] <- "electricity"
 # 读取厦门市服务业LPG消费
 by_com_nrgsum_ls[[2]] <- 
@@ -907,7 +907,7 @@ names(by_hh_nrgsum_ls) <- global_hh_subsector
 # hh_coal_elec
 # 电力部分
 by_hh_nrgsum_ls[[1]] <- 
-  global_electricity_sec[, c("year", "#城乡居民生活用电")]
+  global_elecaggsec[, c("year", "#城乡居民生活用电")]
 names(by_hh_nrgsum_ls[[1]]) <- c("year", "electricity")
 # 煤炭部分
 by_hh_nrgsum_ls[[1]] <- 
