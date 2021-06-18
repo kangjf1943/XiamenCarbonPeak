@@ -327,7 +327,7 @@ global_com_hh_gas[c("服务业", "生活消费")] <- func_addnote(
   global_com_hh_gas[c("服务业", "生活消费")], c("万立方米", "万立方米"))
 
 # 读取交通天然气
-global_trans_gas <- func_read_trans("QH2KBX3X")
+global_trans_gas <- func_read_trans("IZM9FWIY", "天然气消费量")
 
 # 读取用电数据
 global_electricity_sec <- func_read_trans("2I4DKY2A", "全市电力消费情况表")
@@ -432,7 +432,7 @@ for (i in by_nrgbal_years) {
   # 1.7 Trans gas ----
   by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "gas"] <- 
     sum(global_trans_gas[which(
-      global_trans_gas$year == i), c("公共汽车", "出租车")])
+      global_trans_gas$year == i), c("公交合计", "出租车合计")])
 }
 
 # 1.8 Electricity ----
@@ -747,7 +747,7 @@ names(by_trans_nrgsum_ls_ori[[1]])<- c("year", "出租车")
 by_trans_nrgsum_ls_ori[[2]] <- global_roadoper_diesel
 names(by_trans_nrgsum_ls_ori[[2]]) <- c("year", "常规公交", "快速公交", "农村客车")
 # 天然气消费量
-by_trans_nrgsum_ls_ori[[3]] <- global_trans_gas
+by_trans_nrgsum_ls_ori[[3]] <- global_trans_gas[c("year", "公交合计", "出租车合计")]
 names(by_trans_nrgsum_ls_ori[[3]]) <- c("year", "常规公交", "出租车")
 # 转化为按车辆类型分的能耗量列表并整理各元素顺序
 by_trans_nrgsum_ls[global_trans_subsector[1: 4]] <- 
