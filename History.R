@@ -329,6 +329,16 @@ global_com_hh_gas[c("服务业", "生活消费")] <- func_addnote(
 # 读取交通天然气
 global_trans_gas <- func_read_trans("IZM9FWIY", "天然气消费量")
 
+# 读取交通电力消费并合并地铁用电
+# 此处仅进入部分车型用电量
+# 问题：网约车用电量不低，但因无保有量数据，难以从私家车区分出来，暂不处理
+global_trans_elecsec <- 
+  func_read_trans("IZM9FWIY", "电力消费")
+global_trans_elecsec$"地铁" <- 
+  global_trans_elecsec$"地铁牵引用电" + global_trans_elecsec$"地铁其他用电"
+global_trans_elecsec <- global_trans_elecsec[c(
+  "year", "常规公交", "BRT", "纯电动出租车","地铁")]
+
 # 读取用电数据
 global_elecaggsec <- func_read_trans("2I4DKY2A", "全市电力消费情况表")
 global_elecfinesec <- 
