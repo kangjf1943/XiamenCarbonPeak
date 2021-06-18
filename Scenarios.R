@@ -520,7 +520,7 @@ for (set_scalc in set_scalcs) {
                       c(0, 0.6, 1, 1)), 
       alterscales = list(1, 1))
   }
-
+  
   
   ## Energy and emission ----
   com_nrgsum_ls[[set_scalc]] <- func_nrg_sum_ls(com_nrgintst_ls, com_act)
@@ -833,7 +833,7 @@ for (set_scalc in set_scalcs) {
   cat("\n", set_scalc, "\n")
   for (i in global_sectors[1:6]) {
     cat(i, "peak in", 
-         func_peakyear(tot_emisbysec_ls[[set_scalc]], i), "\n")
+        func_peakyear(tot_emisbysec_ls[[set_scalc]], i), "\n")
   }
   # 比较不同部门排放
   print(ggplot(melt(tot_emisbysec_ls[[set_scalc]], id = "year")) + 
@@ -1083,10 +1083,10 @@ if (set_parmexport == TRUE) {
   func_history_project(by_agri_nrgintst, "electricity",
                        agri_nrgintst_df, "electricity",
                        xlab = "", ylab = "用电强度", style = set_plotstyle)
-  func_history_project(by_agri_nrgsum_df, "diesel",
+  func_history_project(by_agri_nrgfuel, "diesel",
                        agri_nrgsum_ls[[set_scalc]], "diesel",
                        xlab = "", ylab = "柴油总量", style = set_plotstyle)
-  func_history_project(by_agri_nrgsum_df, "electricity",
+  func_history_project(by_agri_nrgfuel, "electricity",
                        agri_nrgsum_ls[[set_scalc]], "electricity",
                        xlab = "", ylab = "用电总量", style = set_plotstyle)
   
@@ -1107,7 +1107,7 @@ if (set_parmexport == TRUE) {
   func_history_project(by_const_nrgintst, "electricity",
                        const_nrgintst_df, "electricity",
                        xlab = "", ylab = "用电强度", style = set_plotstyle)
-  func_history_project(by_const_nrgsum_df, "electricity",
+  func_history_project(by_const_nrgfuel, "electricity",
                        const_nrgsum_ls[[set_scalc]], "electricity",
                        xlab = "", ylab = "用电总量", style = set_plotstyle)
   
@@ -1133,7 +1133,7 @@ if (set_parmexport == TRUE) {
                          xlab = "", ylab = paste0("单位GDP", i, "强度"), style = set_plotstyle)
   }
   for (i in c("lpg", "gas", "electricity")) {
-    func_history_project(by_com_nrgsum_df, i,
+    func_history_project(by_com_nrgfuel, i,
                          com_nrgsum_ls[[set_scalc]], i,
                          xlab = "", ylab = paste0(i, "总量"), style = set_plotstyle)
   }
@@ -1159,7 +1159,7 @@ if (set_parmexport == TRUE) {
                        xlab = "", ylab = paste0("gas", "强度"), style = set_plotstyle)
   # 能耗总量
   for (i in c("electricity", "rawcoal", "lpg", "gas")) {
-    func_history_project(by_hh_nrgsum_df, i,
+    func_history_project(by_hh_nrgfuel, i,
                          hh_nrgsum_ls[[set_scalc]], i,
                          xlab = "", ylab = paste0(i, "总量"), style = set_plotstyle)
   }
@@ -1167,15 +1167,14 @@ if (set_parmexport == TRUE) {
   # 各部门排放量和总排放量
   par(mfrow = c(3, 3))
   for (i in global_sectors[1:6]) {
-    func_history_project(by_tot_emisbysec, i, tot_emisbysec_ls[[set_scalc]], i,
+    func_history_project(by_tot_emissec, i, tot_emisbysec_ls[[set_scalc]], i,
                          xlab = "", ylab = i, style = set_plotstyle)
   }
-  func_history_project(by_tf_emissum_df, "co2", tf_emissum_ls[[set_scalc]], "co2",
+  func_history_project(by_tf_emissum, "co2", tf_emissum_ls[[set_scalc]], "co2",
                        xlab = "", ylab = "本地发电排放", style = set_plotstyle)
-  func_history_project(by_res_emissum_df, "co2", res_emissum_ls[[set_scalc]], "co2",
+  func_history_project(by_res_emissum, "co2", res_emissum_ls[[set_scalc]], "co2",
                        xlab = "", ylab = "外调电力排放", style = set_plotstyle)
   func_history_project(by_tot_emis, "co2", tot_emissum_ls[[set_scalc]], "co2",
                        xlab = "", ylab = "全市总排放", style = set_plotstyle)
 }
-
 
