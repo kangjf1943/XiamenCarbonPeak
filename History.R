@@ -100,11 +100,11 @@ global_ind_nrgclass <- c("rawcoal", "coalproduct",
                          "gas", "electricity")
 if (set_nrgplng_scope == TRUE) {
   global_trans_subsector <- c("常规公交", "快速公交", "出租车", "农村客车", 
-                              "公路其他汽油", "公路其他柴油", 
+                              "公路其他汽油", "纯电动私家车", "公路其他柴油", 
                               "水路客运", "水路货运", "航空")
 } else {
   global_trans_subsector <- c("常规公交", "快速公交", "出租车", "农村客车", 
-                              "公路其他汽油", "公路其他柴油", 
+                              "公路其他汽油", "纯电动私家车", "公路其他柴油", 
                               "水路客运", "水路货运")
 }
 
@@ -709,15 +709,21 @@ by_trans_act_operation <- func_read_trans("IZM9FWIY", "里程数")
 by_trans_act_operation <- 
   by_trans_act_operation[, c("year", "常规公交", "BRT", "出租车", "农村客车")]
 names(by_trans_act_operation) <- c("year", global_trans_subsector[1: 4])
-# 公路其他汽油：私家车
-by_trans_act_nonoperation <- func_read_trans("Y3PGVSR7")[c("year", "轿车")]
-names(by_trans_act_nonoperation)[2] <- global_trans_subsector[5]
+
+# 公路其他汽油：私家车保有量；纯电动私家车：保有量
+by_trans_act_nonoperation <- 
+  func_read_trans("Y3PGVSR7")[c("year", "#常规私家车", "#纯电动私家车")]
+names(by_trans_act_nonoperation)[2: 3] <- global_trans_subsector[5: 6]
+# 且假设纯电动私家车在2019年之前均为0
+by_trans_act_nonoperation[which(
+  by_trans_act_nonoperation$year %in% c(2010: 2018)), "纯电动私家车"] <- 0
+
 # 公路其他柴油：货运周转量
-by_trans_ori_turnover <- data.frame("year" = c(2017:2019), 
-                                    "公路其他柴油" = c(1919251, 2037836, 2216748))
+by_trans_ori_turnover <- data.frame(
+  "year" = c(2017:2019), "公路其他柴油" = c(1919251, 2037836, 2216748))
 # 水路客运周转量和水路货运周转量
 by_trans_act_water <- global_water_act
-names(by_trans_act_water) <- c("year", global_trans_subsector[7:8])
+names(by_trans_act_water) <- c("year", global_trans_subsector[8:9])
 # 合并为活动水平数据框
 by_trans_act <- 
   func_merge_2(list(by_trans_act_operation, 
@@ -773,8 +779,12 @@ for (i in by_nrgbal_years) {
     by_trans_nrgsum_ls_ori[["gasoline"]][which(
       by_trans_nrgsum_ls_ori[["gasoline"]]$year == i), "出租车"]
 }
-# 另增其他电力，作为未来的分支
-by_trans_nrgsum_ls[["公路其他汽油"]]$electricity <- 0
+
+# 纯电动私家车：能耗总量为此前估算过的私家车每车能耗和上面活动水平部分计算的纯
+# 电动私家车数量之乘积
+by_trans_nrgsum_ls[["纯电动私家车"]] <- data.frame(
+  year = by_trans_act$year, 
+  electricity = by_trans_act$"纯电动私家车" * 1.249542)
 
 # 水路客运能耗
 if (set_nrgplng_scope == TRUE) {
@@ -861,7 +871,9 @@ names(by_com_act)[3] <- "com_gdp"
 by_com_nrgsum_ls <- vector("list", 2)
 names(by_com_nrgsum_ls) <- global_com_subsector
 # 读取厦门市用电数据
-by_com_nrgsum_ls[[1]] <- global_elecaggsec[c("year", "##第三产业")]
+# 从服务业中扣除交通电力消费量
+by_com_nrgsum_ls[[1]] <- 
+  func_cross(global_elecaggsec[c("year", "##第三产业")], by_trans_nrgsum_ls$"纯电动私家车", "difference")
 names(by_com_nrgsum_ls[[1]])[2] <- "electricity"
 # 读取厦门市服务业LPG消费
 by_com_nrgsum_ls[[2]] <- 
