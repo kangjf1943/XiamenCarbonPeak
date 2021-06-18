@@ -1,6 +1,6 @@
 # SETTING ----
 set_by_elecequalfac_meth <- TRUE
-set_nrgplng_scope <- FALSE # 是否计算能源规划口径能耗
+set_nrgplng_scope <- TRUE # 是否计算能源规划口径能耗
 
 # GLOBAL VAR ----
 ## Names ----
@@ -98,15 +98,9 @@ global_ind_subsector <- c("食品饮料及烟草制造业",
 global_ind_nrgclass <- c("rawcoal", "coalproduct", 
                          "gasoline", "diesel", "residual", "lpg", 
                          "gas", "electricity")
-if (set_nrgplng_scope == TRUE) {
-  global_trans_subsector <- c("常规公交", "快速公交", "出租车", "农村客车", 
-                              "公路其他汽油", "纯电动私家车", "公路其他柴油", 
-                              "水路客运", "水路货运", "航空")
-} else {
-  global_trans_subsector <- c("常规公交", "快速公交", "出租车", "农村客车", 
-                              "公路其他汽油", "纯电动私家车", "公路其他柴油", 
-                              "水路客运", "水路货运")
-}
+global_trans_subsector <- c("常规公交", "快速公交", "出租车", "农村客车", 
+                            "公路其他汽油", "纯电动私家车", "公路其他柴油", 
+                            "水路客运", "水路货运", "航空")
 
 # 服务业子部门
 global_com_subsector <- c("electricity", "lpg_and_gas")
@@ -721,21 +715,24 @@ by_trans_act_nonoperation[which(
 # 公路其他柴油：货运周转量
 by_trans_ori_turnover <- data.frame(
   "year" = c(2017:2019), "公路其他柴油" = c(1919251, 2037836, 2216748))
+
 # 水路客运周转量和水路货运周转量
 by_trans_act_water <- global_water_act
 names(by_trans_act_water) <- c("year", global_trans_subsector[8:9])
-# 合并为活动水平数据框
-by_trans_act <- 
-  func_merge_2(list(by_trans_act_operation, 
-                    by_trans_act_nonoperation,
-                    by_trans_ori_turnover, 
-                    by_trans_act_water))
-# 能源规划口径下增加航空客运周转量一列
+
+# 航空：非能源规划口径下设置为0
 if (set_nrgplng_scope == TRUE) { ## Nrgplng scope ----
   by_trans_ori_avn <- global_avn_act[c("year", "avn_rpk")]
-  names(by_trans_ori_avn) <- c("year", global_trans_subsector[9])
+  names(by_trans_ori_avn) <- c("year", global_trans_subsector[10])
   by_trans_act <- func_merge_2(list(by_trans_act, by_trans_ori_avn))
+} else {
+  by_trans_ori_avn <- data.frame(year = c(2005: 2019), 航空 = c(0))
 }
+
+# 合并为活动水平数据框
+by_trans_act <- func_merge_2(list(
+  by_trans_act_operation, by_trans_act_nonoperation, by_trans_ori_turnover, 
+  by_trans_act_water, by_trans_ori_avn))
 
 # 假设：营运车辆2018-2019年数据为历史数据线性外推
 for (i in global_trans_subsector[1:3]) {
@@ -840,7 +837,7 @@ for (i in by_nrgbal_years) {
 # 能源规划口径下：计算航空煤油
 if (set_nrgplng_scope == TRUE) {
   by_trans_nrgsum_ls[["航空"]] <- 
-    global_avnnrg
+    global_avnnrg[c("year", "kerosene")]
 }
 
 # 能耗总量和排放
