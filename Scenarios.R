@@ -22,6 +22,7 @@ for (i in c("tot_emisbysec_ls", "trans_carprop_ls")) {
 }
 tot_nrgbysec_ls <- init_output_templatels
 tot_emispergdp_ls <- init_output_templatels
+trans_carprop_ls <- init_output_templatels
 # 删除不必要的包装盒
 # 电力等不区分直接排放和间接排放故删除
 rm(init_output_templatels, 
@@ -263,9 +264,12 @@ for (set_scalc in set_scalcs) {
   
   # Transportation ----
   ## Activity level ----
-  # 公路
   if (set_calc_cache == FALSE) { ### Cache ----
     trans_act <- data.frame(year = c(2019: 2060))
+    for (i in global_trans_subsector) {
+      trans_act[, i] <- NA
+    }
+    # 公路
     # 常规公交和快速公交以初始3%的增长率增长至2030年饱和
     for (i in c("常规公交", "快速公交")) {
       trans_act[, i] <- 
@@ -286,39 +290,64 @@ for (set_scalc in set_scalcs) {
         baseyear = 2019, basevalue = func_lastone(by_trans_act[, "农村客车"]), 
         maxyear = 2025, endyear = 2060, init_rate = 0.06)$value
     
-    # 公路其他汽油
-    # 私家车按照初始增长率5%增长，至2035年饱和
-    trans_act[, "公路其他汽油"] <- 
-      func_curve_1(
-        baseyear = 2019, basevalue = func_lastone(by_trans_act[, "公路其他汽油"]), 
-        maxyear = 2035, endyear = 2060, init_rate = 0.05)$value
-    
     # 公路其他柴油
     # 按照初始增长率5%增长，至2030年饱和
     trans_act[, "公路其他柴油"] <- 
       func_curve_1(
-        baseyear = 2019, basevalue = func_lastone(by_trans_act[, "公路其他柴油"]), 
+        baseyear = 2019, 
+        basevalue = func_lastone(by_trans_act[, "公路其他柴油"]), 
         maxyear = 2030, endyear = 2060, init_rate = 0.05)$value
     
     # 水运
-    trans_act$"水路客运" <- 
-      func_interp_2(year = c(2019, 2025, 2060), 
-                    value = c(10000, 10500, 11000))$value
+    trans_act$"水路客运" <- func_interp_3(
+      year = c(2019, 2025, 2060), scale = c(1, 1.05, 1.10), 
+      base = func_lastone(by_trans_act$"水路客运"))$value
     comment(trans_act$"水路客运") <- "万人公里"
-    trans_act$"水路货运" <- 
-      func_interp_2(year = c(2019, 2025, 2060), 
-                    value = c(21538635, 21538635*1.5, 21538635*2.0))$value
+    trans_act$"水路货运" <- func_interp_3(
+      year = c(2019, 2025, 2060), scale = c(1, 1.5, 2.0), 
+      base = func_lastone(by_trans_act$水路货运))$value
     comment(trans_act$"水路货运") <- "万吨公里"
-    
-    # 能源规划口径下：航空
-    if (set_nrgplng_scope == TRUE) {
-      trans_act$"航空" <- 
-        func_rate(
-          baseyear = 2019, basevalue = func_lastone(global_avn_act$avn_rpk), 
-          rate_df = func_stage(
-            year = c(2019, 2024, 2029, 2034, 2040, 2050, 2060), 
-            value = c(0.0902, 0.0833, 0.0768, 0.0730, 0.04, 0.02, 0.02)))$value
-    }
+  }
+  
+  # 私家车：先预测全部私家车变化趋势再分成常规和纯电动私家车
+  # 全部私家车按照初始增长率5%增长，至2035年饱和
+  trans_act[, "私家车"] <- 
+    func_curve_1(
+      baseyear = 2019, 
+      basevalue = func_lastone(by_trans_act[, "公路其他汽油"]), 
+      maxyear = 2035, endyear = 2060, init_rate = 0.05)$value
+  # 开始拆分
+  # 常规私家车和纯电动私家车比例
+  # 私家车电气化措施下
+  if (grepl("ELECCAR", set_scalc)) { ### ELECCAR ----
+    trans_carprop_ls[[set_scalc]] <- 
+      func_interp_2(year = c(2019, 2025, 2030, 2050, 2060), 
+                    value = c(0.022, 0.05, 0.10, 0.80, 1), "elec")
+    trans_carprop_ls[[set_scalc]]$nonelec <- 
+      1 - trans_carprop_ls[[set_scalc]]$elec
+  } else { ### BAU ----
+    trans_carprop_ls[[set_scalc]] <- data.frame( 
+      elec = func_interp_2(year = c(2019, 2035, 2040, 2055, 2060), 
+                           value = c(0.022, 0.05, 0.10, 0.80, 1)))
+    trans_carprop_ls[[set_scalc]]$nonelec <- 
+      1 - trans_carprop_ls[[set_scalc]]$elec
+  }
+  
+  # 公路其他汽油：常规私家车保有量
+  trans_act[, "公路其他汽油"] <- 
+    trans_act[, "私家车"]*trans_carprop_ls[[set_scalc]]$nonelec
+  # 纯电动私家车
+  trans_act$"纯电动私家车" <- 
+    trans_act[, "私家车"]*trans_carprop_ls[[set_scalc]]$elec
+  
+  # 能源规划口径下：航空
+  if (set_nrgplng_scope == TRUE) {
+    trans_act$"航空" <- 
+      func_rate(
+        baseyear = 2019, basevalue = func_lastone(global_avn_act$avn_rpk), 
+        rate_df = func_stage(
+          year = c(2019, 2024, 2029, 2034, 2040, 2050, 2060), 
+          value = c(0.0902, 0.0833, 0.0768, 0.0730, 0.04, 0.02, 0.02)))$value
   }
   
   ## Energy intensity ----
@@ -326,7 +355,7 @@ for (set_scalc in set_scalcs) {
   names(trans_nrgintst_ls) <- global_trans_subsector
   # 公路交通
   # 常规公交、快速公交、出租车、农村客车、公路其他柴油的能耗强度逐渐下降
-  for (j in c(1: 4, 6)) {
+  for (j in c(1: 4, 7)) {
     trans_nrgintst_ls[[j]] <- data.frame(year = c(2019: 2060))
     for (i in names(by_trans_nrgintst_ls[[j]])[
       names(by_trans_nrgintst_ls[[j]]) %in% "year" == FALSE]) {
@@ -336,32 +365,22 @@ for (set_scalc in set_scalcs) {
                       base = func_lastone(by_trans_nrgintst_ls[[j]][, i]))$value
     }
   }
-  # 公路汽油：私家车的电气化
+  
+  # 公路汽油
   trans_nrgintst_ls[["公路其他汽油"]] <- data.frame(year = c(2019: 2060))
   trans_nrgintst_ls[["公路其他汽油"]][, "gasoline"] <- func_interp_3(
     year = c(2019, 2030, 2040, 2060), 
     scale = c(1, 1, 0.8, 0.7), 
     base = func_lastone(by_trans_nrgintst_ls[["公路其他汽油"]]$gasoline))$value
-  trans_nrgintst_ls[["公路其他汽油"]][, "electricity"] <- 0
-  if (grepl("ELECCAR", set_scalc)) { ### ELECCAR ----
-    # 轿车逐渐实现电气化
-    trans_nrgintst_ls[["公路其他汽油"]] <- func_nrgsub(
-      nrgori = trans_nrgintst_ls[["公路其他汽油"]], 
-      namenrgoris = list("gasoline"), 
-      namenrgsubs = list("electricity"), 
-      yearsubs = list(c(2019, 2025, 2030, 2050, 2060)), 
-      propsubs = list(c(0, 0.05, 0.10, 0.80, 1)), 
-      alterscales = list(0.8))
-  } else { ### BAU ----
-    # 其中轿车逐渐实现电气化较晚
-    trans_nrgintst_ls[["公路其他汽油"]] <- func_nrgsub(
-      nrgori = trans_nrgintst_ls[["公路其他汽油"]], 
-      namenrgoris = list("gasoline"), 
-      namenrgsubs = list("electricity"), 
-      yearsubs = list(c(2019, 2035, 2040, 2055, 2060)), 
-      propsubs = list(c(0, 0.05, 0.10, 0.80, 0.80)), 
-      alterscales = list(1))
-  }
+  
+  # 纯电动私家车
+  trans_nrgintst_ls[["纯电动私家车"]] <- data.frame(year = c(2019: 2060))
+  trans_nrgintst_ls[["纯电动私家车"]][, "electricity"] <- func_interp_3(
+    year = c(2019, 2030, 2040, 2060), 
+    scale = c(1, 1, 0.8, 0.7), 
+    base = func_lastone(
+      by_trans_nrgintst_ls[["纯电动私家车"]]$electricity))$value
+  
   # 水路客货运
   if (grepl("OTHER", set_scalc)) { ### OTHER ----
     # 水路客运
