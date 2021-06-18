@@ -274,27 +274,14 @@ comment(global_hh_coal$"生活用煤") <- "吨"
 global_agri_diesel <- func_read_trans("4NJ97NS9")[, c("year", "农用柴油使用量")]
 comment(global_agri_diesel$"农用柴油使用量")
 
-# 读取航空煤油数据并整理出不含福州机场部分的煤油消费量之和
+# 读取航空煤油数据：含福州机场部分的煤油消费量之和
 global_avnnrg <- func_read_trans("JXG6KGSA")
-# 其中“厦航煤油”项可能是包含福州机场的煤油消费量之和
-# 补全国际航班合计之和
-global_avnnrg[which(global_avnnrg$year %in% c(2011: 2017)), "国际航班合计"] <- 
-  global_avnnrg[which(global_avnnrg$year %in% c(2011: 2017)), "#国内国际段航班"] +
-  global_avnnrg[which(global_avnnrg$year %in% c(2011: 2017)), "#外航航班"]
-# 生成国内国际航班之和
-global_avnnrg$kerosene <- 
-  global_avnnrg$"国内航班" + global_avnnrg$"国际航班合计"
-# 补全2018-2019年国内航班之和
-# 假设国内国际航空煤油消费量和包含福州机场在内的消费量比例同2017年
-global_avnnrg[which(global_avnnrg$year %in% c(2018: 2019)), "kerosene"] <- 
-  func_lastone(global_avnnrg[which(global_avnnrg$year == 2017), "kerosene"] / 
-                 global_avnnrg[which(global_avnnrg$year == 2017), "厦航煤油"]) * 
-  global_avnnrg[which(global_avnnrg$year %in% c(2018: 2019)), "厦航煤油"]
 # 补全包含福州机场消费量在内的总消费量
 global_avnnrg[which(global_avnnrg$year %in% c(2005: 2009)), "厦航煤油"] <- 
   global_avnnrg[which(global_avnnrg$year %in% c(2005: 2009)), "国内航班"] +
   global_avnnrg[which(global_avnnrg$year %in% c(2005: 2009)), "国际航班合计"]
-global_avnnrg <- global_avnnrg[c("year", "kerosene", "厦航煤油")]
+global_avnnrg <- global_avnnrg[c("year", "厦航煤油")]
+names(global_avnnrg) <- c("year", "kerosene")
 
 # 读取航空客货运周转量
 global_avn_act <- 
@@ -423,7 +410,7 @@ for (i in by_nrgbal_years) {
     global_agri_diesel[which(global_agri_diesel$year == i), "农用柴油使用量"]
   # 1.4 Trans kerosene ----
   by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "kerosene"] <- 
-    global_avnnrg[which(global_avnnrg$year == i), "厦航煤油"]
+    global_avnnrg[which(global_avnnrg$year == i), "kerosene"]
   # 1.5 Ind & Com & Household LPG ----
   by_nrgbal_ls[[i]][which(
     by_nrgbal_ls[[i]]$iterm %in% c("ind", "com", "hh")), "lpg"] <- 
