@@ -963,14 +963,6 @@ if (set_dataexport == TRUE) {
   }
   func_dataexp("各情景下能耗和排放达峰时间", mydata = exp_var)
   
-  ## Nrg per GDP of BAU ----
-  exp_var <- 
-    func_merge_2(list(tot_nrgsum_ls[["BAU"]], prj_global_gdp[c("year", "GDP")]))
-  # 问题：根据统计局基准年数据校正
-  exp_var$energyconsump <- exp_var$energyconsump * 1536/1274
-  exp_var$nrg_per_gdp <- exp_var$energyconsump / exp_var$GDP
-  func_dataexp("惯性情景单位GDP能耗", mydata = exp_var)
-  
   ## Tot emis of scenarios ----
   exp_var <- func_mrgcol(tot_emissum_ls[set_scalcs], "co2", set_scalcs)
   func_dataexp("各情景总排放量", mydata = exp_var)
@@ -980,17 +972,24 @@ if (set_dataexport == TRUE) {
   func_dataexp("惯性情景各部门排放量", mydata = exp_var)
   
   # Five year change rate of emis ----
+  exp_var <- 
+    prj_global_gdp[c("year", "GDP")][which(prj_global_gdp$year %% 5 == 0), ]
   for (i in set_scalcs) {
-    exp_var[, paste0(i, "nrg (万吨标煤)")] <- 
+    exp_var[, paste0(i, "_nrg (万吨标煤)")] <- 
       tot_nrgsum_ls[[i]][which(
         tot_nrgsum_ls[[i]]$year %% 5 == 0), ]$energyconsump/10000
     exp_var[, paste0(i, " (吨标煤/万元GDP)")] <- 
-      exp_var[, paste0(i, "nrg (万吨标煤)")]*10000 / exp_var[, "GDP"]
+      exp_var[, paste0(i, "_nrg (万吨标煤)")]*10000 / exp_var[, "GDP"]
     exp_var[, paste0(i, " 变化率")] <- 
       func_ratecalc(exp_var[, c("year", paste0(i, " (吨标煤/万元GDP)"))], 
                     paste0(i, " (吨标煤/万元GDP)"))$rate
   }
-  func_dataexp("各情景下每隔五年GDP和能耗总量", mydata = exp_var)
+  if (set_nrgplng_scope == FALSE) {
+    func_dataexp("各情景五年GDP和能耗强度", mydata = exp_var)
+  } else {
+    func_dataexp("各情景五年GDP和能耗强度-能源规划口径",mydata = exp_var)
+  }
+  
   
   ## Emis per GDP of scenarios ----
   exp_var <- 
