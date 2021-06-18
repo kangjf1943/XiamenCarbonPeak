@@ -1,9 +1,7 @@
 # Init ----
-# 主要措施包括工业结构优化、电动车普及、服务业节能、生活节能
-init_measures <- 
-  c("INDSTR", "ELECCAR", "COMCONS", "HHCONS", "24COAL", "26COAL", "OTHER")
+# 情景包括：惯性，弱低碳，强低碳，提前退煤，退煤5个情景
 init_scenarios <- 
-  func_sgen("BAU", init_measures)
+  c("BAU", "BAU_WLC_OTHER", "BAU_SLC_OTHER", "BAU_24COAL", "BAU_26COAL")
 # 构建输出结果变量
 # 需要输出的主要数据性质
 init_outputs <- c("_nrgsum_ls", "_emissum_dir_ls", "_emissum_ls")
@@ -30,7 +28,8 @@ rm(init_output_templatels,
 
 
 # Settings ----
-set_scalcs <- c("BAU_INDSTR_ELECCAR_COMCONS_HHCONS_OTHER")
+set_scalcs <- 
+  c("BAU", "BAU_WLC_OTHER", "BAU_SLC_OTHER", "BAU_24COAL", "BAU_26COAL")
 set_plotstyle <- "base"
 set_calc_cache <- FALSE
 set_elecfac_meth <- TRUE
@@ -121,7 +120,7 @@ for (set_scalc in set_scalcs) {
       value = c(func_lastone(by_ind_ori_act_prop$"电力、热力生产和供应业"), 
                 0.9, 0.1))$value
   }
-  if (grepl("INDSTR", set_scalc)) { ### INDSTR ----
+  if (grepl("SLC", set_scalc)) { ### SLC ----
     ind_ori_act_prop[, "化学工业"] <- func_interp_2(
       year = c(2019, 2030, 2045, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"化学工业"), 5, 0.5, 0))$value
@@ -130,7 +129,19 @@ for (set_scalc in set_scalcs) {
       value = c(func_lastone(by_ind_ori_act_prop$"设备制造业"), 15, 16))$value
     ind_ori_act_prop[, "电子电气制造业"] <- func_interp_2(
       year = c(2019, 2030, 2060), 
-      value = c(func_lastone(by_ind_ori_act_prop$"电子电气制造业"), 57, 64))$value
+      value = c(
+        func_lastone(by_ind_ori_act_prop$"电子电气制造业"), 57, 64))$value
+  } else if (grepl("WLC", set_scalc)) { ### SLC ----
+    ind_ori_act_prop[, "化学工业"] <- func_interp_2(
+      year = c(2019, 2035, 2050, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"化学工业"), 5, 0.5, 0))$value
+    ind_ori_act_prop[, "设备制造业"] <- func_interp_2(
+      year = c(2019, 2040, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"设备制造业"), 15, 16))$value
+    ind_ori_act_prop[, "电子电气制造业"] <- func_interp_2(
+      year = c(2019, 2040, 2060), 
+      value = c(
+        func_lastone(by_ind_ori_act_prop$"电子电气制造业"), 57, 64))$value
   } else { ### BAU ----
     # 时间推迟，比例不同
     ind_ori_act_prop[, "化学工业"] <- func_interp_2(
@@ -319,19 +330,21 @@ for (set_scalc in set_scalcs) {
   # 开始拆分
   # 常规私家车和纯电动私家车比例
   # 私家车电气化措施下
-  if (grepl("ELECCAR", set_scalc)) { ### ELECCAR ----
+  if (grepl("SLC", set_scalc)) { ### SLC ----
     trans_carprop_ls[[set_scalc]] <- 
       func_interp_2(year = c(2019, 2025, 2030, 2050, 2060), 
                     value = c(0.022, 0.05, 0.10, 0.80, 1), "elec")
-    trans_carprop_ls[[set_scalc]]$nonelec <- 
-      1 - trans_carprop_ls[[set_scalc]]$elec
+  } else if (grepl("WLC", set_scalc)) { ### WLC ----
+    trans_carprop_ls[[set_scalc]] <- 
+      func_interp_2(year = c(2019, 2030, 2040, 2050, 2060), 
+                    value = c(0.022, 0.05, 0.10, 0.80, 1), "elec")
   } else { ### BAU ----
-    trans_carprop_ls[[set_scalc]] <- data.frame( 
-      elec = func_interp_2(year = c(2019, 2035, 2040, 2055, 2060), 
-                           value = c(0.022, 0.05, 0.10, 0.80, 1)))
-    trans_carprop_ls[[set_scalc]]$nonelec <- 
-      1 - trans_carprop_ls[[set_scalc]]$elec
+    trans_carprop_ls[[set_scalc]] <- func_interp_2(
+      year = c(2019, 2035, 2045, 2055, 2060), 
+      value = c(0.022, 0.05, 0.10, 0.80, 1), "elec")
   }
+  trans_carprop_ls[[set_scalc]]$nonelec <- 
+    1 - trans_carprop_ls[[set_scalc]]$elec
   
   # 公路其他汽油：常规私家车保有量
   trans_act[, "公路其他汽油"] <- 
@@ -512,7 +525,7 @@ for (set_scalc in set_scalcs) {
                     base = func_lastone(by_com_nrgintst_ls[[2]]$gas), 
                     "gas")$gas
   }
-  if (grepl("COMCONS", set_scalc)) { ### COMCONS ----
+  if (grepl("SLC", set_scalc)) { ### SLC ----
     # 燃气的电气化较早
     com_nrgintst_ls[[2]] <- func_nrgsub(
       nrgori = com_nrgintst_ls[[2]], 
@@ -520,6 +533,16 @@ for (set_scalc in set_scalcs) {
       namenrgsubs = list("electricity", "electricity"), 
       yearsubs = list(c(2019, 2030, 2050, 2060), 
                       c(2019, 2030, 2050, 2060)), 
+      propsubs = list(c(0, 0.6, 1, 1), 
+                      c(0, 0.6, 1, 1)), 
+      alterscales = list(0.8, 0.8))
+  } else if (grepl("WLC", set_scalc)) { ### WLC ----
+    com_nrgintst_ls[[2]] <- func_nrgsub(
+      nrgori = com_nrgintst_ls[[2]], 
+      namenrgoris = list("lpg", "gas"), 
+      namenrgsubs = list("electricity", "electricity"), 
+      yearsubs = list(c(2019, 2035, 2053, 2060), 
+                      c(2019, 2035, 2053, 2060)), 
       propsubs = list(c(0, 0.6, 1, 1), 
                       c(0, 0.6, 1, 1)), 
       alterscales = list(0.8, 0.8))
@@ -575,7 +598,7 @@ for (set_scalc in set_scalcs) {
   hh_nrgintst_ls <- vector("list", length(global_hh_subsector))
   names(hh_nrgintst_ls) <- global_hh_subsector
   # 生活用电强度
-  if (grepl("HHCONS", set_scalc)) { ### HHCONS ----
+  if (grepl("SLC", set_scalc)) { ### SLC ----
     hh_nrgintst_ls[[1]] <- func_interp_3(
       year = c(2019, 2035, 2060), 
       scale = c(1, 1.2, 1.4), 
@@ -592,7 +615,7 @@ for (set_scalc in set_scalcs) {
   hh_nrgintst_ls[[1]]$rawcoal <- 0
   
   # 生活液化石油气
-  if (grepl("HHCONS", set_scalc)) { ### HHCONS ----
+  if (grepl("SLC", set_scalc)) { ### SLC ----
     hh_nrgintst_ls[[2]] <- 
       func_interp_3(year = c(2019, 2035, 2060), 
                     scale = c(1, 0.8, 0.5), 
@@ -607,7 +630,7 @@ for (set_scalc in set_scalcs) {
   }
   
   # 生活天然气
-  if (grepl("HHCONS", set_scalc)) { ### HHCONS ----
+  if (grepl("SLC", set_scalc)) { ### SLC ----
     hh_nrgintst_ls[[3]] <- 
       func_interp_3(year = c(2019, 2035, 2060), 
                     scale = c(1, 0.8, 0.5), 
@@ -732,9 +755,6 @@ for (set_scalc in set_scalcs) {
     func_nrg_sum(res_nrgintst, tfres_act, "importthrm")
   res_emissum_ls[[set_scalc]] <- 
     func_emissum(res_nrgsum_ls[[set_scalc]], prj_emisfac_df)
-  
-  # Other nrg consumption ----
-  
   
   
   # RESULT ----
@@ -941,7 +961,7 @@ if (set_dataexport == TRUE) {
     exp_var[which(exp_var$scenario == i), "emis_peak"] <- 
       func_peakyear(tot_emissum_ls[[i]], "co2")
   }
-  func_dataexp("各情景下能耗和排放达峰时间", exp_var)
+  func_dataexp("各情景下能耗和排放达峰时间", mydata = exp_var)
   
   ## Nrg per GDP of BAU ----
   exp_var <- 
@@ -949,7 +969,7 @@ if (set_dataexport == TRUE) {
   # 问题：根据统计局基准年数据校正
   exp_var$energyconsump <- exp_var$energyconsump * 1536/1274
   exp_var$nrg_per_gdp <- exp_var$energyconsump / exp_var$GDP
-  func_dataexp("惯性情景单位GDP能耗", exp_var)
+  func_dataexp("惯性情景单位GDP能耗", mydata = exp_var)
   
   ## Tot emis of scenarios ----
   exp_var <- func_mrgcol(tot_emissum_ls[set_scalcs], "co2", set_scalcs)
