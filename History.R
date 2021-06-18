@@ -720,11 +720,10 @@ by_trans_ori_turnover <- data.frame(
 by_trans_act_water <- global_water_act
 names(by_trans_act_water) <- c("year", global_trans_subsector[8:9])
 
-# 航空：非能源规划口径下设置为0
+# 航空客运周转量：非能源规划口径下设置为0
 if (set_nrgplng_scope == TRUE) { ## Nrgplng scope ----
   by_trans_ori_avn <- global_avn_act[c("year", "avn_rpk")]
   names(by_trans_ori_avn) <- c("year", global_trans_subsector[10])
-  by_trans_act <- func_merge_2(list(by_trans_act, by_trans_ori_avn))
 } else {
   by_trans_ori_avn <- data.frame(year = c(2005: 2019), 航空 = c(0))
 }
@@ -834,10 +833,13 @@ for (i in by_nrgbal_years) {
       by_trans_nrgsum_ls[["水路货运"]]$year == i), "diesel"]
 }
 
-# 能源规划口径下：计算航空煤油
+# 航空煤油：非能源规划口径下设置为0
 if (set_nrgplng_scope == TRUE) {
   by_trans_nrgsum_ls[["航空"]] <- 
     global_avnnrg[c("year", "kerosene")]
+} else {
+  by_trans_nrgsum_ls[["航空"]] <- 
+    data.frame(year = c(2005: 2019), kerosene = c(0))
 }
 
 # 能耗总量和排放
@@ -847,6 +849,11 @@ by_trans_emissum <- func_emissum(by_trans_nrgfuel, global_emisfac_df)
 ## Energy intensity ----
 by_trans_nrgintst_ls <- 
   func_nrg_intst_ls(by_trans_nrgsum_ls, by_trans_act)
+# 非能源规划口径下设置航空煤油强度为0
+if (set_nrgplng_scope == FALSE) {
+  by_trans_nrgintst_ls[["航空"]] <- 
+    data.frame(year = c(2005: 2019), kerosene = c(0))
+} 
 
 
 # Service -----
