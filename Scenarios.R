@@ -595,7 +595,7 @@ for (set_scalc in set_scalcs) {
   hh_nrgintst_ls <- vector("list", length(global_hh_subsector))
   names(hh_nrgintst_ls) <- global_hh_subsector
   # 生活用电强度
-  if (grepl("SLC", set_scalc)) { ### SLC ----
+  if (grepl("OTHER", set_scalc)) { ### OTHER ----
     hh_nrgintst_ls[[1]] <- func_interp_3(
       year = c(2019, 2035, 2060), 
       scale = c(1, 1.2, 1.4), 
@@ -612,7 +612,7 @@ for (set_scalc in set_scalcs) {
   hh_nrgintst_ls[[1]]$rawcoal <- 0
   
   # 生活液化石油气
-  if (grepl("SLC", set_scalc)) { ### SLC ----
+  if (grepl("OTHER", set_scalc)) { ### OTHER ----
     hh_nrgintst_ls[[2]] <- 
       func_interp_3(year = c(2019, 2035, 2060), 
                     scale = c(1, 0.8, 0.5), 
@@ -627,7 +627,7 @@ for (set_scalc in set_scalcs) {
   }
   
   # 生活天然气
-  if (grepl("SLC", set_scalc)) { ### SLC ----
+  if (grepl("OTHER", set_scalc)) { ### OTHER ----
     hh_nrgintst_ls[[3]] <- 
       func_interp_3(year = c(2019, 2035, 2060), 
                     scale = c(1, 0.8, 0.5), 
@@ -640,6 +640,67 @@ for (set_scalc in set_scalcs) {
                     base = func_lastone(by_hh_nrgintst_ls[["gas"]]$gas), 
                     "gas")
   }
+  
+  # LPG电气化
+  if (grepl("SLC", set_scalc)) { ### SLC ----
+    # 电气化较早
+    hh_nrgintst_ls[[2]] <- func_nrgsub(
+      nrgori = hh_nrgintst_ls[[2]], 
+      namenrgoris = list("lpg"), 
+      namenrgsubs = list("electricity"), 
+      yearsubs = list(c(2019, 2030, 2050, 2060)), 
+      propsubs = list(c(0, 0.6, 0.9, 0.9)), 
+      alterscales = list(0.8))
+  } else if (grepl("WLC", set_scalc)) { ### WLC ----
+    # 电气化较迟
+    hh_nrgintst_ls[[2]] <- func_nrgsub(
+      nrgori = hh_nrgintst_ls[[2]], 
+      namenrgoris = list("lpg"), 
+      namenrgsubs = list("electricity"), 
+      yearsubs = list(c(2019, 2035, 2055, 2060)), 
+      propsubs = list(c(0, 0.6, 0.9, 0.9)), 
+      alterscales = list(0.8))
+  } else { ### BAU ----
+    # 电气化率低，时间迟
+    hh_nrgintst_ls[[2]] <- func_nrgsub(
+      nrgori = hh_nrgintst_ls[[2]], 
+      namenrgoris = list("lpg"), 
+      namenrgsubs = list("electricity"), 
+      yearsubs = list(c(2019, 2060)), 
+      propsubs = list(c(0, 0.5)), 
+      alterscales = list(0.8))
+  }
+  
+  # 天然气电气化
+  if (grepl("SLC", set_scalc)) { ### SLC ----
+    # 电气化较早
+    hh_nrgintst_ls[[3]] <- func_nrgsub(
+      nrgori = hh_nrgintst_ls[[3]], 
+      namenrgoris = list("gas"), 
+      namenrgsubs = list("electricity"), 
+      yearsubs = list(c(2019, 2030, 2050, 2060)), 
+      propsubs = list(c(0, 0.6, 0.9, 0.9)), 
+      alterscales = list(0.8))
+  } else if (grepl("WLC", set_scalc)) { ### WLC ----
+    # 电气化较迟
+    hh_nrgintst_ls[[3]] <- func_nrgsub(
+      nrgori = hh_nrgintst_ls[[3]], 
+      namenrgoris = list("gas"), 
+      namenrgsubs = list("electricity"), 
+      yearsubs = list(c(2019, 2035, 2055, 2060)), 
+      propsubs = list(c(0, 0.6, 0.9, 0.9)), 
+      alterscales = list(0.8))
+  } else { ### BAU ----
+    # 电气化率低，时间迟
+    hh_nrgintst_ls[[3]] <- func_nrgsub(
+      nrgori = hh_nrgintst_ls[[3]], 
+      namenrgoris = list("gas"), 
+      namenrgsubs = list("electricity"), 
+      yearsubs = list(c(2019, 2060)), 
+      propsubs = list(c(0, 0.5)), 
+      alterscales = list(0.8))
+  }
+  
   
   ## Consumption and emission ----
   hh_nrgsum_ls[[set_scalc]] <- 
