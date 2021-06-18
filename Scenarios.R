@@ -29,9 +29,9 @@ rm(init_output_templatels,
 
 # Settings ----
 set_scalcs <- 
-  c("BAU", "BAU_WLC_OTHER", "BAU_SLC_OTHER", "BAU_24COAL", "BAU_26COAL")
+  c("BAU", "BAU_SLC_OTHER")
 set_plotstyle <- "base"
-set_calc_cache <- FALSE
+set_calc_cache <- TRUE
 set_elecfac_meth <- TRUE
 set_resultout <- TRUE
 set_dataexport <- FALSE
@@ -131,7 +131,7 @@ for (set_scalc in set_scalcs) {
       year = c(2019, 2030, 2060), 
       value = c(
         func_lastone(by_ind_ori_act_prop$"电子电气制造业"), 57, 64))$value
-  } else if (grepl("WLC", set_scalc)) { ### SLC ----
+  } else if (grepl("WLC", set_scalc)) { ### WLC ----
     ind_ori_act_prop[, "化学工业"] <- func_interp_2(
       year = c(2019, 2035, 2050, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"化学工业"), 5, 0.5, 0))$value
@@ -353,15 +353,14 @@ for (set_scalc in set_scalcs) {
   trans_act$"纯电动私家车" <- 
     trans_act[, "私家车"]*trans_carprop_ls[[set_scalc]]$elec
   
-  # 能源规划口径下：航空
-  if (set_nrgplng_scope == TRUE) {
-    trans_act$"航空" <- 
-      func_rate(
-        baseyear = 2019, basevalue = func_lastone(global_avn_act$avn_rpk), 
-        rate_df = func_stage(
-          year = c(2019, 2024, 2029, 2034, 2040, 2050, 2060), 
-          value = c(0.0902, 0.0833, 0.0768, 0.0730, 0.04, 0.02, 0.02)))$value
-  }
+  # 航空
+  trans_act$"航空" <- 
+    func_rate(
+      baseyear = 2019, basevalue = func_lastone(global_avn_act$avn_rpk), 
+      rate_df = func_stage(
+        year = c(2019, 2024, 2029, 2034, 2040, 2050, 2060), 
+        value = c(0.0902, 0.0833, 0.0768, 0.0730, 0.04, 0.02, 0.02)))$value
+  
   
   ## Energy intensity ----
   trans_nrgintst_ls <- vector("list", length(global_trans_subsector))
@@ -458,12 +457,10 @@ for (set_scalc in set_scalcs) {
   }
   
   # 能源规划口径下：航空
-  if (set_nrgplng_scope == TRUE) {
-    trans_nrgintst_ls[["航空"]] <- 
-      func_interp_3(
-        year = c(2019, 2040, 2060), scale = c(1, 0.8, 0.7), 
-        base = func_lastone(by_trans_nrgintst_ls[["航空"]]$kerosene), "kerosene")
-  }
+  trans_nrgintst_ls[["航空"]] <- 
+    func_interp_3(
+      year = c(2019, 2040, 2060), scale = c(1, 0.8, 0.7), 
+      base = func_lastone(by_trans_nrgintst_ls[["航空"]]$kerosene), "kerosene")
   
   ## Energy and emission ----
   trans_nrgsum_ls[[set_scalc]] <- func_nrg_sum_ls(trans_nrgintst_ls, trans_act)
@@ -971,7 +968,7 @@ if (set_dataexport == TRUE) {
   exp_var <- tot_emisbysec_ls[["BAU_26COAL"]]
   func_dataexp("惯性情景各部门排放量", mydata = exp_var)
   
-  # Five year change rate of emis ----
+  ## Five year change rate of emis ----
   exp_var <- 
     prj_global_gdp[c("year", "GDP")][which(prj_global_gdp$year %% 5 == 0), ]
   for (i in set_scalcs) {
