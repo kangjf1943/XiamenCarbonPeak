@@ -29,11 +29,7 @@ rm(init_output_templatels,
 
 
 # Settings ----
-set_scalcs <- c("BAU", 
-                "BAU_INDSTR", "BAU_ELECCAR", "BAU_COMCONS", "BAU_HHCONS",
-                "BAU_INDSTR_ELECCAR_COMCONS_HHCONS_OTHER", 
-                "BAU_26COAL", 
-                "BAU_24COAL")
+set_scalcs <- c("BAU_INDSTR_ELECCAR_COMCONS_HHCONS_OTHER")
 set_plotstyle <- "base"
 set_calc_cache <- FALSE
 set_elecfac_meth <- TRUE
