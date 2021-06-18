@@ -1065,12 +1065,6 @@ if (set_by_elecequalfac_meth == TRUE) { ### Elecequalfac meth ----
     by_trans_nrgsumce, by_com_nrgsumce, by_hh_nrgsumce), 
     "stdcoal", global_sectors[1: 6])
   
-  ### Total energy ----
-  # 计算能耗标准量之和
-  by_tot_nrgsumce <- data.frame(
-    year = by_tot_nrgsecce$year, 
-    energyconsump = rowSums(by_tot_nrgsecce[, -1]))
-  
   ### Energy by fuels ----
   # 除了电力外其他能耗物理量及标准煤
   by_tot_nrgfuel <- 
@@ -1086,13 +1080,20 @@ if (set_by_elecequalfac_meth == TRUE) { ### Elecequalfac meth ----
   # 聚合成煤油气电
   by_tot_nrgaggfuel <- func_secagg(by_tot_nrgfuel, global_nrg_lookup)
   by_tot_nrgaggfuelce <- func_secagg(by_tot_nrgfuelce, global_nrg_lookup)
+  
+  ### Total energy ----
+  # 计算能耗标准量之和
+  by_tot_nrgsumce <- data.frame(
+    year = by_tot_nrgsecce$year, 
+    energyconsump = rowSums(by_tot_nrgsecce[, -1]))
 } else {
   # 除电力外的其他能耗之和
   by_tot_nrgsum_byfuel <- 
     func_ls2df(list(by_agri_nrgsum_df, by_ind_nrgsum_df, by_const_nrgsum_df, 
                     by_trans_nrgsum_df, by_com_nrgsum_df, by_hh_nrgsum_df, 
                     by_tf_nrgsum_df, by_res_nrgsum_df))
-  by_tot_nrgsum_byfuel <- by_tot_nrgsum_byfuel[names(by_tot_nrgsum_byfuel) != "electricity"]
+  by_tot_nrgsum_byfuel <- 
+    by_tot_nrgsum_byfuel[names(by_tot_nrgsum_byfuel) != "electricity"]
   # 换算成标准煤
   by_tot_nrgsum_byfuel_ce <- func_toce(by_tot_nrgsum_byfuel)
   # 换算成各年份总和
