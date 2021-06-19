@@ -2,6 +2,8 @@
 set_by_elecequalfac_meth <- TRUE
 set_cache_globalvar <- TRUE # 是否已有全局变量缓存
 set_cache_nrgbal <- TRUE # 是否已有能源平衡表缓存
+set_cache_hiscalc <- TRUE # 是否已有历史数据计算缓存
+
 set_nrgplng_scope <- TRUE # 是否计算能源规划口径能耗
 
 # GLOBAL VAR ----
@@ -579,474 +581,552 @@ if (set_cache_nrgbal == FALSE) {
 }
 
 
-# Agri ----
-## Activity level ----
-# 农业的播种面积
-# 读取《碳排放峰值模型参数选择检验》
-by_agri_act <- func_read_trans("4NJ97NS9")
-by_agri_act <- 
-  by_agri_act[, c("year", "全年农作物总播种面积")]
-names(by_agri_act)[2] <- "agri"
-by_agri_act$agri <- 
-  by_agri_act$agri/1500
-comment(by_agri_act$agri) <- "平方公里"
-
-## Consumption and emission ----
-# 读取《碳排放峰值模型参数选择检验》
-by_agri_ori_diesel <- global_agri_diesel
-names(by_agri_ori_diesel)[2] <- "diesel"
-# 读取《厦门市电力数据》
-by_agri_ori_electricity <- global_elecaggsec[, c("year", "##第一产业")]
-names(by_agri_ori_electricity)[2] <- "electricity"
-# 合并活动水平
-by_agri_nrgfuel <- 
-  func_merge_2(list(by_agri_ori_diesel, by_agri_ori_electricity))
-# 计算排放量
-by_agri_emissum <- 
-  func_emissum(by_agri_nrgfuel, global_emisfac_df)
-
-## Energy intensity ----
-by_agri_nrgintst <- 
-  func_nrg_intst(by_agri_nrgfuel, by_agri_act, "agri")
-
-
-# Industry ----
-## Activity level ----
-# 问题：需要通过调研补全规上各行业GDP数据
-# 读取规上工业各行业GDP
-by_ind_ori_act_scale <- func_secagg(global_indscale_gdp4sctr, global_ind_lookup)
-# 计算规上工业各行业所占比例
-by_ind_ori_act_prop <- 
-  by_ind_ori_act_scale[, -1]/rowSums(by_ind_ori_act_scale[, -1])*100
-by_ind_ori_act_prop$year <- by_ind_ori_act_scale$year
-by_ind_ori_act_prop <- by_ind_ori_act_prop[c("year", global_ind_ori_subsector)]
-# 假设2018-2019年规上工业各行业比例同2017年
-by_ind_ori_act_prop[by_ind_ori_act_prop$year %in% c(2018, 2019),
-                    global_ind_ori_subsector] <- 
-  by_ind_ori_act_prop[by_ind_ori_act_prop$year == 2017,][global_ind_ori_subsector]
-# 作图：func_propplot(by_ind_ori_act_prop)
-# 活动强度为全市工业各行业GDP：剔除电力、热力生产和供应业
-by_ind_act <- func_nrg_sum(by_ind_ori_act_prop, global_gdp, "indgdp")
-by_ind_act <- by_ind_act[c("year", global_ind_subsector)]
-by_ind_act[global_ind_subsector] <- by_ind_act[global_ind_subsector]/100
-
-
-## Consumption and emission----
-# 读取规上工业各行业各类能耗总量
-# 原本的数据是按能源分类的
-by_ind_ori_nrgsum_bynrg_ls <- global_indscale_nrgls_bynrg_secagg
-
-# 构造缩放因子
-by_ind_ori_scalefac <- data.frame(year = by_nrgbal_years)
-for (j in c(global_nrg_class[global_nrg_class %in% "kerosene" == FALSE])) {
-  by_ind_ori_scalefac[, j] <- NA
-  for (i in by_nrgbal_years) {
-    by_ind_ori_scalefac[by_ind_ori_scalefac$year == i, j] <- 
-      by_nrgbal_ls[[i]][which(
-        by_nrgbal_ls[[i]]$iterm == "ind"), j]/
-      global_indscale_nrgaggsec_noelec_df[which(
-        global_indscale_nrgaggsec_noelec_df$year == i), j]
+if (set_cache_hiscalc == FALSE) {
+  # Agri ----
+  ## Activity level ----
+  # 农业的播种面积
+  # 读取《碳排放峰值模型参数选择检验》
+  by_agri_act <- func_read_trans("4NJ97NS9")
+  by_agri_act <- 
+    by_agri_act[, c("year", "全年农作物总播种面积")]
+  names(by_agri_act)[2] <- "agri"
+  by_agri_act$agri <- 
+    by_agri_act$agri/1500
+  comment(by_agri_act$agri) <- "平方公里"
+  
+  ## Consumption and emission ----
+  # 读取《碳排放峰值模型参数选择检验》
+  by_agri_ori_diesel <- global_agri_diesel
+  names(by_agri_ori_diesel)[2] <- "diesel"
+  # 读取《厦门市电力数据》
+  by_agri_ori_electricity <- global_elecaggsec[, c("year", "##第一产业")]
+  names(by_agri_ori_electricity)[2] <- "electricity"
+  # 合并活动水平
+  by_agri_nrgfuel <- 
+    func_merge_2(list(by_agri_ori_diesel, by_agri_ori_electricity))
+  # 计算排放量
+  by_agri_emissum <- 
+    func_emissum(by_agri_nrgfuel, global_emisfac_df)
+  
+  ## Energy intensity ----
+  by_agri_nrgintst <- 
+    func_nrg_intst(by_agri_nrgfuel, by_agri_act, "agri")
+  
+  
+  # Industry ----
+  ## Activity level ----
+  # 问题：需要通过调研补全规上各行业GDP数据
+  # 读取规上工业各行业GDP
+  by_ind_ori_act_scale <- func_secagg(global_indscale_gdp4sctr, global_ind_lookup)
+  # 计算规上工业各行业所占比例
+  by_ind_ori_act_prop <- 
+    by_ind_ori_act_scale[, -1]/rowSums(by_ind_ori_act_scale[, -1])*100
+  by_ind_ori_act_prop$year <- by_ind_ori_act_scale$year
+  by_ind_ori_act_prop <- by_ind_ori_act_prop[c("year", global_ind_ori_subsector)]
+  # 假设2018-2019年规上工业各行业比例同2017年
+  by_ind_ori_act_prop[by_ind_ori_act_prop$year %in% c(2018, 2019),
+                      global_ind_ori_subsector] <- 
+    by_ind_ori_act_prop[by_ind_ori_act_prop$year == 2017,][global_ind_ori_subsector]
+  # 作图：func_propplot(by_ind_ori_act_prop)
+  # 活动强度为全市工业各行业GDP：剔除电力、热力生产和供应业
+  by_ind_act <- func_nrg_sum(by_ind_ori_act_prop, global_gdp, "indgdp")
+  by_ind_act <- by_ind_act[c("year", global_ind_subsector)]
+  by_ind_act[global_ind_subsector] <- by_ind_act[global_ind_subsector]/100
+  
+  
+  ## Consumption and emission----
+  # 读取规上工业各行业各类能耗总量
+  # 原本的数据是按能源分类的
+  by_ind_ori_nrgsum_bynrg_ls <- global_indscale_nrgls_bynrg_secagg
+  
+  # 构造缩放因子
+  by_ind_ori_scalefac <- data.frame(year = by_nrgbal_years)
+  for (j in c(global_nrg_class[global_nrg_class %in% "kerosene" == FALSE])) {
+    by_ind_ori_scalefac[, j] <- NA
+    for (i in by_nrgbal_years) {
+      by_ind_ori_scalefac[by_ind_ori_scalefac$year == i, j] <- 
+        by_nrgbal_ls[[i]][which(
+          by_nrgbal_ls[[i]]$iterm == "ind"), j]/
+        global_indscale_nrgaggsec_noelec_df[which(
+          global_indscale_nrgaggsec_noelec_df$year == i), j]
+    }
   }
-}
-
-# 缩放数据
-for (i in global_nrg_class[global_nrg_class %in% "kerosene" == FALSE]) {
-  by_ind_ori_nrgsum_bynrg_ls[[i]] <- 
-    func_nrg_sum(by_ind_ori_nrgsum_bynrg_ls[[i]], 
-                 by_ind_ori_scalefac, i)
-}
-
-# 转化为按行业分的能耗总量并剔除电力热力行业
-by_ind_nrgsum_ls <- func_ls_transition(by_ind_ori_nrgsum_bynrg_ls)
-by_ind_nrgsum_ls <- by_ind_nrgsum_ls[global_ind_subsector]
-# 计算工业的各类能耗总量
-by_ind_nrgfuel <- func_ls2df(by_ind_nrgsum_ls)
-# 计算排放量
-by_ind_emissum <- func_emissum(by_ind_nrgfuel, global_emisfac_df)
-
-
-## Energy intensity ---- 
-by_ind_nrgintst_ls <- 
-  func_nrg_intst_ls(by_ind_nrgsum_ls, by_ind_act)
-
-
-# Construction ----
-## Activity level ----
-by_const_act <- global_gdp[, c("year", "constgdp")]
-names(by_const_act)[2] <- "const_gdp"
-
-## Consumption and emission ----
-# 读取《厦门市电力数据》
-by_const_nrgfuel <- global_elecfinesec[, c("year", "建筑业")]
-names(by_const_nrgfuel) <- c("year", "electricity")
-by_const_emissum <- 
-  func_emissum(by_const_nrgfuel, global_emisfac_df)
-
-## Energy intensity ----
-by_const_nrgintst <- 
-  func_nrg_intst(by_const_nrgfuel, by_const_act, "const_gdp")
-
-
-# Transportation ----
-# 问题：轨道交通能耗呢？
-## Activity level ----
-# 营运车辆里程数
-# 需求：没有2018-2019年的营运车辆里程数数据
-by_trans_act_operation <- func_read_trans("IZM9FWIY", "里程数")
-by_trans_act_operation <- 
-  by_trans_act_operation[, c("year", "常规公交", "BRT", "出租车", "农村客车")]
-names(by_trans_act_operation) <- c("year", global_trans_subsector[1: 4])
-
-# 公路其他汽油：私家车保有量；纯电动私家车：保有量
-by_trans_act_nonoperation <- 
-  func_read_trans("Y3PGVSR7")[c("year", "#常规私家车", "#纯电动私家车")]
-names(by_trans_act_nonoperation)[2: 3] <- global_trans_subsector[5: 6]
-# 且假设纯电动私家车在2019年之前均为0
-by_trans_act_nonoperation[which(
-  by_trans_act_nonoperation$year %in% c(2010: 2018)), "纯电动私家车"] <- 0
-
-# 公路其他柴油：货运周转量
-by_trans_ori_turnover <- data.frame(
-  "year" = c(2017:2019), "公路其他柴油" = c(1919251, 2037836, 2216748))
-
-# 水路客运周转量和水路货运周转量
-by_trans_act_water <- global_water_act
-names(by_trans_act_water) <- c("year", global_trans_subsector[8:9])
-
-# 航空客运周转量：非能源规划口径下设置为0
-if (set_nrgplng_scope == TRUE) { ## Nrgplng scope ----
-  by_trans_ori_avn <- global_avn_act[c("year", "avn_rpk")]
-  names(by_trans_ori_avn) <- c("year", global_trans_subsector[10])
-} else {
-  by_trans_ori_avn <- data.frame(year = c(2005: 2019), 航空 = c(0))
-}
-
-# 合并为活动水平数据框
-by_trans_act <- func_merge_2(list(
-  by_trans_act_operation, by_trans_act_nonoperation, by_trans_ori_turnover, 
-  by_trans_act_water, by_trans_ori_avn))
-
-# 假设：营运车辆2018-2019年数据为历史数据线性外推
-for (i in global_trans_subsector[1:3]) {
-  by_trans_act[which(by_trans_act$year > 2017), i] <- 
-    tail(func_linear(by_trans_act, i, startyear = 2018, endyear = 2019)[, i], 2)
-}
-by_trans_act[which(by_trans_act$year > 2014), "农村客车"] <- 
-  tail(func_linear(by_trans_act, "农村客车", 
-                   startyear = 2015, endyear = 2019)[, "农村客车"], 5)
-
-
-## Consumption and emission ---- 
-# 定义存储数据框
-by_trans_nrgsum_ls <- vector("list", length(global_trans_subsector))
-names(by_trans_nrgsum_ls) <- global_trans_subsector
-
-# 营运车辆能耗总量
-by_trans_nrgsum_ls_ori <- vector("list", 3)
-names(by_trans_nrgsum_ls_ori) <- c("gasoline", "diesel", "gas")
-# 汽油消费量
-by_trans_nrgsum_ls_ori[[1]] <- 
-  func_read_trans("IZM9FWIY", "汽油消费量")[, c("year", "出租车合计")]
-names(by_trans_nrgsum_ls_ori[[1]])<- c("year", "出租车")
-# 柴油消费量
-by_trans_nrgsum_ls_ori[[2]] <- global_roadoper_diesel
-names(by_trans_nrgsum_ls_ori[[2]]) <- c("year", "常规公交", "快速公交", "农村客车")
-# 天然气消费量
-by_trans_nrgsum_ls_ori[[3]] <- global_trans_gas[c("year", "公交合计", "出租车合计")]
-names(by_trans_nrgsum_ls_ori[[3]]) <- c("year", "常规公交", "出租车")
-# 转化为按车辆类型分的能耗量列表并整理各元素顺序
-by_trans_nrgsum_ls[global_trans_subsector[1: 4]] <- 
-  func_ls_transition(by_trans_nrgsum_ls_ori)
-
-# 其他汽油 = 能源平衡表汽油总量扣除当前汽油之和
-by_trans_nrgsum_ls[["公路其他汽油"]] <- data.frame(year = by_nrgbal_years)
-by_trans_nrgsum_ls[["公路其他汽油"]]$gasoline <- NA
-for (i in by_nrgbal_years) {
-  by_trans_nrgsum_ls[["公路其他汽油"]][which(
-    by_trans_nrgsum_ls[["公路其他汽油"]]$year == i), "gasoline"] <- 
-    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "gasoline"] -
-    by_trans_nrgsum_ls_ori[["gasoline"]][which(
-      by_trans_nrgsum_ls_ori[["gasoline"]]$year == i), "出租车"]
-}
-
-# 纯电动私家车：能耗总量为此前估算过的私家车每车能耗和上面活动水平部分计算的纯
-# 电动私家车数量之乘积
-by_trans_nrgsum_ls[["纯电动私家车"]] <- data.frame(
-  year = by_trans_act$year, 
-  electricity = by_trans_act$"纯电动私家车" * 1.249542)
-
-# 水路客运能耗
-if (set_nrgplng_scope == TRUE) {
-  by_trans_nrgsum_ls[["水路客运"]] <- 
-    func_merge_2(list(
-      func_cross(global_water_railway_diesel[c("year", "水运国内客运")], 
-                 global_water_railway_diesel[c("year", "水运国际客运")], "sum"), 
-      func_cross(global_trans_residual[c("year", "国内客运")], 
-                 global_trans_residual[c("year", "国际客运")], "sum")))
-} else {
-  by_trans_nrgsum_ls[["水路客运"]] <- 
-    func_merge_2(list(
-      global_water_railway_diesel[c("year", "水运国内客运")], 
-      global_trans_residual[c("year", "国内客运")]))
-}
-names(by_trans_nrgsum_ls$水路客运)[2:3] <- c("diesel", "residual")
-
-# 水路货运能耗
-if (set_nrgplng_scope == TRUE) {
-  by_trans_nrgsum_ls[["水路货运"]] <- 
-    func_merge_2(list(
-      func_cross(global_water_railway_diesel[c("year", "水运国内货运")], 
-                 global_water_railway_diesel[c("year", "水运国际货运")], "sum"), 
-      func_cross(global_trans_residual[c("year", "国内货运")], 
-                 global_trans_residual[c("year", "国际货运")], "sum")))
-} else {
-  by_trans_nrgsum_ls[["水路货运"]] <- 
-    func_merge_2(list(
-      global_water_railway_diesel[c("year", "水运国内货运")], 
-      global_trans_residual[c("year", "国内货运")]))
-}
-names(by_trans_nrgsum_ls$水路货运)[2:3] <- c("diesel", "residual")
-
-# 其他柴油 = 能源平衡表柴油总量扣除当前柴油之和
-by_trans_nrgsum_ls[["公路其他柴油"]] <- data.frame(year = by_nrgbal_years)
-by_trans_nrgsum_ls[["公路其他柴油"]]$diesel <- NA
-for (i in by_nrgbal_years) {
-  by_trans_nrgsum_ls[["公路其他柴油"]][which(
-    by_trans_nrgsum_ls[[5]]$year == i), "diesel"] <- 
-    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "diesel"] -
-    # 公路运输的柴油消费
-    sum(by_trans_nrgsum_ls_ori[["diesel"]][which(
-      by_trans_nrgsum_ls_ori[["gasoline"]]$year == i), 
-      c("常规公交", "快速公交", "农村客车")]) -
-    # 水路客运柴油消费
-    by_trans_nrgsum_ls[["水路客运"]][which(
-      by_trans_nrgsum_ls[["水路客运"]]$year == i), "diesel"] -
-    # 水路货运柴油消费
-    by_trans_nrgsum_ls[["水路货运"]][which(
-      by_trans_nrgsum_ls[["水路货运"]]$year == i), "diesel"]
-}
-
-# 航空煤油：非能源规划口径下设置为0
-if (set_nrgplng_scope == TRUE) {
-  by_trans_nrgsum_ls[["航空"]] <- 
-    global_avnnrg[c("year", "kerosene")]
-} else {
-  by_trans_nrgsum_ls[["航空"]] <- 
-    data.frame(year = c(2005: 2019), kerosene = c(0))
-}
-
-# 能耗总量和排放
-by_trans_nrgfuel <- func_ls2df(by_trans_nrgsum_ls)
-by_trans_emissum <- func_emissum(by_trans_nrgfuel, global_emisfac_df)
-
-## Energy intensity ----
-by_trans_nrgintst_ls <- 
-  func_nrg_intst_ls(by_trans_nrgsum_ls, by_trans_act)
-# 非能源规划口径下设置航空煤油强度为0
-if (set_nrgplng_scope == FALSE) {
-  by_trans_nrgintst_ls[["航空"]] <- 
-    data.frame(year = c(2005: 2019), kerosene = c(0))
-} 
-
-
-# Service -----
-## Activity level ----
-# 服务业从业人口
-by_com_act <- func_read_trans("2VHEE264", "从业人口")
-by_com_act <- by_com_act[, c("year", "第三产业")]
-names(by_com_act)[2] <- "com_employee"
-# 补全2015-2019年数据：假设线性外推
-by_com_act[which(by_com_act$year %in% c(2015:2019)), "com_employee"] <- 
-  func_linear(by_com_act, "com_employee", startyear = 2015, endyear = 2019)$com_employee[16:20]
-# 服务业GDP
-by_com_act$com_employee <- by_com_act$com_employee/10000
-comment(by_com_act$com_employee) <- "万人"
-by_com_act <- merge(by_com_act, global_gdp[c("year", "comgdp")], by = "year")
-names(by_com_act)[3] <- "com_gdp"
-
-## Consumption and emission ----
-by_com_nrgsum_ls <- vector("list", 2)
-names(by_com_nrgsum_ls) <- global_com_subsector
-# 读取厦门市用电数据
-# 从服务业中扣除交通电力消费量
-by_com_nrgsum_ls[[1]] <- 
-  func_cross(global_elecaggsec[c("year", "##第三产业")], by_trans_nrgsum_ls$"纯电动私家车", "difference")
-names(by_com_nrgsum_ls[[1]])[2] <- "electricity"
-# 读取厦门市服务业LPG消费
-by_com_nrgsum_ls[[2]] <- 
-  func_merge_2(list(global_ind_com_hh_lpg[c("year", "服务业")], 
-                    global_com_hh_gas[c("year", "服务业")]))
-names(by_com_nrgsum_ls[[2]])[2:3] <- c("lpg", "gas")
-# 设置由服务业GDP驱动的用电量
-by_com_nrgsum_ls[[2]]$electricity <- 0
-# 生成能耗总量数据框
-by_com_nrgfuel <- func_ls2df(by_com_nrgsum_ls)
-# 计算排放量
-by_com_emissum <- func_emissum(by_com_nrgfuel, global_emisfac_df)
-
-## Energy intensity ---- 
-by_com_nrgintst_ls <- func_nrg_intst_ls(by_com_nrgsum_ls, by_com_act)
-names(by_com_nrgintst_ls) <- global_com_subsector
-
-
-# Household ----
-## Activity level ----
-# 家庭户数
-by_ori_household<- global_population[c("year", "household")]
-# 用液化石油气的户数
-by_ori_lpguser <- func_read_trans("S32RZEF7", "瓶装液化气总用户数")
-by_ori_lpguser <- by_ori_lpguser[, c("year", "民用")]
-names(by_ori_lpguser)[2] <- "lpg"
-by_ori_lpguser$lpg <- by_ori_lpguser$lpg/10000
-# 用管道天然气的用户数
-by_ori_gasuser <- func_read_trans("S32RZEF7", "管道天然气总用户数")
-by_ori_gasuser <- by_ori_gasuser[, c("year", "民用")]
-names(by_ori_gasuser)[2] <- "gas"
-by_ori_gasuser$gas <- by_ori_gasuser$gas/10000
-# 合并成活动水平数据框
-by_hh_act <- 
-  func_merge_2(list(by_ori_household, by_ori_lpguser, by_ori_gasuser))
-# 通过线性拟合补全2016-2019年燃气用户数据
-by_hh_act$lpg[by_hh_act$year > 2015] <- 
-  func_linear(by_hh_act, "lpg", startyear = 2016, endyear = 2019)$lpg[
-    func_linear(by_hh_act, "lpg", startyear = 2016, endyear = 2019)$color == 
-      "predicted"]
-by_hh_act$gas[by_hh_act$year > 2015] <- 
-  func_linear(by_hh_act, "gas", startyear = 2016, endyear = 2019)$gas[
-    func_linear(by_hh_act, "gas", startyear = 2016, endyear = 2019)$color == 
-      "predicted"]
-# 查看燃气用户比例变化
-by_hh_ori_users_prop <- 
-  func_nrg_intst(by_hh_act[c("year", "lpg", "gas")], 
-                 by_hh_act, "household")
-
-## Consumption and emission ----
-by_hh_nrgsum_ls <- vector("list", length(global_hh_subsector))
-names(by_hh_nrgsum_ls) <- global_hh_subsector
-# hh_coal_elec
-# 电力部分
-by_hh_nrgsum_ls[[1]] <- 
-  global_elecaggsec[, c("year", "#城乡居民生活用电")]
-names(by_hh_nrgsum_ls[[1]]) <- c("year", "electricity")
-# 煤炭部分
-by_hh_nrgsum_ls[[1]] <- 
-  func_merge_2(list(by_hh_nrgsum_ls[[1]], global_hh_coal))
-names(by_hh_nrgsum_ls[[1]])[3] <- "rawcoal"
-# hh_lpg
-by_hh_nrgsum_ls[[2]] <- 
-  global_ind_com_hh_lpg[, c("year", "生活消费")]
-names(by_hh_nrgsum_ls[[2]]) <- c("year", "lpg")
-# hh_gas
-by_hh_nrgsum_ls[[3]] <- 
-  global_com_hh_gas[c("year", "生活消费")]
-names(by_hh_nrgsum_ls[[3]]) <- c("year", "gas")
-# emission 
-by_hh_nrgfuel <- func_ls2df(by_hh_nrgsum_ls)
-by_hh_emissum <- 
-  func_emissum(by_hh_nrgfuel, global_emisfac_df)
-
-## Energy intensity ----
-by_hh_nrgintst_ls <- 
-  func_nrg_intst_ls(by_hh_nrgsum_ls, by_hh_act)
-
-
-# Power generation ----
-## Activity level ----
-# 分成4部分计算：发电外用电，本地发电用电，本地发电，外调电量
-# 发电外用电量
-by_tfres_ori_elecuse <- 
-  func_ls2df(list(by_agri_nrgfuel, by_ind_nrgfuel, by_const_nrgfuel, 
-                  by_trans_nrgfuel, by_com_nrgfuel, by_hh_nrgfuel))
-by_tfres_ori_elecuse <- by_tfres_ori_elecuse[c("year", "electricity")]
-names(by_tfres_ori_elecuse)[2] <- "elecuse"
-
-# 本地发电用电量
-by_tfres_ori_tfelecuse <- 
-  global_indscale_nrgaggsec$"电力、热力生产和供应业"[c("year", "electricity")]
-names(by_tfres_ori_tfelecuse)[2] <- "tfelecuse"
-
-# 本地发电量：继续拆分成清洁发电和火电
-by_tfres_ori_elecgen <- 
-  global_elecgen[c("year", "合计")]
-by_tfres_ori_elecgen <- 
-  func_nrg_sum(global_elecgen[c("year", "thrm_prop", "clean_prop")], 
-               by_tfres_ori_elecgen, "合计")
-names(by_tfres_ori_elecgen) <- c("year", "elecgen_thrm", "elecgen_clean")
-
-# 合并以上几项
-by_tfres_act <- 
-  func_merge_2(
-    list(by_tfres_ori_elecuse, by_tfres_ori_tfelecuse, by_tfres_ori_elecgen))
-
-# 计算所需外调电力并将其分成火力发电和清洁发电
-# 生成省电网发电结构
-by_tfres_ori_provelecgenstr <- global_provelecgen
-by_tfres_ori_provelecgenstr$sum <- 
-  by_tfres_ori_provelecgenstr$"火电" + by_tfres_ori_provelecgenstr$"其他"
-by_tfres_ori_provelecgenstr$thrm_prop <- 
-  by_tfres_ori_provelecgenstr$"火电"/by_tfres_ori_provelecgenstr$sum
-by_tfres_ori_provelecgenstr$clean_prop <- 
-  by_tfres_ori_provelecgenstr$"其他"/by_tfres_ori_provelecgenstr$sum
-# 计算所需外调电力
-by_tfres_ori_importelec <- 
-  data.frame(
-    year = by_tfres_act$year, 
-    importelec = by_tfres_act$elecuse + by_tfres_act$tfelecuse - 
-      by_tfres_act$elecgen_thrm - by_tfres_act$elecgen_clean)
-by_tfres_ori_importelec <- 
-  func_nrg_sum(by_tfres_ori_provelecgenstr[c("year", "thrm_prop","clean_prop")],
-               by_tfres_ori_importelec, "importelec")
-names(by_tfres_ori_importelec) <- c("year", "importthrm", "importclean")
-
-# 合并活动水平
-by_tfres_act <- func_merge_2(list(by_tfres_act, by_tfres_ori_importelec))
-
-
-## Consumption and emission ----
-by_tf_nrgfuel <- global_indscale_nrgaggsec$"电力、热力生产和供应业"
-by_tf_emissum <- func_emissum(by_tf_nrgfuel, global_emisfac_df)
-
-## Energy intensity ----
-by_tf_nrgintst <- func_nrg_intst(by_tf_nrgfuel, by_tfres_act, "elecgen_thrm")
-
-# Imported elec ----
-## Energy intensity ----
-# 读取省电网发电能耗量
-global_provelecgen_nrgsum <- 
-  func_read_trans("S3CNPRZE")[c("year", "原煤", "柴油", "燃料油", "天然气")]
-names(global_provelecgen_nrgsum) <- c("year", "rawcoal", "diesel", "residual", "gas")
-
-# 火电能耗强度
-by_res_nrgintst <- 
-  func_nrg_intst(global_provelecgen_nrgsum, global_provelecgen, "火电")
-
-## Consumption and emission ----
-by_res_nrgfuel <- func_nrg_sum(by_res_nrgintst, by_tfres_act, "importthrm")
-by_res_emissum <- func_emissum(by_res_nrgfuel, global_emisfac_df)
-
-
-# RESULT ----
-## Total energy ----
-if (set_by_elecequalfac_meth == TRUE) { ### Elecequalfac meth ----
-  ### Energy by secs ----
-  # 计算外调电力火电折标煤系数
-  by_tot_ori_elecequalfac <- 
-    func_elecequalfac(by_res_nrgfuel, by_tfres_act[c("year", "importthrm")])
-  # 计算外调电力折标煤量
-  by_tot_ori_elecequal <- func_cross(
-    by_tot_ori_elecequalfac, 
-    func_cross(by_tfres_act[c("year", "importthrm")], 
-               by_tfres_act[c("year", "importclean")], method = "sum"), 
-    method = "product")
   
-  # 计算本地发电标准煤量
-  by_tot_ori_elecgenequal <- 
-    func_toce(by_tf_nrgfuel, agg = TRUE)
-  # 计算本地发电和外调电力标准煤量之和
-  by_tot_ori_elecstdcoal <- 
-    func_cross(by_tot_ori_elecequal, by_tot_ori_elecgenequal, method = "sum")
+  # 缩放数据
+  for (i in global_nrg_class[global_nrg_class %in% "kerosene" == FALSE]) {
+    by_ind_ori_nrgsum_bynrg_ls[[i]] <- 
+      func_nrg_sum(by_ind_ori_nrgsum_bynrg_ls[[i]], 
+                   by_ind_ori_scalefac, i)
+  }
   
-  # 各部门电力消费占比
+  # 转化为按行业分的能耗总量并剔除电力热力行业
+  by_ind_nrgsum_ls <- func_ls_transition(by_ind_ori_nrgsum_bynrg_ls)
+  by_ind_nrgsum_ls <- by_ind_nrgsum_ls[global_ind_subsector]
+  # 计算工业的各类能耗总量
+  by_ind_nrgfuel <- func_ls2df(by_ind_nrgsum_ls)
+  # 计算排放量
+  by_ind_emissum <- func_emissum(by_ind_nrgfuel, global_emisfac_df)
+  
+  
+  ## Energy intensity ---- 
+  by_ind_nrgintst_ls <- 
+    func_nrg_intst_ls(by_ind_nrgsum_ls, by_ind_act)
+  
+  
+  # Construction ----
+  ## Activity level ----
+  by_const_act <- global_gdp[, c("year", "constgdp")]
+  names(by_const_act)[2] <- "const_gdp"
+  
+  ## Consumption and emission ----
+  # 读取《厦门市电力数据》
+  by_const_nrgfuel <- global_elecfinesec[, c("year", "建筑业")]
+  names(by_const_nrgfuel) <- c("year", "electricity")
+  by_const_emissum <- 
+    func_emissum(by_const_nrgfuel, global_emisfac_df)
+  
+  ## Energy intensity ----
+  by_const_nrgintst <- 
+    func_nrg_intst(by_const_nrgfuel, by_const_act, "const_gdp")
+  
+  
+  # Transportation ----
+  # 问题：轨道交通能耗呢？
+  ## Activity level ----
+  # 营运车辆里程数
+  # 需求：没有2018-2019年的营运车辆里程数数据
+  by_trans_act_operation <- func_read_trans("IZM9FWIY", "里程数")
+  by_trans_act_operation <- 
+    by_trans_act_operation[, c("year", "常规公交", "BRT", "出租车", "农村客车")]
+  names(by_trans_act_operation) <- c("year", global_trans_subsector[1: 4])
+  
+  # 公路其他汽油：私家车保有量；纯电动私家车：保有量
+  by_trans_act_nonoperation <- 
+    func_read_trans("Y3PGVSR7")[c("year", "#常规私家车", "#纯电动私家车")]
+  names(by_trans_act_nonoperation)[2: 3] <- global_trans_subsector[5: 6]
+  # 且假设纯电动私家车在2019年之前均为0
+  by_trans_act_nonoperation[which(
+    by_trans_act_nonoperation$year %in% c(2010: 2018)), "纯电动私家车"] <- 0
+  
+  # 公路其他柴油：货运周转量
+  by_trans_ori_turnover <- data.frame(
+    "year" = c(2017:2019), "公路其他柴油" = c(1919251, 2037836, 2216748))
+  
+  # 水路客运周转量和水路货运周转量
+  by_trans_act_water <- global_water_act
+  names(by_trans_act_water) <- c("year", global_trans_subsector[8:9])
+  
+  # 航空客运周转量：非能源规划口径下设置为0
+  if (set_nrgplng_scope == TRUE) { ## Nrgplng scope ----
+    by_trans_ori_avn <- global_avn_act[c("year", "avn_rpk")]
+    names(by_trans_ori_avn) <- c("year", global_trans_subsector[10])
+  } else {
+    by_trans_ori_avn <- data.frame(year = c(2005: 2019), 航空 = c(0))
+  }
+  
+  # 合并为活动水平数据框
+  by_trans_act <- func_merge_2(list(
+    by_trans_act_operation, by_trans_act_nonoperation, by_trans_ori_turnover, 
+    by_trans_act_water, by_trans_ori_avn))
+  
+  # 假设：营运车辆2018-2019年数据为历史数据线性外推
+  for (i in global_trans_subsector[1:3]) {
+    by_trans_act[which(by_trans_act$year > 2017), i] <- 
+      tail(func_linear(by_trans_act, i, startyear = 2018, endyear = 2019)[, i], 2)
+  }
+  by_trans_act[which(by_trans_act$year > 2014), "农村客车"] <- 
+    tail(func_linear(by_trans_act, "农村客车", 
+                     startyear = 2015, endyear = 2019)[, "农村客车"], 5)
+  
+  
+  ## Consumption and emission ---- 
+  # 定义存储数据框
+  by_trans_nrgsum_ls <- vector("list", length(global_trans_subsector))
+  names(by_trans_nrgsum_ls) <- global_trans_subsector
+  
+  # 营运车辆能耗总量
+  by_trans_nrgsum_ls_ori <- vector("list", 3)
+  names(by_trans_nrgsum_ls_ori) <- c("gasoline", "diesel", "gas")
+  # 汽油消费量
+  by_trans_nrgsum_ls_ori[[1]] <- 
+    func_read_trans("IZM9FWIY", "汽油消费量")[, c("year", "出租车合计")]
+  names(by_trans_nrgsum_ls_ori[[1]])<- c("year", "出租车")
+  # 柴油消费量
+  by_trans_nrgsum_ls_ori[[2]] <- global_roadoper_diesel
+  names(by_trans_nrgsum_ls_ori[[2]]) <- c("year", "常规公交", "快速公交", "农村客车")
+  # 天然气消费量
+  by_trans_nrgsum_ls_ori[[3]] <- global_trans_gas[c("year", "公交合计", "出租车合计")]
+  names(by_trans_nrgsum_ls_ori[[3]]) <- c("year", "常规公交", "出租车")
+  # 转化为按车辆类型分的能耗量列表并整理各元素顺序
+  by_trans_nrgsum_ls[global_trans_subsector[1: 4]] <- 
+    func_ls_transition(by_trans_nrgsum_ls_ori)
+  
+  # 其他汽油 = 能源平衡表汽油总量扣除当前汽油之和
+  by_trans_nrgsum_ls[["公路其他汽油"]] <- data.frame(year = by_nrgbal_years)
+  by_trans_nrgsum_ls[["公路其他汽油"]]$gasoline <- NA
+  for (i in by_nrgbal_years) {
+    by_trans_nrgsum_ls[["公路其他汽油"]][which(
+      by_trans_nrgsum_ls[["公路其他汽油"]]$year == i), "gasoline"] <- 
+      by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "gasoline"] -
+      by_trans_nrgsum_ls_ori[["gasoline"]][which(
+        by_trans_nrgsum_ls_ori[["gasoline"]]$year == i), "出租车"]
+  }
+  
+  # 纯电动私家车：能耗总量为此前估算过的私家车每车能耗和上面活动水平部分计算的纯
+  # 电动私家车数量之乘积
+  by_trans_nrgsum_ls[["纯电动私家车"]] <- data.frame(
+    year = by_trans_act$year, 
+    electricity = by_trans_act$"纯电动私家车" * 1.249542)
+  
+  # 水路客运能耗
+  if (set_nrgplng_scope == TRUE) {
+    by_trans_nrgsum_ls[["水路客运"]] <- 
+      func_merge_2(list(
+        func_cross(global_water_railway_diesel[c("year", "水运国内客运")], 
+                   global_water_railway_diesel[c("year", "水运国际客运")], "sum"), 
+        func_cross(global_trans_residual[c("year", "国内客运")], 
+                   global_trans_residual[c("year", "国际客运")], "sum")))
+  } else {
+    by_trans_nrgsum_ls[["水路客运"]] <- 
+      func_merge_2(list(
+        global_water_railway_diesel[c("year", "水运国内客运")], 
+        global_trans_residual[c("year", "国内客运")]))
+  }
+  names(by_trans_nrgsum_ls$水路客运)[2:3] <- c("diesel", "residual")
+  
+  # 水路货运能耗
+  if (set_nrgplng_scope == TRUE) {
+    by_trans_nrgsum_ls[["水路货运"]] <- 
+      func_merge_2(list(
+        func_cross(global_water_railway_diesel[c("year", "水运国内货运")], 
+                   global_water_railway_diesel[c("year", "水运国际货运")], "sum"), 
+        func_cross(global_trans_residual[c("year", "国内货运")], 
+                   global_trans_residual[c("year", "国际货运")], "sum")))
+  } else {
+    by_trans_nrgsum_ls[["水路货运"]] <- 
+      func_merge_2(list(
+        global_water_railway_diesel[c("year", "水运国内货运")], 
+        global_trans_residual[c("year", "国内货运")]))
+  }
+  names(by_trans_nrgsum_ls$水路货运)[2:3] <- c("diesel", "residual")
+  
+  # 其他柴油 = 能源平衡表柴油总量扣除当前柴油之和
+  by_trans_nrgsum_ls[["公路其他柴油"]] <- data.frame(year = by_nrgbal_years)
+  by_trans_nrgsum_ls[["公路其他柴油"]]$diesel <- NA
+  for (i in by_nrgbal_years) {
+    by_trans_nrgsum_ls[["公路其他柴油"]][which(
+      by_trans_nrgsum_ls[[5]]$year == i), "diesel"] <- 
+      by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "diesel"] -
+      # 公路运输的柴油消费
+      sum(by_trans_nrgsum_ls_ori[["diesel"]][which(
+        by_trans_nrgsum_ls_ori[["gasoline"]]$year == i), 
+        c("常规公交", "快速公交", "农村客车")]) -
+      # 水路客运柴油消费
+      by_trans_nrgsum_ls[["水路客运"]][which(
+        by_trans_nrgsum_ls[["水路客运"]]$year == i), "diesel"] -
+      # 水路货运柴油消费
+      by_trans_nrgsum_ls[["水路货运"]][which(
+        by_trans_nrgsum_ls[["水路货运"]]$year == i), "diesel"]
+  }
+  
+  # 航空煤油：非能源规划口径下设置为0
+  if (set_nrgplng_scope == TRUE) {
+    by_trans_nrgsum_ls[["航空"]] <- 
+      global_avnnrg[c("year", "kerosene")]
+  } else {
+    by_trans_nrgsum_ls[["航空"]] <- 
+      data.frame(year = c(2005: 2019), kerosene = c(0))
+  }
+  
+  # 能耗总量和排放
+  by_trans_nrgfuel <- func_ls2df(by_trans_nrgsum_ls)
+  by_trans_emissum <- func_emissum(by_trans_nrgfuel, global_emisfac_df)
+  
+  ## Energy intensity ----
+  by_trans_nrgintst_ls <- 
+    func_nrg_intst_ls(by_trans_nrgsum_ls, by_trans_act)
+  # 非能源规划口径下设置航空煤油强度为0
+  if (set_nrgplng_scope == FALSE) {
+    by_trans_nrgintst_ls[["航空"]] <- 
+      data.frame(year = c(2005: 2019), kerosene = c(0))
+  } 
+  
+  
+  # Service -----
+  ## Activity level ----
+  # 服务业从业人口
+  by_com_act <- func_read_trans("2VHEE264", "从业人口")
+  by_com_act <- by_com_act[, c("year", "第三产业")]
+  names(by_com_act)[2] <- "com_employee"
+  # 补全2015-2019年数据：假设线性外推
+  by_com_act[which(by_com_act$year %in% c(2015:2019)), "com_employee"] <- 
+    func_linear(by_com_act, "com_employee", startyear = 2015, endyear = 2019)$com_employee[16:20]
+  # 服务业GDP
+  by_com_act$com_employee <- by_com_act$com_employee/10000
+  comment(by_com_act$com_employee) <- "万人"
+  by_com_act <- merge(by_com_act, global_gdp[c("year", "comgdp")], by = "year")
+  names(by_com_act)[3] <- "com_gdp"
+  
+  ## Consumption and emission ----
+  by_com_nrgsum_ls <- vector("list", 2)
+  names(by_com_nrgsum_ls) <- global_com_subsector
+  # 读取厦门市用电数据
+  # 从服务业中扣除交通电力消费量
+  by_com_nrgsum_ls[[1]] <- 
+    func_cross(global_elecaggsec[c("year", "##第三产业")], by_trans_nrgsum_ls$"纯电动私家车", "difference")
+  names(by_com_nrgsum_ls[[1]])[2] <- "electricity"
+  # 读取厦门市服务业LPG消费
+  by_com_nrgsum_ls[[2]] <- 
+    func_merge_2(list(global_ind_com_hh_lpg[c("year", "服务业")], 
+                      global_com_hh_gas[c("year", "服务业")]))
+  names(by_com_nrgsum_ls[[2]])[2:3] <- c("lpg", "gas")
+  # 设置由服务业GDP驱动的用电量
+  by_com_nrgsum_ls[[2]]$electricity <- 0
+  # 生成能耗总量数据框
+  by_com_nrgfuel <- func_ls2df(by_com_nrgsum_ls)
+  # 计算排放量
+  by_com_emissum <- func_emissum(by_com_nrgfuel, global_emisfac_df)
+  
+  ## Energy intensity ---- 
+  by_com_nrgintst_ls <- func_nrg_intst_ls(by_com_nrgsum_ls, by_com_act)
+  names(by_com_nrgintst_ls) <- global_com_subsector
+  
+  
+  # Household ----
+  ## Activity level ----
+  # 家庭户数
+  by_ori_household<- global_population[c("year", "household")]
+  # 用液化石油气的户数
+  by_ori_lpguser <- func_read_trans("S32RZEF7", "瓶装液化气总用户数")
+  by_ori_lpguser <- by_ori_lpguser[, c("year", "民用")]
+  names(by_ori_lpguser)[2] <- "lpg"
+  by_ori_lpguser$lpg <- by_ori_lpguser$lpg/10000
+  # 用管道天然气的用户数
+  by_ori_gasuser <- func_read_trans("S32RZEF7", "管道天然气总用户数")
+  by_ori_gasuser <- by_ori_gasuser[, c("year", "民用")]
+  names(by_ori_gasuser)[2] <- "gas"
+  by_ori_gasuser$gas <- by_ori_gasuser$gas/10000
+  # 合并成活动水平数据框
+  by_hh_act <- 
+    func_merge_2(list(by_ori_household, by_ori_lpguser, by_ori_gasuser))
+  # 通过线性拟合补全2016-2019年燃气用户数据
+  by_hh_act$lpg[by_hh_act$year > 2015] <- 
+    func_linear(by_hh_act, "lpg", startyear = 2016, endyear = 2019)$lpg[
+      func_linear(by_hh_act, "lpg", startyear = 2016, endyear = 2019)$color == 
+        "predicted"]
+  by_hh_act$gas[by_hh_act$year > 2015] <- 
+    func_linear(by_hh_act, "gas", startyear = 2016, endyear = 2019)$gas[
+      func_linear(by_hh_act, "gas", startyear = 2016, endyear = 2019)$color == 
+        "predicted"]
+  # 查看燃气用户比例变化
+  by_hh_ori_users_prop <- 
+    func_nrg_intst(by_hh_act[c("year", "lpg", "gas")], 
+                   by_hh_act, "household")
+  
+  ## Consumption and emission ----
+  by_hh_nrgsum_ls <- vector("list", length(global_hh_subsector))
+  names(by_hh_nrgsum_ls) <- global_hh_subsector
+  # hh_coal_elec
+  # 电力部分
+  by_hh_nrgsum_ls[[1]] <- 
+    global_elecaggsec[, c("year", "#城乡居民生活用电")]
+  names(by_hh_nrgsum_ls[[1]]) <- c("year", "electricity")
+  # 煤炭部分
+  by_hh_nrgsum_ls[[1]] <- 
+    func_merge_2(list(by_hh_nrgsum_ls[[1]], global_hh_coal))
+  names(by_hh_nrgsum_ls[[1]])[3] <- "rawcoal"
+  # hh_lpg
+  by_hh_nrgsum_ls[[2]] <- 
+    global_ind_com_hh_lpg[, c("year", "生活消费")]
+  names(by_hh_nrgsum_ls[[2]]) <- c("year", "lpg")
+  # hh_gas
+  by_hh_nrgsum_ls[[3]] <- 
+    global_com_hh_gas[c("year", "生活消费")]
+  names(by_hh_nrgsum_ls[[3]]) <- c("year", "gas")
+  # emission 
+  by_hh_nrgfuel <- func_ls2df(by_hh_nrgsum_ls)
+  by_hh_emissum <- 
+    func_emissum(by_hh_nrgfuel, global_emisfac_df)
+  
+  ## Energy intensity ----
+  by_hh_nrgintst_ls <- 
+    func_nrg_intst_ls(by_hh_nrgsum_ls, by_hh_act)
+  
+  
+  # Power generation ----
+  ## Activity level ----
+  # 分成4部分计算：发电外用电，本地发电用电，本地发电，外调电量
+  # 发电外用电量
+  by_tfres_ori_elecuse <- 
+    func_ls2df(list(by_agri_nrgfuel, by_ind_nrgfuel, by_const_nrgfuel, 
+                    by_trans_nrgfuel, by_com_nrgfuel, by_hh_nrgfuel))
+  by_tfres_ori_elecuse <- by_tfres_ori_elecuse[c("year", "electricity")]
+  names(by_tfres_ori_elecuse)[2] <- "elecuse"
+  
+  # 本地发电用电量
+  by_tfres_ori_tfelecuse <- 
+    global_indscale_nrgaggsec$"电力、热力生产和供应业"[c("year", "electricity")]
+  names(by_tfres_ori_tfelecuse)[2] <- "tfelecuse"
+  
+  # 本地发电量：继续拆分成清洁发电和火电
+  by_tfres_ori_elecgen <- 
+    global_elecgen[c("year", "合计")]
+  by_tfres_ori_elecgen <- 
+    func_nrg_sum(global_elecgen[c("year", "thrm_prop", "clean_prop")], 
+                 by_tfres_ori_elecgen, "合计")
+  names(by_tfres_ori_elecgen) <- c("year", "elecgen_thrm", "elecgen_clean")
+  
+  # 合并以上几项
+  by_tfres_act <- 
+    func_merge_2(
+      list(by_tfres_ori_elecuse, by_tfres_ori_tfelecuse, by_tfres_ori_elecgen))
+  
+  # 计算所需外调电力并将其分成火力发电和清洁发电
+  # 生成省电网发电结构
+  by_tfres_ori_provelecgenstr <- global_provelecgen
+  by_tfres_ori_provelecgenstr$sum <- 
+    by_tfres_ori_provelecgenstr$"火电" + by_tfres_ori_provelecgenstr$"其他"
+  by_tfres_ori_provelecgenstr$thrm_prop <- 
+    by_tfres_ori_provelecgenstr$"火电"/by_tfres_ori_provelecgenstr$sum
+  by_tfres_ori_provelecgenstr$clean_prop <- 
+    by_tfres_ori_provelecgenstr$"其他"/by_tfres_ori_provelecgenstr$sum
+  # 计算所需外调电力
+  by_tfres_ori_importelec <- 
+    data.frame(
+      year = by_tfres_act$year, 
+      importelec = by_tfres_act$elecuse + by_tfres_act$tfelecuse - 
+        by_tfres_act$elecgen_thrm - by_tfres_act$elecgen_clean)
+  by_tfres_ori_importelec <- 
+    func_nrg_sum(by_tfres_ori_provelecgenstr[c("year", "thrm_prop","clean_prop")],
+                 by_tfres_ori_importelec, "importelec")
+  names(by_tfres_ori_importelec) <- c("year", "importthrm", "importclean")
+  
+  # 合并活动水平
+  by_tfres_act <- func_merge_2(list(by_tfres_act, by_tfres_ori_importelec))
+  
+  
+  ## Consumption and emission ----
+  by_tf_nrgfuel <- global_indscale_nrgaggsec$"电力、热力生产和供应业"
+  by_tf_emissum <- func_emissum(by_tf_nrgfuel, global_emisfac_df)
+  
+  ## Energy intensity ----
+  by_tf_nrgintst <- func_nrg_intst(by_tf_nrgfuel, by_tfres_act, "elecgen_thrm")
+  
+  # Imported elec ----
+  ## Energy intensity ----
+  # 读取省电网发电能耗量
+  global_provelecgen_nrgsum <- 
+    func_read_trans("S3CNPRZE")[c("year", "原煤", "柴油", "燃料油", "天然气")]
+  names(global_provelecgen_nrgsum) <- c("year", "rawcoal", "diesel", "residual", "gas")
+  
+  # 火电能耗强度
+  by_res_nrgintst <- 
+    func_nrg_intst(global_provelecgen_nrgsum, global_provelecgen, "火电")
+  
+  ## Consumption and emission ----
+  by_res_nrgfuel <- func_nrg_sum(by_res_nrgintst, by_tfres_act, "importthrm")
+  by_res_emissum <- func_emissum(by_res_nrgfuel, global_emisfac_df)
+  
+  
+  # RESULT ----
+  ## Total energy ----
+  if (set_by_elecequalfac_meth == TRUE) { ### Elecequalfac meth ----
+    ### Energy by secs ----
+    # 计算外调电力火电折标煤系数
+    by_tot_ori_elecequalfac <- 
+      func_elecequalfac(by_res_nrgfuel, by_tfres_act[c("year", "importthrm")])
+    # 计算外调电力折标煤量
+    by_tot_ori_elecequal <- func_cross(
+      by_tot_ori_elecequalfac, 
+      func_cross(by_tfres_act[c("year", "importthrm")], 
+                 by_tfres_act[c("year", "importclean")], method = "sum"), 
+      method = "product")
+    
+    # 计算本地发电标准煤量
+    by_tot_ori_elecgenequal <- 
+      func_toce(by_tf_nrgfuel, agg = TRUE)
+    # 计算本地发电和外调电力标准煤量之和
+    by_tot_ori_elecstdcoal <- 
+      func_cross(by_tot_ori_elecequal, by_tot_ori_elecgenequal, method = "sum")
+    
+    # 各部门电力消费占比
+    by_tot_elecsec <- 
+      func_mrgcol(list(by_agri_nrgfuel, by_ind_nrgfuel, 
+                       by_const_nrgfuel, by_trans_nrgfuel, 
+                       by_com_nrgfuel, by_hh_nrgfuel), 
+                  "electricity", namesnew = global_sectors[1:6])
+    by_tot_elecsharesec <- 
+      func_nrg_intst(by_tot_elecsec, by_tfres_act, "elecuse")
+    
+    # 分配电力标准煤量到各部门
+    by_tot_elecstdcoalsec <- 
+      func_nrg_sum(by_tot_elecsharesec, by_tot_ori_elecstdcoal, "nrg_input")
+    
+    # 计算各部门能耗标准量
+    by_agri_nrgsumce <- func_cross(
+      func_toce(by_agri_nrgfuel, agg = TRUE), 
+      by_tot_elecstdcoalsec[c("year", "agri")], method = "sum")
+    by_ind_nrgsumce <- func_cross(
+      func_toce(by_ind_nrgfuel, agg = TRUE), 
+      by_tot_elecstdcoalsec[c("year", "ind")], method = "sum")
+    by_const_nrgsumce <- func_cross(
+      func_toce(by_const_nrgfuel, agg = TRUE), 
+      by_tot_elecstdcoalsec[c("year", "const")], method = "sum")
+    by_trans_nrgsumce <- func_cross(
+      func_toce(by_trans_nrgfuel, agg = TRUE), 
+      by_tot_elecstdcoalsec[c("year", "trans")], method = "sum")
+    by_com_nrgsumce <- func_cross(
+      func_toce(by_com_nrgfuel, agg = TRUE), 
+      by_tot_elecstdcoalsec[c("year", "com")], method = "sum")
+    by_hh_nrgsumce <- func_cross(
+      func_toce(by_hh_nrgfuel, agg = TRUE), 
+      by_tot_elecstdcoalsec[c("year", "hh")], method = "sum")
+    # 合并各部门
+    by_tot_nrgsecce <- func_mrgcol(list(
+      by_agri_nrgsumce, by_ind_nrgsumce, by_const_nrgsumce, 
+      by_trans_nrgsumce, by_com_nrgsumce, by_hh_nrgsumce), 
+      "stdcoal", global_sectors[1: 6])
+    
+    ### Energy by fuels ----
+    # 除了电力外其他能耗物理量及标准煤
+    by_tot_nrgfuel <- 
+      func_ls2df(list(by_agri_nrgfuel, by_ind_nrgfuel, by_const_nrgfuel, 
+                      by_trans_nrgfuel, by_com_nrgfuel, by_hh_nrgfuel, 
+                      by_tf_nrgfuel))
+    by_tot_nrgfuelce <- func_toce(by_tot_nrgfuel)
+    # 加上电力标准量
+    by_tot_nrgfuelce <- 
+      func_merge_2(list(by_tot_nrgfuelce, by_tot_ori_elecequal))
+    names(by_tot_nrgfuelce)[names(by_tot_nrgfuelce) == "nrg_input"] <- "electricity"
+    
+    # 聚合成煤油气电
+    by_tot_nrgaggfuel <- func_secagg(by_tot_nrgfuel, global_nrg_lookup)
+    by_tot_nrgaggfuelce <- func_secagg(by_tot_nrgfuelce, global_nrg_lookup)
+    
+    ### Total energy ----
+    # 计算能耗标准量之和
+    by_tot_nrgsumce <- data.frame(
+      year = by_tot_nrgsecce$year, 
+      energyconsump = rowSums(by_tot_nrgsecce[, -1]))
+  } else {
+    # 除电力外的其他能耗之和
+    by_tot_nrgsum_byfuel <- 
+      func_ls2df(list(by_agri_nrgfuel, by_ind_nrgfuel, by_const_nrgfuel, 
+                      by_trans_nrgfuel, by_com_nrgfuel, by_hh_nrgfuel, 
+                      by_tf_nrgfuel, by_res_nrgfuel))
+    by_tot_nrgsum_byfuel <- 
+      by_tot_nrgsum_byfuel[names(by_tot_nrgsum_byfuel) != "electricity"]
+    # 换算成标准煤
+    by_tot_nrgsum_byfuel_ce <- func_toce(by_tot_nrgsum_byfuel)
+    # 换算成各年份总和
+    by_tot_nrgsum_ce <- data.frame(
+      year = by_tot_nrgsum_byfuel_ce$year, 
+      energyconsump = rowSums(by_tot_nrgsum_byfuel[names(by_tot_nrgsum_byfuel) != "year"]))
+  }
+  
+  
+  ## Total emission ----
+  # 各部门用电量
   by_tot_elecsec <- 
     func_mrgcol(list(by_agri_nrgfuel, by_ind_nrgfuel, 
                      by_const_nrgfuel, by_trans_nrgfuel, 
@@ -1055,100 +1135,24 @@ if (set_by_elecequalfac_meth == TRUE) { ### Elecequalfac meth ----
   by_tot_elecsharesec <- 
     func_nrg_intst(by_tot_elecsec, by_tfres_act, "elecuse")
   
-  # 分配电力标准煤量到各部门
-  by_tot_elecstdcoalsec <- 
-    func_nrg_sum(by_tot_elecsharesec, by_tot_ori_elecstdcoal, "nrg_input")
+  # 电力总排放
+  by_tot_elecemis <- 
+    func_cross(by_tf_emissum, by_res_emissum, "sum")
   
-  # 计算各部门能耗标准量
-  by_agri_nrgsumce <- func_cross(
-    func_toce(by_agri_nrgfuel, agg = TRUE), 
-    by_tot_elecstdcoalsec[c("year", "agri")], method = "sum")
-  by_ind_nrgsumce <- func_cross(
-    func_toce(by_ind_nrgfuel, agg = TRUE), 
-    by_tot_elecstdcoalsec[c("year", "ind")], method = "sum")
-  by_const_nrgsumce <- func_cross(
-    func_toce(by_const_nrgfuel, agg = TRUE), 
-    by_tot_elecstdcoalsec[c("year", "const")], method = "sum")
-  by_trans_nrgsumce <- func_cross(
-    func_toce(by_trans_nrgfuel, agg = TRUE), 
-    by_tot_elecstdcoalsec[c("year", "trans")], method = "sum")
-  by_com_nrgsumce <- func_cross(
-    func_toce(by_com_nrgfuel, agg = TRUE), 
-    by_tot_elecstdcoalsec[c("year", "com")], method = "sum")
-  by_hh_nrgsumce <- func_cross(
-    func_toce(by_hh_nrgfuel, agg = TRUE), 
-    by_tot_elecstdcoalsec[c("year", "hh")], method = "sum")
-  # 合并各部门
-  by_tot_nrgsecce <- func_mrgcol(list(
-    by_agri_nrgsumce, by_ind_nrgsumce, by_const_nrgsumce, 
-    by_trans_nrgsumce, by_com_nrgsumce, by_hh_nrgsumce), 
-    "stdcoal", global_sectors[1: 6])
+  # 分配电力排放到各个终端部门
+  by_tot_elecemissec <- 
+    func_nrg_sum(by_tot_elecsharesec, by_tot_elecemis, "co2")
   
-  ### Energy by fuels ----
-  # 除了电力外其他能耗物理量及标准煤
-  by_tot_nrgfuel <- 
-    func_ls2df(list(by_agri_nrgfuel, by_ind_nrgfuel, by_const_nrgfuel, 
-                    by_trans_nrgfuel, by_com_nrgfuel, by_hh_nrgfuel, 
-                    by_tf_nrgfuel))
-  by_tot_nrgfuelce <- func_toce(by_tot_nrgfuel)
-  # 加上电力标准量
-  by_tot_nrgfuelce <- 
-    func_merge_2(list(by_tot_nrgfuelce, by_tot_ori_elecequal))
-  names(by_tot_nrgfuelce)[names(by_tot_nrgfuelce) == "nrg_input"] <- "electricity"
-    
-  # 聚合成煤油气电
-  by_tot_nrgaggfuel <- func_secagg(by_tot_nrgfuel, global_nrg_lookup)
-  by_tot_nrgaggfuelce <- func_secagg(by_tot_nrgfuelce, global_nrg_lookup)
-  
-  ### Total energy ----
-  # 计算能耗标准量之和
-  by_tot_nrgsumce <- data.frame(
-    year = by_tot_nrgsecce$year, 
-    energyconsump = rowSums(by_tot_nrgsecce[, -1]))
-} else {
-  # 除电力外的其他能耗之和
-  by_tot_nrgsum_byfuel <- 
-    func_ls2df(list(by_agri_nrgfuel, by_ind_nrgfuel, by_const_nrgfuel, 
-                    by_trans_nrgfuel, by_com_nrgfuel, by_hh_nrgfuel, 
-                    by_tf_nrgfuel, by_res_nrgfuel))
-  by_tot_nrgsum_byfuel <- 
-    by_tot_nrgsum_byfuel[names(by_tot_nrgsum_byfuel) != "electricity"]
-  # 换算成标准煤
-  by_tot_nrgsum_byfuel_ce <- func_toce(by_tot_nrgsum_byfuel)
-  # 换算成各年份总和
-  by_tot_nrgsum_ce <- data.frame(
-    year = by_tot_nrgsum_byfuel_ce$year, 
-    energyconsump = rowSums(by_tot_nrgsum_byfuel[names(by_tot_nrgsum_byfuel) != "year"]))
+  # 汇总各部门直接排放
+  by_tot_diremissec <- 
+    func_mrgcol(list(by_agri_emissum, by_ind_emissum, 
+                     by_const_emissum, by_trans_emissum, 
+                     by_com_emissum, by_hh_emissum), 
+                "co2", namesnew = global_sectors[1:6])
+  # 终端部门总排放=电力排放+直接排放
+  by_tot_emissec <- func_cross(by_tot_elecemissec, by_tot_diremissec, "sum")
+  # 总排放
+  by_tot_emissum <- data.frame(year = by_tot_emissec$year)
+  by_tot_emissum$co2 <- rowSums(by_tot_emissec[names(by_tot_emissec) != "year"])
 }
-
-
-## Total emission ----
-# 各部门用电量
-by_tot_elecsec <- 
-  func_mrgcol(list(by_agri_nrgfuel, by_ind_nrgfuel, 
-                   by_const_nrgfuel, by_trans_nrgfuel, 
-                   by_com_nrgfuel, by_hh_nrgfuel), 
-              "electricity", namesnew = global_sectors[1:6])
-by_tot_elecsharesec <- 
-  func_nrg_intst(by_tot_elecsec, by_tfres_act, "elecuse")
-
-# 电力总排放
-by_tot_elecemis <- 
-  func_cross(by_tf_emissum, by_res_emissum, "sum")
-
-# 分配电力排放到各个终端部门
-by_tot_elecemissec <- 
-  func_nrg_sum(by_tot_elecsharesec, by_tot_elecemis, "co2")
-
-# 汇总各部门直接排放
-by_tot_diremissec <- 
-  func_mrgcol(list(by_agri_emissum, by_ind_emissum, 
-                   by_const_emissum, by_trans_emissum, 
-                   by_com_emissum, by_hh_emissum), 
-              "co2", namesnew = global_sectors[1:6])
-# 终端部门总排放=电力排放+直接排放
-by_tot_emissec <- func_cross(by_tot_elecemissec, by_tot_diremissec, "sum")
-# 总排放
-by_tot_emissum <- data.frame(year = by_tot_emissec$year)
-by_tot_emissum$co2 <- rowSums(by_tot_emissec[names(by_tot_emissec) != "year"])
 
