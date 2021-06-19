@@ -1079,6 +1079,12 @@ if (set_dataexport == TRUE) {
   exp_var[names(exp_var) != "year"] <- 
     exp_var[names(exp_var) != "year"]*10000
   func_dataexp("各情景下单位GDP排放量", mydata = exp_var)
+  
+  ## Key index ----
+  # 输出各情景的关键指标
+  for (i in set_scalcs) {
+    func_dataexp(paste0("关键指标-", i), mydata = idx_output[[i]])
+  }
 }
 
 
