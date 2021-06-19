@@ -11,7 +11,6 @@ set_cache_globalvar <- TRUE # 是否已有全局变量缓存
 set_cache_nrgbal <- TRUE # 是否已有能源平衡表缓存
 set_cache_hiscalc <- FALSE # 是否已有历史数据计算缓存
 set_cache_init <- FALSE # 是否已有初始化缓存
-set_calc_cache <- FALSE # 是否已有情景计算中可缓存部分的结果
 
 # 结果相关设置
 set_plotstyle <- "base" # 设置作图风格
@@ -115,6 +114,7 @@ if (set_cache_globalvar == FALSE) {
                             "非金属矿物制品业", "金属加工制造业",   
                             "设备制造业", 
                             "电子电气制造业", "其他制造业")
+  global_ind_finesec <- global_ind_lookup$ind_ori
   global_ind_nrgclass <- c("rawcoal", "coalproduct", 
                            "gasoline", "diesel", "residual", "lpg", 
                            "gas", "electricity")
@@ -240,7 +240,7 @@ if (set_cache_globalvar == FALSE) {
     year = c(2019, 2025, 2035, 2045, 2060), 
     value = c(global_population$"常住人口"[global_population$year == 2019], 
               580, 730, 780, 800), "population")
-  # 问题：如果用第七次人口普查数据，则2019年到2020年的人口跳跃式增长，且韩晖的预测数据将偏小。
+  
   prj_global_population$household <- 
     prj_global_population$population / 
     func_lastone(global_population$household_size)
@@ -249,14 +249,18 @@ if (set_cache_globalvar == FALSE) {
   ## Read data ----
   # 读取规上工业各行业能耗分能耗类型-行业数据
   global_indscale_nrgls_bynrg <- 
-    func_read_multitable(
-      "7TP7UDE6", 
+    func_read_multitable("7TP7UDE6", 
       names_tbl = c("煤", "煤制品", 
                     "汽油", "柴油", "燃料油", "液化石油气", 
                     "天然气", "电力"), 
       names_ls = c("rawcoal", "coalproduct", 
                    "gasoline", "diesel", "residual", "lpg", 
                    "gas", "electricity"))
+  for (i in names(global_indscale_nrgls_bynrg)) {
+    global_indscale_nrgls_bynrg[[i]] <- 
+      global_indscale_nrgls_bynrg[[i]][global_ind_finesec]
+    global_indscale_nrgls_bynrg[[i]][is.na(global_indscale_nrgls_bynrg[[i]])] <- 0
+  }
   comment(global_indscale_nrgls_bynrg) <- 
     "规上工业能耗：8能源-35行业"
   
@@ -1197,6 +1201,13 @@ if (set_cache_init == FALSE) {
 global_starttime <- Sys.time()
 for (set_scalc in set_scalcs) {
   # Analysis ----
+  # 在多于一个情景的计算中，从第二次开始将计算缓存设为真
+  if (match(set_scalc, set_scalcs) > 1) {
+    set_calc_cache <- TRUE
+  } else {
+    set_calc_cache <- FALSE
+  }
+  
   # Agriculture ----
   ## Activity level ----
   agri_act <- 
