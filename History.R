@@ -1,576 +1,582 @@
 # SETTING ----
 set_by_elecequalfac_meth <- TRUE
+set_cache_globalvar <- TRUE # 是否已有全局变量缓存
+set_cache_nrgbal <- TRUE # 是否已有能源平衡表缓存
 set_nrgplng_scope <- TRUE # 是否计算能源规划口径能耗
 
 # GLOBAL VAR ----
-## Names ----
-# 能源类别
-global_nrg_class <- c("rawcoal", "coalproduct", 
-                      "gasoline", "diesel", "residual", "kerosene", "lpg", 
-                      "gas", "electricity")
-global_sectors <- c("agri", "ind", "const", "trans", "com", "hh", "tf", "res")
-
-## Subsector ----
-# 能源合并方式
-global_nrg_lookup <- 
-  Reduce(rbind, 
-         list(data.frame(ind_agg = c("煤炭"), 
-                         ind_ori = c("coal", 
-                                     "coalproduct")),
-              data.frame(ind_agg = c("油品"), 
-                         ind_ori = c("gasolline", 
-                                     "diesel", 
-                                     "residual", 
-                                     "lpg")), 
-              data.frame(ind_agg = c("天然气"), 
-                         ind_ori = c("gas")), 
-              data.frame(ind_agg = c("电力"), 
-                         ind_ori = c("electricity"))))
-
-# 工业行业聚合方式
-global_ind_lookup <- 
-  Reduce(rbind, 
-         list(data.frame(ind_agg = c("食品饮料及烟草制造业"), 
-                         ind_ori = c("非金属矿采选业", 
-                                     "农副食品加工业", 
-                                     "食品制造业", 
-                                     "酒、饮料和精制茶制造业", 
-                                     "烟草制品业")),
-              data.frame(ind_agg = c("纺织及服装制造业"), 
-                         ind_ori = c("纺织业", 
-                                     "纺织服装、服饰业", 
-                                     "皮革、毛皮、羽毛及其制品和制鞋业")),
-              data.frame(ind_agg = c("木材及家具制造业"), 
-                         ind_ori = c("木材加工和木、竹、藤、棕、草制品业", 
-                                     "家具制造业")), 
-              data.frame(ind_agg = c("造纸及印刷"), 
-                         ind_ori = c("造纸和纸制品业", 
-                                     "印刷和记录媒介复制业")), 
-              data.frame(ind_agg = c("文体工美用品制造业"), 
-                         ind_ori = c("文教、工美、体育和娱乐用品制造业")), 
-              data.frame(ind_agg = c("石油及炼焦"), 
-                         ind_ori = c("石油加工、炼焦和核燃料加工业")), 
-              data.frame(ind_agg = c("化学工业"), 
-                         ind_ori = c("化学原料和化学制品制造业", 
-                                     "化学纤维制造业", 
-                                     "橡胶和塑料制品业")), 
-              data.frame(ind_agg = c("医药制造业"), 
-                         ind_ori = c("医药制造业")), 
-              data.frame(ind_agg = c("非金属矿物制品业"), 
-                         ind_ori = c("非金属矿物制品业")), 
-              data.frame(ind_agg = c("金属加工制造业"), 
-                         ind_ori = c("黑色金属冶炼和压延加工业", 
-                                     "有色金属冶炼和压延加工业", 
-                                     "金属制品业")), 
-              data.frame(ind_agg = c("设备制造业"), 
-                         ind_ori = c("通用设备制造业", 
-                                     "专用设备制造业", 
-                                     "交通运输设备制造业")), 
-              data.frame(ind_agg = c("电子电气制造业"), 
-                         ind_ori = c("电气机械和器材制造业", 
-                                     "计算机、通信和其他电子设备制造业", 
-                                     "仪器仪表制造业")), 
-              data.frame(ind_agg = c("其他制造业"), 
-                         ind_ori = c("其他制造业", 
-                                     "废弃资源综合利用业", 
-                                     "金属制品、机械和设备修理业", 
-                                     "燃气生产和供应业", 
-                                     "水的生产和供应业")), 
-              data.frame(ind_agg = c("电力、热力生产和供应业"), 
-                         ind_ori = c("电力、热力生产和供应业"))))
-
-# 工业子部门
-global_ind_ori_subsector <- c("食品饮料及烟草制造业", 
-                              "纺织及服装制造业", "木材及家具制造业", 
-                              "造纸及印刷", "文体工美用品制造业",    
-                              "石油及炼焦", "化学工业", "医药制造业",
-                              "非金属矿物制品业", "金属加工制造业",   
-                              "设备制造业", 
-                              "电子电气制造业", "其他制造业", 
-                              "电力、热力生产和供应业")
-global_ind_subsector <- c("食品饮料及烟草制造业", 
-                          "纺织及服装制造业", "木材及家具制造业", 
-                          "造纸及印刷", "文体工美用品制造业",    
-                          "石油及炼焦", "化学工业", "医药制造业",
-                          "非金属矿物制品业", "金属加工制造业",   
-                          "设备制造业", 
-                          "电子电气制造业", "其他制造业")
-global_ind_nrgclass <- c("rawcoal", "coalproduct", 
-                         "gasoline", "diesel", "residual", "lpg", 
-                         "gas", "electricity")
-global_trans_subsector <- c("常规公交", "快速公交", "出租车", "农村客车", 
-                            "公路其他汽油", "纯电动私家车", "公路其他柴油", 
-                            "水路客运", "水路货运", "航空")
-
-# 服务业子部门
-global_com_subsector <- c("electricity", "lpg_and_gas")
-# 生活子部门
-global_hh_subsector <- 
-  c("hh_coal_elec", "hh_lpg", "hh_gas")
-
-## Factors ----
-# 构建排放因子列表
-global_ori_emisfac_df <- func_read_data("8C8EDJVH")[global_nrg_class]
-global_emisfac_df <- data.frame(year = c(2000: 2019))
-for (i in global_nrg_class) {
-  global_emisfac_df[, i] <- global_ori_emisfac_df[, i]
-}
-rm(global_ori_emisfac_df)
-# 预测排放因子变化：从2040年开始各类能耗开始脱碳，至2055年为0
-prj_emisfac_df <- data.frame(year = c(2019: 2060))
-for (i in global_nrg_class) {
-  prj_emisfac_df[, i] <- 
+if (set_cache_globalvar == FALSE) {
+  ## Names ----
+  # 能源类别
+  global_nrg_class <- c("rawcoal", "coalproduct", 
+                        "gasoline", "diesel", "residual", "kerosene", "lpg", 
+                        "gas", "electricity")
+  global_sectors <- c("agri", "ind", "const", "trans", "com", "hh", "tf", "res")
+  
+  ## Subsector ----
+  # 能源合并方式
+  global_nrg_lookup <- 
+    Reduce(rbind, 
+           list(data.frame(ind_agg = c("煤炭"), 
+                           ind_ori = c("coal", 
+                                       "coalproduct")),
+                data.frame(ind_agg = c("油品"), 
+                           ind_ori = c("gasolline", 
+                                       "diesel", 
+                                       "residual", 
+                                       "lpg")), 
+                data.frame(ind_agg = c("天然气"), 
+                           ind_ori = c("gas")), 
+                data.frame(ind_agg = c("电力"), 
+                           ind_ori = c("electricity"))))
+  
+  # 工业行业聚合方式
+  global_ind_lookup <- 
+    Reduce(rbind, 
+           list(data.frame(ind_agg = c("食品饮料及烟草制造业"), 
+                           ind_ori = c("非金属矿采选业", 
+                                       "农副食品加工业", 
+                                       "食品制造业", 
+                                       "酒、饮料和精制茶制造业", 
+                                       "烟草制品业")),
+                data.frame(ind_agg = c("纺织及服装制造业"), 
+                           ind_ori = c("纺织业", 
+                                       "纺织服装、服饰业", 
+                                       "皮革、毛皮、羽毛及其制品和制鞋业")),
+                data.frame(ind_agg = c("木材及家具制造业"), 
+                           ind_ori = c("木材加工和木、竹、藤、棕、草制品业", 
+                                       "家具制造业")), 
+                data.frame(ind_agg = c("造纸及印刷"), 
+                           ind_ori = c("造纸和纸制品业", 
+                                       "印刷和记录媒介复制业")), 
+                data.frame(ind_agg = c("文体工美用品制造业"), 
+                           ind_ori = c("文教、工美、体育和娱乐用品制造业")), 
+                data.frame(ind_agg = c("石油及炼焦"), 
+                           ind_ori = c("石油加工、炼焦和核燃料加工业")), 
+                data.frame(ind_agg = c("化学工业"), 
+                           ind_ori = c("化学原料和化学制品制造业", 
+                                       "化学纤维制造业", 
+                                       "橡胶和塑料制品业")), 
+                data.frame(ind_agg = c("医药制造业"), 
+                           ind_ori = c("医药制造业")), 
+                data.frame(ind_agg = c("非金属矿物制品业"), 
+                           ind_ori = c("非金属矿物制品业")), 
+                data.frame(ind_agg = c("金属加工制造业"), 
+                           ind_ori = c("黑色金属冶炼和压延加工业", 
+                                       "有色金属冶炼和压延加工业", 
+                                       "金属制品业")), 
+                data.frame(ind_agg = c("设备制造业"), 
+                           ind_ori = c("通用设备制造业", 
+                                       "专用设备制造业", 
+                                       "交通运输设备制造业")), 
+                data.frame(ind_agg = c("电子电气制造业"), 
+                           ind_ori = c("电气机械和器材制造业", 
+                                       "计算机、通信和其他电子设备制造业", 
+                                       "仪器仪表制造业")), 
+                data.frame(ind_agg = c("其他制造业"), 
+                           ind_ori = c("其他制造业", 
+                                       "废弃资源综合利用业", 
+                                       "金属制品、机械和设备修理业", 
+                                       "燃气生产和供应业", 
+                                       "水的生产和供应业")), 
+                data.frame(ind_agg = c("电力、热力生产和供应业"), 
+                           ind_ori = c("电力、热力生产和供应业"))))
+  
+  # 工业子部门
+  global_ind_ori_subsector <- c("食品饮料及烟草制造业", 
+                                "纺织及服装制造业", "木材及家具制造业", 
+                                "造纸及印刷", "文体工美用品制造业",    
+                                "石油及炼焦", "化学工业", "医药制造业",
+                                "非金属矿物制品业", "金属加工制造业",   
+                                "设备制造业", 
+                                "电子电气制造业", "其他制造业", 
+                                "电力、热力生产和供应业")
+  global_ind_subsector <- c("食品饮料及烟草制造业", 
+                            "纺织及服装制造业", "木材及家具制造业", 
+                            "造纸及印刷", "文体工美用品制造业",    
+                            "石油及炼焦", "化学工业", "医药制造业",
+                            "非金属矿物制品业", "金属加工制造业",   
+                            "设备制造业", 
+                            "电子电气制造业", "其他制造业")
+  global_ind_nrgclass <- c("rawcoal", "coalproduct", 
+                           "gasoline", "diesel", "residual", "lpg", 
+                           "gas", "electricity")
+  global_trans_subsector <- c("常规公交", "快速公交", "出租车", "农村客车", 
+                              "公路其他汽油", "纯电动私家车", "公路其他柴油", 
+                              "水路客运", "水路货运", "航空")
+  
+  # 服务业子部门
+  global_com_subsector <- c("electricity", "lpg_and_gas")
+  # 生活子部门
+  global_hh_subsector <- 
+    c("hh_coal_elec", "hh_lpg", "hh_gas")
+  
+  ## Factors ----
+  # 构建排放因子列表
+  global_ori_emisfac_df <- func_read_data("8C8EDJVH")[global_nrg_class]
+  global_emisfac_df <- data.frame(year = c(2000: 2019))
+  for (i in global_nrg_class) {
+    global_emisfac_df[, i] <- global_ori_emisfac_df[, i]
+  }
+  rm(global_ori_emisfac_df)
+  # 预测排放因子变化：从2040年开始各类能耗开始脱碳，至2055年为0
+  prj_emisfac_df <- data.frame(year = c(2019: 2060))
+  for (i in global_nrg_class) {
+    prj_emisfac_df[, i] <- 
+      func_interp_2(
+        year = c(2019, 2040, 2050, 2060), 
+        value = c(global_emisfac_df[which(global_emisfac_df$year == 2019), i], 
+                  global_emisfac_df[which(global_emisfac_df$year == 2019), i],
+                  global_emisfac_df[which(global_emisfac_df$year == 2019), i]*0.7,
+                  0))$value
+  }
+  
+  
+  ## GDP ----
+  # 规上工业各行业GDP
+  global_indscale_gdp4sctr <- func_read_trans("7TP7UDE6", "工业GDP")
+  global_indscale_gdp <- data.frame(year = global_indscale_gdp4sctr$year)
+  global_indscale_gdp$GDP <- 
+    rowSums(global_indscale_gdp4sctr[names(global_indscale_gdp4sctr) 
+                                     %in% "year" == FALSE], na.rm = TRUE)
+  # 补全2018年和2019年的数据
+  global_indscale_gdp[which(
+    global_indscale_gdp$year %in% c(2018:2019)), "GDP"] <- 
+    c(16113500, 17960000)
+  comment(global_indscale_gdp) <- "规上工业总GDP"
+  
+  # 全市各产业GDP
+  global_gdp <- func_read_trans("2VHEE264", "GDP")
+  global_gdp <- global_gdp[names(global_gdp) != "人均GDP"]
+  names(global_gdp)[names(global_gdp) == "#第一产业"] <- "agrigdp"
+  names(global_gdp)[names(global_gdp) == "#第二产业"] <- "secgdp"
+  names(global_gdp)[names(global_gdp) == "##工业"] <- "indgdp"
+  names(global_gdp)[names(global_gdp) == "##建筑业"] <- "constgdp"
+  names(global_gdp)[names(global_gdp) == "#第三产业"] <- "comgdp"
+  # 基于当年价计算各产业比重
+  global_gdp$agrigdp_prop <- global_gdp$agrigdp/global_gdp$GDP*100
+  global_gdp$secgdp_prop <- global_gdp$secgdp/global_gdp$GDP*100
+  global_gdp$indgdp_prop <- global_gdp$indgdp/global_gdp$GDP*100
+  global_gdp$constgdp_prop <- global_gdp$constgdp/global_gdp$GDP*100
+  global_gdp$comgdp_prop <- global_gdp$comgdp/global_gdp$GDP*100
+  # 转换为2015年可比价
+  global_gdp$GDP <- func_compprice(global_gdp, "地区生产总值指数", 2015)$GDP
+  global_gdp$agrigdp <- global_gdp$GDP * global_gdp$agrigdp_prop/100
+  global_gdp$secgdp <- global_gdp$GDP * global_gdp$secgdp_prop/100
+  global_gdp$indgdp <- global_gdp$GDP * global_gdp$indgdp_prop/100
+  global_gdp$constgdp <- global_gdp$GDP * global_gdp$constgdp_prop/100
+  global_gdp$comgdp <- global_gdp$GDP * global_gdp$comgdp_prop/100
+  
+  # 预测GDP相关项目变化
+  # 预测GDP
+  prj_global_gdp <- func_rate(
+    baseyear = 2019, basevalue = global_gdp$GDP[global_gdp$year == 2019], 
+    rate_df = # 未来GDP增长率减缓
+      func_interp_2(year = c(2020, 2021, 2025, 2030, 2035, 2040, 2060),
+                    value = c(5.8, 7.5, 7.00, 6.00, 5.00, 3.00, 2.00)))
+  names(prj_global_gdp)[2] <- "GDP"
+  comment(prj_global_gdp$GDP) <- "2015可比价万元"
+  # 预测各产业所占比重
+  prj_global_gdp$secgdp_prop <- 
+    func_interp_2(year = c(2019, 2025, 2030, 2040, 2060), 
+                  value = c(global_gdp$secgdp_prop[global_gdp$year == 2019], 
+                            32, 26, 23, 15, 12))$value
+  prj_global_gdp$comgdp_prop <- 
+    func_interp_2(year = c(2019, 2025, 2030, 2040, 2060), 
+                  value = c(global_gdp$comgdp_prop[global_gdp$year == 2019], 
+                            67.7, 73.7, 76.8, 84.8, 87.8))$value
+  prj_global_gdp$agrigdp_prop <- 
+    func_saturate(prj_global_gdp[c("year", "secgdp_prop", "comgdp_prop")])$value
+  prj_global_gdp$constgdp_prop <- 
     func_interp_2(
-      year = c(2019, 2040, 2050, 2060), 
-      value = c(global_emisfac_df[which(global_emisfac_df$year == 2019), i], 
-                global_emisfac_df[which(global_emisfac_df$year == 2019), i],
-                global_emisfac_df[which(global_emisfac_df$year == 2019), i]*0.7,
-                0))$value
-}
-
-
-## GDP ----
-# 规上工业各行业GDP
-global_indscale_gdp4sctr <- func_read_trans("7TP7UDE6", "工业GDP")
-global_indscale_gdp <- data.frame(year = global_indscale_gdp4sctr$year)
-global_indscale_gdp$GDP <- 
-  rowSums(global_indscale_gdp4sctr[names(global_indscale_gdp4sctr) 
-                                   %in% "year" == FALSE], na.rm = TRUE)
-# 补全2018年和2019年的数据
-global_indscale_gdp[which(
-  global_indscale_gdp$year %in% c(2018:2019)), "GDP"] <- 
-  c(16113500, 17960000)
-comment(global_indscale_gdp) <- "规上工业总GDP"
-
-# 全市各产业GDP
-global_gdp <- func_read_trans("2VHEE264", "GDP")
-global_gdp <- global_gdp[names(global_gdp) != "人均GDP"]
-names(global_gdp)[names(global_gdp) == "#第一产业"] <- "agrigdp"
-names(global_gdp)[names(global_gdp) == "#第二产业"] <- "secgdp"
-names(global_gdp)[names(global_gdp) == "##工业"] <- "indgdp"
-names(global_gdp)[names(global_gdp) == "##建筑业"] <- "constgdp"
-names(global_gdp)[names(global_gdp) == "#第三产业"] <- "comgdp"
-# 基于当年价计算各产业比重
-global_gdp$agrigdp_prop <- global_gdp$agrigdp/global_gdp$GDP*100
-global_gdp$secgdp_prop <- global_gdp$secgdp/global_gdp$GDP*100
-global_gdp$indgdp_prop <- global_gdp$indgdp/global_gdp$GDP*100
-global_gdp$constgdp_prop <- global_gdp$constgdp/global_gdp$GDP*100
-global_gdp$comgdp_prop <- global_gdp$comgdp/global_gdp$GDP*100
-# 转换为2015年可比价
-global_gdp$GDP <- func_compprice(global_gdp, "地区生产总值指数", 2015)$GDP
-global_gdp$agrigdp <- global_gdp$GDP * global_gdp$agrigdp_prop/100
-global_gdp$secgdp <- global_gdp$GDP * global_gdp$secgdp_prop/100
-global_gdp$indgdp <- global_gdp$GDP * global_gdp$indgdp_prop/100
-global_gdp$constgdp <- global_gdp$GDP * global_gdp$constgdp_prop/100
-global_gdp$comgdp <- global_gdp$GDP * global_gdp$comgdp_prop/100
-
-# 预测GDP相关项目变化
-# 预测GDP
-prj_global_gdp <- func_rate(
-  baseyear = 2019, basevalue = global_gdp$GDP[global_gdp$year == 2019], 
-  rate_df = # 未来GDP增长率减缓
-    func_interp_2(year = c(2020, 2021, 2025, 2030, 2035, 2040, 2060),
-                  value = c(5.8, 7.5, 7.00, 6.00, 5.00, 3.00, 2.00)))
-names(prj_global_gdp)[2] <- "GDP"
-comment(prj_global_gdp$GDP) <- "2015可比价万元"
-# 预测各产业所占比重
-prj_global_gdp$secgdp_prop <- 
-  func_interp_2(year = c(2019, 2025, 2030, 2040, 2060), 
-                value = c(global_gdp$secgdp_prop[global_gdp$year == 2019], 
-                          32, 26, 23, 15, 12))$value
-prj_global_gdp$comgdp_prop <- 
-  func_interp_2(year = c(2019, 2025, 2030, 2040, 2060), 
-                value = c(global_gdp$comgdp_prop[global_gdp$year == 2019], 
-                          67.7, 73.7, 76.8, 84.8, 87.8))$value
-prj_global_gdp$agrigdp_prop <- 
-  func_saturate(prj_global_gdp[c("year", "secgdp_prop", "comgdp_prop")])$value
-prj_global_gdp$constgdp_prop <- 
-  func_interp_2(
-    year = c(2019, 2060), 
-    value = c(global_gdp$constgdp_prop[global_gdp$year == 2019], 10))$value
-prj_global_gdp$indgdp_prop <- 
-  func_saturate(
-    prj_global_gdp[c("year", 
-                     "agrigdp_prop", "constgdp_prop", "comgdp_prop")])$value
-
-# 预测各行业GDP
-prj_global_gdp$agrigdp <- prj_global_gdp$GDP * prj_global_gdp$agrigdp_prop/100
-prj_global_gdp$secgdp <- prj_global_gdp$GDP * prj_global_gdp$secgdp_prop/100
-prj_global_gdp$indgdp <- prj_global_gdp$GDP * prj_global_gdp$indgdp_prop/100
-prj_global_gdp$constgdp <- prj_global_gdp$GDP * prj_global_gdp$constgdp_prop/100
-prj_global_gdp$comgdp <- prj_global_gdp$GDP * prj_global_gdp$comgdp_prop/100
-
-# Test
-# func_history_project_df(global_gdp, prj_global_gdp, "ggpoint")
-
-## Population ----
-global_population <- func_read_trans("2VHEE264")
-# 假设全市综合家庭规模为城镇家庭规模和农村家庭规模的加权平均值
-global_population$household_size <- 
-  global_population$调查城镇家庭规模 * global_population$城镇化率/100 + 
-  global_population$调查农村家庭规模 * (1 - global_population$城镇化率/100)
-# 假设2016-2019的综合家庭户数和2015年相同
-global_population$household_size[global_population$year > 2015] <- 
-  global_population$household_size[global_population$year == 2015]
-# 计算户数
-global_population$household <- 
-  global_population$"常住人口" / global_population$household_size
-# 预测人口相关项目
-prj_global_population <- func_interp_2(
-  year = c(2019, 2025, 2035, 2045, 2060), 
-  value = c(global_population$"常住人口"[global_population$year == 2019], 
-            580, 730, 780, 800), "population")
-# 问题：如果用第七次人口普查数据，则2019年到2020年的人口跳跃式增长，且韩晖的预测数据将偏小。
-prj_global_population$household <- 
-  prj_global_population$population / 
-  func_lastone(global_population$household_size)
-comment(prj_global_population$household) <- "万户"
-
-## Read data ----
-# 读取规上工业各行业能耗分能耗类型-行业数据
-global_indscale_nrgls_bynrg <- 
-  func_read_multitable(
-    "7TP7UDE6", 
-    names_tbl = c("煤", "煤制品", 
-                  "汽油", "柴油", "燃料油", "液化石油气", 
-                  "天然气", "电力"), 
-    names_ls = c("rawcoal", "coalproduct", 
-                 "gasoline", "diesel", "residual", "lpg", 
-                 "gas", "electricity"))
-comment(global_indscale_nrgls_bynrg) <- 
-  "规上工业能耗：8能源-35行业"
-
-# 聚合各行业：工业用能分能耗类型-聚合行业数据
-global_indscale_nrgls_bynrg_secagg <- 
-  func_secagg_ls(global_indscale_nrgls_bynrg, global_ind_lookup)
-comment(global_indscale_nrgls_bynrg_secagg) <- 
-  "规上工业能耗：8能源-14行业"
-
-# 转变成工业用能分聚合行业-能耗类型数据：包含电力热力供应业
-global_indscale_nrgaggsec <- 
-  func_ls_transition(global_indscale_nrgls_bynrg_secagg)
-comment(global_indscale_nrgaggsec) <- 
-  "规上工业能耗：14行业-8能源"
-
-# 转变成工业用能分聚合行业数据框：不包含电力热力供应业
-global_indscale_nrgaggsec_noelec <- 
-  global_indscale_nrgaggsec[global_ind_subsector]
-comment(global_indscale_nrgaggsec_noelec) <- "规上工业能耗列表：13行业-8能源"
-
-# 压缩成数据框
-global_indscale_nrgaggsec_noelec_df <- 
-  func_ls2df(global_indscale_nrgaggsec_noelec)
-comment(global_indscale_nrgaggsec_noelec_df) <- "规上工业能耗数据框：8能源"
-
-# 农业柴油
-global_agri_diesel <- func_read_trans("4NJ97NS9")[, c("year", "农用柴油使用量")]
-
-# 生活原煤
-global_hh_coal <- func_read_trans("WJU7N3EL")
-global_hh_coal$"生活用煤" <- global_hh_coal$"生活用煤"*10000
-comment(global_hh_coal$"生活用煤") <- "吨"
-
-# 读取统计年鉴的农业柴油
-global_agri_diesel <- func_read_trans("4NJ97NS9")[, c("year", "农用柴油使用量")]
-comment(global_agri_diesel$"农用柴油使用量")
-
-# 读取航空煤油数据：含福州机场部分的煤油消费量之和
-global_avnnrg <- func_read_trans("JXG6KGSA")
-# 补全包含福州机场消费量在内的总消费量
-global_avnnrg[which(global_avnnrg$year %in% c(2005: 2009)), "厦航煤油"] <- 
-  global_avnnrg[which(global_avnnrg$year %in% c(2005: 2009)), "国内航班"] +
-  global_avnnrg[which(global_avnnrg$year %in% c(2005: 2009)), "国际航班合计"]
-global_avnnrg <- global_avnnrg[c("year", "厦航煤油")]
-names(global_avnnrg) <- c("year", "kerosene")
-
-# 读取航空客货运周转量
-global_avn_act <- 
-  func_read_trans("U737THYU")[c("year", "客运周转量", "货运周转量")]
-names(global_avn_act) <- c("year", "avn_rpk", "avn_rftk")
-
-# 读取水运客货运周转量
-global_water_act <- 
-  func_read_trans("P6KQQFUP")[c("year", "客运周转量", "货运周转量")]
-names(global_water_act) <- c("year", "water_rpk", "water_rftk")
-
-# 读取园林局LPG数据
-global_ind_com_hh_lpg <- func_read_trans("SRYBIXUY")
-global_ind_com_hh_lpg[c("工业", "服务业", "生活消费")] <- 
-  global_ind_com_hh_lpg[c("工业", "服务业", "生活消费")]*10000
-global_ind_com_hh_lpg[c("工业", "服务业", "生活消费")] <- func_addnote(
-  global_ind_com_hh_lpg[c("工业", "服务业", "生活消费")], c("吨", "吨", "吨"))
-
-# 读取园林局天然气数据
-global_com_hh_gas <- func_read_trans("4ALKEGTV")
-global_com_hh_gas[c("服务业", "生活消费")] <- 
-  global_com_hh_gas[c("服务业", "生活消费")]*10000
-global_com_hh_gas[c("服务业", "生活消费")] <- func_addnote(
-  global_com_hh_gas[c("服务业", "生活消费")], c("万立方米", "万立方米"))
-
-# 读取交通天然气
-global_trans_gas <- func_read_trans("IZM9FWIY", "天然气消费量")
-
-# 读取交通电力消费并合并地铁用电
-# 此处仅进入部分车型用电量
-# 问题：网约车用电量不低，但因无保有量数据，难以从私家车区分出来，暂不处理
-global_trans_elecsec <- 
-  func_read_trans("IZM9FWIY", "电力消费")
-global_trans_elecsec$"地铁" <- 
-  global_trans_elecsec$"地铁牵引用电" + global_trans_elecsec$"地铁其他用电"
-global_trans_elecsec <- global_trans_elecsec[c(
-  "year", "常规公交", "BRT", "纯电动出租车","地铁")]
-
-# 读取用电数据
-global_elecaggsec <- func_read_trans("2I4DKY2A", "全市电力消费情况表")
-global_elecfinesec <- 
-  func_read_trans("2I4DKY2A", "全市电力消费情况表分具体行业")
-
-# 读取本地发电数据并计算清洁和非清洁发电比例
-global_elecgen <- func_read_trans("2I4DKY2A", "全市发电量")
-global_elecgen$clean <- 
-  global_elecgen$"#水电" + global_elecgen$"#垃圾发电" + global_elecgen$"#太阳能"
-global_elecgen$clean_prop <- global_elecgen$clean / global_elecgen$"合计"
-global_elecgen$thrm_prop <- 1 - global_elecgen$clean_prop
-
-# 读取水运燃料油
-global_trans_residual <- func_read_trans("68Z975NU")
-global_trans_residual[c("国内客运", "国内货运", "国际客运", "国际货运")] <- 
-  global_trans_residual[c("国内客运", "国内货运", "国际客运", "国际货运")]*10000
-global_trans_residual[c("国内客运", "国内货运", "国际客运", "国际货运")] <- 
-  func_addnote(
-    global_trans_residual[c("国内客运", "国内货运", "国际客运", "国际货运")], 
-    c("吨", "吨", "吨", "吨"))
-
-# 读取慧梅推算：交通水运部分（基于港口局数据）
-global_water_railway_diesel <- func_read_trans("VZS39ZM8")
-global_water_railway_diesel[c("水运国内客运", "水运国内货运", 
-                              "水运国际客运", "水运国际货运", "铁路")] <- 
+      year = c(2019, 2060), 
+      value = c(global_gdp$constgdp_prop[global_gdp$year == 2019], 10))$value
+  prj_global_gdp$indgdp_prop <- 
+    func_saturate(
+      prj_global_gdp[c("year", 
+                       "agrigdp_prop", "constgdp_prop", "comgdp_prop")])$value
+  
+  # 预测各行业GDP
+  prj_global_gdp$agrigdp <- prj_global_gdp$GDP * prj_global_gdp$agrigdp_prop/100
+  prj_global_gdp$secgdp <- prj_global_gdp$GDP * prj_global_gdp$secgdp_prop/100
+  prj_global_gdp$indgdp <- prj_global_gdp$GDP * prj_global_gdp$indgdp_prop/100
+  prj_global_gdp$constgdp <- prj_global_gdp$GDP * prj_global_gdp$constgdp_prop/100
+  prj_global_gdp$comgdp <- prj_global_gdp$GDP * prj_global_gdp$comgdp_prop/100
+  
+  # Test
+  # func_history_project_df(global_gdp, prj_global_gdp, "ggpoint")
+  
+  ## Population ----
+  global_population <- func_read_trans("2VHEE264")
+  # 假设全市综合家庭规模为城镇家庭规模和农村家庭规模的加权平均值
+  global_population$household_size <- 
+    global_population$调查城镇家庭规模 * global_population$城镇化率/100 + 
+    global_population$调查农村家庭规模 * (1 - global_population$城镇化率/100)
+  # 假设2016-2019的综合家庭户数和2015年相同
+  global_population$household_size[global_population$year > 2015] <- 
+    global_population$household_size[global_population$year == 2015]
+  # 计算户数
+  global_population$household <- 
+    global_population$"常住人口" / global_population$household_size
+  # 预测人口相关项目
+  prj_global_population <- func_interp_2(
+    year = c(2019, 2025, 2035, 2045, 2060), 
+    value = c(global_population$"常住人口"[global_population$year == 2019], 
+              580, 730, 780, 800), "population")
+  # 问题：如果用第七次人口普查数据，则2019年到2020年的人口跳跃式增长，且韩晖的预测数据将偏小。
+  prj_global_population$household <- 
+    prj_global_population$population / 
+    func_lastone(global_population$household_size)
+  comment(prj_global_population$household) <- "万户"
+  
+  ## Read data ----
+  # 读取规上工业各行业能耗分能耗类型-行业数据
+  global_indscale_nrgls_bynrg <- 
+    func_read_multitable(
+      "7TP7UDE6", 
+      names_tbl = c("煤", "煤制品", 
+                    "汽油", "柴油", "燃料油", "液化石油气", 
+                    "天然气", "电力"), 
+      names_ls = c("rawcoal", "coalproduct", 
+                   "gasoline", "diesel", "residual", "lpg", 
+                   "gas", "electricity"))
+  comment(global_indscale_nrgls_bynrg) <- 
+    "规上工业能耗：8能源-35行业"
+  
+  # 聚合各行业：工业用能分能耗类型-聚合行业数据
+  global_indscale_nrgls_bynrg_secagg <- 
+    func_secagg_ls(global_indscale_nrgls_bynrg, global_ind_lookup)
+  comment(global_indscale_nrgls_bynrg_secagg) <- 
+    "规上工业能耗：8能源-14行业"
+  
+  # 转变成工业用能分聚合行业-能耗类型数据：包含电力热力供应业
+  global_indscale_nrgaggsec <- 
+    func_ls_transition(global_indscale_nrgls_bynrg_secagg)
+  comment(global_indscale_nrgaggsec) <- 
+    "规上工业能耗：14行业-8能源"
+  
+  # 转变成工业用能分聚合行业数据框：不包含电力热力供应业
+  global_indscale_nrgaggsec_noelec <- 
+    global_indscale_nrgaggsec[global_ind_subsector]
+  comment(global_indscale_nrgaggsec_noelec) <- "规上工业能耗列表：13行业-8能源"
+  
+  # 压缩成数据框
+  global_indscale_nrgaggsec_noelec_df <- 
+    func_ls2df(global_indscale_nrgaggsec_noelec)
+  comment(global_indscale_nrgaggsec_noelec_df) <- "规上工业能耗数据框：8能源"
+  
+  # 农业柴油
+  global_agri_diesel <- func_read_trans("4NJ97NS9")[, c("year", "农用柴油使用量")]
+  
+  # 生活原煤
+  global_hh_coal <- func_read_trans("WJU7N3EL")
+  global_hh_coal$"生活用煤" <- global_hh_coal$"生活用煤"*10000
+  comment(global_hh_coal$"生活用煤") <- "吨"
+  
+  # 读取统计年鉴的农业柴油
+  global_agri_diesel <- func_read_trans("4NJ97NS9")[, c("year", "农用柴油使用量")]
+  comment(global_agri_diesel$"农用柴油使用量")
+  
+  # 读取航空煤油数据：含福州机场部分的煤油消费量之和
+  global_avnnrg <- func_read_trans("JXG6KGSA")
+  # 补全包含福州机场消费量在内的总消费量
+  global_avnnrg[which(global_avnnrg$year %in% c(2005: 2009)), "厦航煤油"] <- 
+    global_avnnrg[which(global_avnnrg$year %in% c(2005: 2009)), "国内航班"] +
+    global_avnnrg[which(global_avnnrg$year %in% c(2005: 2009)), "国际航班合计"]
+  global_avnnrg <- global_avnnrg[c("year", "厦航煤油")]
+  names(global_avnnrg) <- c("year", "kerosene")
+  
+  # 读取航空客货运周转量
+  global_avn_act <- 
+    func_read_trans("U737THYU")[c("year", "客运周转量", "货运周转量")]
+  names(global_avn_act) <- c("year", "avn_rpk", "avn_rftk")
+  
+  # 读取水运客货运周转量
+  global_water_act <- 
+    func_read_trans("P6KQQFUP")[c("year", "客运周转量", "货运周转量")]
+  names(global_water_act) <- c("year", "water_rpk", "water_rftk")
+  
+  # 读取园林局LPG数据
+  global_ind_com_hh_lpg <- func_read_trans("SRYBIXUY")
+  global_ind_com_hh_lpg[c("工业", "服务业", "生活消费")] <- 
+    global_ind_com_hh_lpg[c("工业", "服务业", "生活消费")]*10000
+  global_ind_com_hh_lpg[c("工业", "服务业", "生活消费")] <- func_addnote(
+    global_ind_com_hh_lpg[c("工业", "服务业", "生活消费")], c("吨", "吨", "吨"))
+  
+  # 读取园林局天然气数据
+  global_com_hh_gas <- func_read_trans("4ALKEGTV")
+  global_com_hh_gas[c("服务业", "生活消费")] <- 
+    global_com_hh_gas[c("服务业", "生活消费")]*10000
+  global_com_hh_gas[c("服务业", "生活消费")] <- func_addnote(
+    global_com_hh_gas[c("服务业", "生活消费")], c("万立方米", "万立方米"))
+  
+  # 读取交通天然气
+  global_trans_gas <- func_read_trans("IZM9FWIY", "天然气消费量")
+  
+  # 读取交通电力消费并合并地铁用电
+  # 此处仅进入部分车型用电量
+  # 问题：网约车用电量不低，但因无保有量数据，难以从私家车区分出来，暂不处理
+  global_trans_elecsec <- 
+    func_read_trans("IZM9FWIY", "电力消费")
+  global_trans_elecsec$"地铁" <- 
+    global_trans_elecsec$"地铁牵引用电" + global_trans_elecsec$"地铁其他用电"
+  global_trans_elecsec <- global_trans_elecsec[c(
+    "year", "常规公交", "BRT", "纯电动出租车","地铁")]
+  
+  # 读取用电数据
+  global_elecaggsec <- func_read_trans("2I4DKY2A", "全市电力消费情况表")
+  global_elecfinesec <- 
+    func_read_trans("2I4DKY2A", "全市电力消费情况表分具体行业")
+  
+  # 读取本地发电数据并计算清洁和非清洁发电比例
+  global_elecgen <- func_read_trans("2I4DKY2A", "全市发电量")
+  global_elecgen$clean <- 
+    global_elecgen$"#水电" + global_elecgen$"#垃圾发电" + global_elecgen$"#太阳能"
+  global_elecgen$clean_prop <- global_elecgen$clean / global_elecgen$"合计"
+  global_elecgen$thrm_prop <- 1 - global_elecgen$clean_prop
+  
+  # 读取水运燃料油
+  global_trans_residual <- func_read_trans("68Z975NU")
+  global_trans_residual[c("国内客运", "国内货运", "国际客运", "国际货运")] <- 
+    global_trans_residual[c("国内客运", "国内货运", "国际客运", "国际货运")]*10000
+  global_trans_residual[c("国内客运", "国内货运", "国际客运", "国际货运")] <- 
+    func_addnote(
+      global_trans_residual[c("国内客运", "国内货运", "国际客运", "国际货运")], 
+      c("吨", "吨", "吨", "吨"))
+  
+  # 读取慧梅推算：交通水运部分（基于港口局数据）
+  global_water_railway_diesel <- func_read_trans("VZS39ZM8")
   global_water_railway_diesel[c("水运国内客运", "水运国内货运", 
-                                "水运国际客运", "水运国际货运", "铁路")]*10000
-global_water_railway_diesel[c("水运国内客运", "水运国内货运", 
-                              "水运国际客运", "水运国际货运", "铁路")] <- 
-  func_addnote(
+                                "水运国际客运", "水运国际货运", "铁路")] <- 
     global_water_railway_diesel[c("水运国内客运", "水运国内货运", 
-                                  "水运国际客运", "水运国际货运", "铁路")], 
-    rep("吨", 4))
-
-# 读取慧梅推算：铁路（客运周转量*能耗强度）
-global_roadoper_diesel <- 
-  func_read_trans("IZM9FWIY", "柴油消费量")[c("year","常规公交","BRT","农村客车")]
-
-# 读取慧梅推算数据：营运非营运车辆柴油
-global_roadnonoper_diesel <- 
-  func_read_trans("Y3PGVSR7", "非营运性车辆柴油消费推算")
-global_roadnonoper_diesel[c("非营运客车", "货车")] <- 
-  global_roadnonoper_diesel[c("非营运客车", "货车")]*10000
-global_roadnonoper_diesel[c("非营运客车", "货车")] <- 
-  func_addnote(global_roadnonoper_diesel[c("非营运客车", "货车")], 
-               rep("吨", 2))
-
-# 读取刘洋太阳能发电预测
-global_solarelecgen_fut <- func_read_trans("4R9XNW4Z")
-
-# 读取全省发电量
-global_provelecgen <- func_read_trans("S3CNPRZE", "发电量")
+                                  "水运国际客运", "水运国际货运", "铁路")]*10000
+  global_water_railway_diesel[c("水运国内客运", "水运国内货运", 
+                                "水运国际客运", "水运国际货运", "铁路")] <- 
+    func_addnote(
+      global_water_railway_diesel[c("水运国内客运", "水运国内货运", 
+                                    "水运国际客运", "水运国际货运", "铁路")], 
+      rep("吨", 4))
+  
+  # 读取慧梅推算：铁路（客运周转量*能耗强度）
+  global_roadoper_diesel <- 
+    func_read_trans("IZM9FWIY", "柴油消费量")[c("year","常规公交","BRT","农村客车")]
+  
+  # 读取慧梅推算数据：营运非营运车辆柴油
+  global_roadnonoper_diesel <- 
+    func_read_trans("Y3PGVSR7", "非营运性车辆柴油消费推算")
+  global_roadnonoper_diesel[c("非营运客车", "货车")] <- 
+    global_roadnonoper_diesel[c("非营运客车", "货车")]*10000
+  global_roadnonoper_diesel[c("非营运客车", "货车")] <- 
+    func_addnote(global_roadnonoper_diesel[c("非营运客车", "货车")], 
+                 rep("吨", 2))
+  
+  # 读取刘洋太阳能发电预测
+  global_solarelecgen_fut <- func_read_trans("4R9XNW4Z")
+  
+  # 读取全省发电量
+  global_provelecgen <- func_read_trans("S3CNPRZE", "发电量")
+}
 
 
 # NRG BALANCE ----
-# 构建空能源平衡表
-by_nrgbal_years <- as.character(c(2015: 2019))
-by_nrgbal_ls <- vector("list", 5)
-names(by_nrgbal_ls) <- by_nrgbal_years
-for (i in by_nrgbal_years) {
-  by_nrgbal_ls[[i]] <- 
-    data.frame(
-      iterm = c("tf", "agri","ind","const", "trans","com", "hh"), 
-      rawcoal = 0, coalproduct = 0, 
-      gasoline = 0, diesel = 0, 
-      kerosene = 0, residual = 0, lpg = 0, 
-      gas = 0, electricity = 0)
-}
-
-# 1.1 Transformation input ----
-# 输入发电那一行
-for (j in by_nrgbal_years) {
-  for (i in c("rawcoal", "coalproduct", 
-              "gasoline", "diesel", "residual", "lpg", 
-              "gas", "electricity")) {
-    by_nrgbal_ls[[j]][which(by_nrgbal_ls[[j]]$iterm == "tf"),i] <- 
-      global_indscale_nrgaggsec$"电力、热力生产和供应业"[which(
-        global_indscale_nrgaggsec$"电力、热力生产和供应业"$year == j), i]
+if (set_cache_nrgbal == FALSE) {
+  # 构建空能源平衡表
+  by_nrgbal_years <- as.character(c(2015: 2019))
+  by_nrgbal_ls <- vector("list", 5)
+  names(by_nrgbal_ls) <- by_nrgbal_years
+  for (i in by_nrgbal_years) {
+    by_nrgbal_ls[[i]] <- 
+      data.frame(
+        iterm = c("tf", "agri","ind","const", "trans","com", "hh"), 
+        rawcoal = 0, coalproduct = 0, 
+        gasoline = 0, diesel = 0, 
+        kerosene = 0, residual = 0, lpg = 0, 
+        gas = 0, electricity = 0)
   }
+  
+  # 1.1 Transformation input ----
+  # 输入发电那一行
+  for (j in by_nrgbal_years) {
+    for (i in c("rawcoal", "coalproduct", 
+                "gasoline", "diesel", "residual", "lpg", 
+                "gas", "electricity")) {
+      by_nrgbal_ls[[j]][which(by_nrgbal_ls[[j]]$iterm == "tf"),i] <- 
+        global_indscale_nrgaggsec$"电力、热力生产和供应业"[which(
+          global_indscale_nrgaggsec$"电力、热力生产和供应业"$year == j), i]
+    }
+  }
+  
+  for (i in by_nrgbal_years) {
+    # 1.2 Household rawcoal ----
+    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "hh"), "rawcoal"] <- 
+      global_hh_coal[which(global_hh_coal$year == i), "生活用煤"]
+    # 1.3 Agri diesel ----
+    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "agri"), "diesel"] <- 
+      global_agri_diesel[which(global_agri_diesel$year == i), "农用柴油使用量"]
+    # 1.4 Trans kerosene ----
+    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "kerosene"] <- 
+      global_avnnrg[which(global_avnnrg$year == i), "kerosene"]
+    # 1.5 Ind & Com & Household LPG ----
+    by_nrgbal_ls[[i]][which(
+      by_nrgbal_ls[[i]]$iterm %in% c("ind", "com", "hh")), "lpg"] <- 
+      as.numeric(global_ind_com_hh_lpg[which(global_ind_com_hh_lpg$year == i), 
+                                       c("工业", "服务业", "生活消费")])
+    # 1.6 Com & Household gas ----
+    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm %in% c("com", "hh")), "gas"] <- 
+      as.numeric(
+        global_com_hh_gas[which(global_com_hh_gas$year == i), c("服务业", "生活消费")])
+    # 1.7 Trans gas ----
+    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "gas"] <- 
+      sum(global_trans_gas[which(
+        global_trans_gas$year == i), c("公交合计", "出租车合计")])
+  }
+  
+  # 1.8 Electricity ----
+  for (i in by_nrgbal_years) {
+    # 发电量
+    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "tf"), "electricity"] <- 
+      global_elecgen[which(global_elecgen$year == i), "合计"]
+    # 农业用电
+    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "agri"), "electricity"] <- 
+      global_elecaggsec[which(global_elecaggsec$year == i), "##第一产业"]
+    # 建筑业用电
+    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "const"), "electricity"] <- 
+      global_elecfinesec[which(global_elecfinesec$year == i), "建筑业"]
+    # 工业用电
+    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "ind"), "electricity"] <- 
+      global_elecaggsec[which(global_elecaggsec$year == i), "##第二产业"] - 
+      global_elecfinesec[which(global_elecfinesec$year == i), "建筑业"]
+    # 服务业用电
+    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "com"), "electricity"] <- 
+      global_elecaggsec[which(global_elecaggsec$year == i), "##第三产业"]
+    # 生活用电
+    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "hh"), "electricity"] <- 
+      global_elecaggsec[which(global_elecaggsec$year == i), "##第三产业"]
+  }
+  
+  # 2.1 Ind oil ----
+  # 构造每年全市工业GDP/规上工业GDP缩放因子
+  by_nrgbal_ind_scalefac <- func_cross(
+    global_gdp[c("year", "indgdp")], global_indscale_gdp, method = "rate")
+  names(by_nrgbal_ind_scalefac)[2] <- "scalefac"
+  # 不包含电力热力行业的工业能耗数据
+  by_nrgbal_indscale_oil <- 
+    func_ls2df(global_indscale_nrgaggsec[global_ind_subsector])
+  by_nrgbal_indscale_oil <- 
+    by_nrgbal_indscale_oil[c("year", "gasoline", "diesel", "residual")]
+  # 进行缩放
+  by_nrgbal_ind_oil <- 
+    func_nrg_sum(by_nrgbal_indscale_oil, by_nrgbal_ind_scalefac, "scalefac")
+  
+  for (i in by_nrgbal_years) {
+    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "ind"), 
+                      c("gasoline", "diesel", "residual")] <- 
+      by_nrgbal_ind_oil[which(by_nrgbal_ind_oil$year == i), 
+                        c("gasoline", "diesel", "residual")]
+  }
+  
+  # 3.1 Ind coalproduct ----
+  # 填写工业煤制品
+  # 读取黄若谷统计局核对数据
+  by_nrgbal_check <- 
+    func_read_multitable(
+      "2IRV6STN", names_tbl = c("煤合计", "原煤", "油品", "天然气"), 
+      names_ls = c("coaltotal", "coal", "oil", "gas"))
+  # 更改单位
+  for (i in c("coaltotal", "coal", "oil", "gas")) {
+    by_nrgbal_check[[i]][, -1] <- by_nrgbal_check[[i]][, -1]*10000
+  }
+  
+  for (i in by_nrgbal_years) {
+    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "ind"), "coalproduct"] <- 
+      by_nrgbal_check[["coaltotal"]][which(
+        by_nrgbal_check[["coaltotal"]]$year == i), "工业"] - 
+      by_nrgbal_check[["coal"]][which(
+        by_nrgbal_check[["coal"]]$year == i), "工业"] 
+  }
+  
+  # 3.2 Ind coal ----
+  # 4 = 若谷煤合计-刚算的煤制品-生活用煤-发电用煤
+  # 读取若谷总量数据
+  nrgcheck_total <- func_read_trans("LPLPNXCQ")
+  nrgcheck_total[c("煤炭消费量", "油品消费量", "天然气消费量", "调入电力")] <- 
+    nrgcheck_total[c("煤炭消费量", "油品消费量", "天然气消费量", "调入电力")]*10000
+  nrgcheck_total[c("煤炭消费量", "油品消费量", "天然气消费量", "调入电力")] <- 
+    func_addnote(
+      nrgcheck_total[c("煤炭消费量", "油品消费量", "天然气消费量", "调入电力")], 
+      c("吨", "吨", "万立方米", "万千瓦时"))
+  
+  for (i in by_nrgbal_years) {
+    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "ind"), "rawcoal"] <- 
+      nrgcheck_total[which(nrgcheck_total$year == i), "煤炭消费量"] - 
+      # 刚算的煤制品
+      by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "ind"), "coalproduct"] -
+      # 生活用煤
+      by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "hh"), "rawcoal"] -
+      # 发电用煤
+      by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "tf"), "rawcoal"]
+  }
+  
+  # 3.3 Trans residual ----
+  # 9 = 水运燃料油消耗量（港口局数据推算，慧梅）
+  for (i in by_nrgbal_years) {
+    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "residual"] <- 
+      sum(global_trans_residual[which(global_trans_residual$year == i), 
+                                c("国内客运", "国内货运", "国际客运", "国际货运")])
+  }
+  
+  # 3.4 Trans diesel ----
+  for (i in by_nrgbal_years) {
+    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "diesel"] <- 
+      sum(global_water_railway_diesel[which(
+        global_water_railway_diesel$year == i), 
+        c("水运国内客运", "水运国内货运","水运国际客运","水运国际货运","铁路")], 
+        na.rm = TRUE) +
+      # 公路营运
+      sum(global_roadoper_diesel[which(
+        global_roadoper_diesel$year == i), c("常规公交","BRT","农村客车")], na.rm = TRUE) +
+      # 公路非营运
+      sum(global_roadnonoper_diesel[which(
+        global_roadnonoper_diesel$year == i), c("非营运客车","货车")], na.rm = TRUE)
+  }
+  
+  # 3.5 Trans gasoline ----
+  # 18 = 交通汽油柴油合计量 = 全部油品总量-目前已有的数据
+  for (i in by_nrgbal_years) {
+    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "gasoline"] <- 
+      # 各年份油品总量
+      nrgcheck_total[which(nrgcheck_total$year == i), "油品消费量"] - 
+      # 目前已有的各类油耗数据
+      sum(by_nrgbal_ls[[i]][, c("gasoline", "diesel", "kerosene","residual","lpg")])
+  }
+  
+  # 3.6  Ind gas----
+  # 7 = 若谷天然气总量-生活消费-服务业-交通-发电
+  for (i in by_nrgbal_years) {
+    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "ind"), "gas"] <- 
+      # 若谷核对统计局总量
+      nrgcheck_total[which(nrgcheck_total$year == i), "天然气消费量"] - 
+      # 生活消费
+      by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "hh"), "gas"] -
+      # 服务业
+      by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "com"), "gas"] -
+      # 交通
+      by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "gas"] -
+      # 发电
+      by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "tf"), "gas"]
+  }
+  
+  # Data export ----
+  nrgbal_out <- createWorkbook()
+  for (i in by_nrgbal_years) {
+    addWorksheet(nrgbal_out, i)
+    writeData(nrgbal_out, i, by_nrgbal_ls[[i]])
+  }
+  if (file.exists("生成能源平衡表.xlsx")) {
+    file.remove("生成能源平衡表.xlsx")
+  }
+  saveWorkbook(nrgbal_out, "生成能源平衡表.xlsx")
 }
-
-for (i in by_nrgbal_years) {
-  # 1.2 Household rawcoal ----
-  by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "hh"), "rawcoal"] <- 
-    global_hh_coal[which(global_hh_coal$year == i), "生活用煤"]
-  # 1.3 Agri diesel ----
-  by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "agri"), "diesel"] <- 
-    global_agri_diesel[which(global_agri_diesel$year == i), "农用柴油使用量"]
-  # 1.4 Trans kerosene ----
-  by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "kerosene"] <- 
-    global_avnnrg[which(global_avnnrg$year == i), "kerosene"]
-  # 1.5 Ind & Com & Household LPG ----
-  by_nrgbal_ls[[i]][which(
-    by_nrgbal_ls[[i]]$iterm %in% c("ind", "com", "hh")), "lpg"] <- 
-    as.numeric(global_ind_com_hh_lpg[which(global_ind_com_hh_lpg$year == i), 
-                              c("工业", "服务业", "生活消费")])
-  # 1.6 Com & Household gas ----
-  by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm %in% c("com", "hh")), "gas"] <- 
-    as.numeric(
-      global_com_hh_gas[which(global_com_hh_gas$year == i), c("服务业", "生活消费")])
-  # 1.7 Trans gas ----
-  by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "gas"] <- 
-    sum(global_trans_gas[which(
-      global_trans_gas$year == i), c("公交合计", "出租车合计")])
-}
-
-# 1.8 Electricity ----
-for (i in by_nrgbal_years) {
-  # 发电量
-  by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "tf"), "electricity"] <- 
-    global_elecgen[which(global_elecgen$year == i), "合计"]
-  # 农业用电
-  by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "agri"), "electricity"] <- 
-    global_elecaggsec[which(global_elecaggsec$year == i), "##第一产业"]
-  # 建筑业用电
-  by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "const"), "electricity"] <- 
-    global_elecfinesec[which(global_elecfinesec$year == i), "建筑业"]
-  # 工业用电
-  by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "ind"), "electricity"] <- 
-    global_elecaggsec[which(global_elecaggsec$year == i), "##第二产业"] - 
-    global_elecfinesec[which(global_elecfinesec$year == i), "建筑业"]
-  # 服务业用电
-  by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "com"), "electricity"] <- 
-    global_elecaggsec[which(global_elecaggsec$year == i), "##第三产业"]
-  # 生活用电
-  by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "hh"), "electricity"] <- 
-    global_elecaggsec[which(global_elecaggsec$year == i), "##第三产业"]
-}
-
-# 2.1 Ind oil ----
-# 构造每年全市工业GDP/规上工业GDP缩放因子
-by_nrgbal_ind_scalefac <- func_cross(
-  global_gdp[c("year", "indgdp")], global_indscale_gdp, method = "rate")
-names(by_nrgbal_ind_scalefac)[2] <- "scalefac"
-# 不包含电力热力行业的工业能耗数据
-by_nrgbal_indscale_oil <- 
-  func_ls2df(global_indscale_nrgaggsec[global_ind_subsector])
-by_nrgbal_indscale_oil <- 
-  by_nrgbal_indscale_oil[c("year", "gasoline", "diesel", "residual")]
-# 进行缩放
-by_nrgbal_ind_oil <- 
-  func_nrg_sum(by_nrgbal_indscale_oil, by_nrgbal_ind_scalefac, "scalefac")
-
-for (i in by_nrgbal_years) {
-  by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "ind"), 
-                    c("gasoline", "diesel", "residual")] <- 
-    by_nrgbal_ind_oil[which(by_nrgbal_ind_oil$year == i), 
-                c("gasoline", "diesel", "residual")]
-}
-
-# 3.1 Ind coalproduct ----
-# 填写工业煤制品
-# 读取黄若谷统计局核对数据
-by_nrgbal_check <- 
-  func_read_multitable(
-    "2IRV6STN", names_tbl = c("煤合计", "原煤", "油品", "天然气"), 
-    names_ls = c("coaltotal", "coal", "oil", "gas"))
-# 更改单位
-for (i in c("coaltotal", "coal", "oil", "gas")) {
-  by_nrgbal_check[[i]][, -1] <- by_nrgbal_check[[i]][, -1]*10000
-}
-
-for (i in by_nrgbal_years) {
-  by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "ind"), "coalproduct"] <- 
-    by_nrgbal_check[["coaltotal"]][which(
-      by_nrgbal_check[["coaltotal"]]$year == i), "工业"] - 
-    by_nrgbal_check[["coal"]][which(
-      by_nrgbal_check[["coal"]]$year == i), "工业"] 
-}
-
-# 3.2 Ind coal ----
-# 4 = 若谷煤合计-刚算的煤制品-生活用煤-发电用煤
-# 读取若谷总量数据
-nrgcheck_total <- func_read_trans("LPLPNXCQ")
-nrgcheck_total[c("煤炭消费量", "油品消费量", "天然气消费量", "调入电力")] <- 
-  nrgcheck_total[c("煤炭消费量", "油品消费量", "天然气消费量", "调入电力")]*10000
-nrgcheck_total[c("煤炭消费量", "油品消费量", "天然气消费量", "调入电力")] <- 
-  func_addnote(
-    nrgcheck_total[c("煤炭消费量", "油品消费量", "天然气消费量", "调入电力")], 
-    c("吨", "吨", "万立方米", "万千瓦时"))
-
-for (i in by_nrgbal_years) {
-  by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "ind"), "rawcoal"] <- 
-    nrgcheck_total[which(nrgcheck_total$year == i), "煤炭消费量"] - 
-    # 刚算的煤制品
-    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "ind"), "coalproduct"] -
-    # 生活用煤
-    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "hh"), "rawcoal"] -
-    # 发电用煤
-    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "tf"), "rawcoal"]
-}
-
-# 3.3 Trans residual ----
-# 9 = 水运燃料油消耗量（港口局数据推算，慧梅）
-for (i in by_nrgbal_years) {
-  by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "residual"] <- 
-    sum(global_trans_residual[which(global_trans_residual$year == i), 
-                       c("国内客运", "国内货运", "国际客运", "国际货运")])
-}
-
-# 3.4 Trans diesel ----
-for (i in by_nrgbal_years) {
-  by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "diesel"] <- 
-    sum(global_water_railway_diesel[which(
-      global_water_railway_diesel$year == i), 
-      c("水运国内客运", "水运国内货运","水运国际客运","水运国际货运","铁路")], 
-      na.rm = TRUE) +
-    # 公路营运
-    sum(global_roadoper_diesel[which(
-      global_roadoper_diesel$year == i), c("常规公交","BRT","农村客车")], na.rm = TRUE) +
-    # 公路非营运
-    sum(global_roadnonoper_diesel[which(
-      global_roadnonoper_diesel$year == i), c("非营运客车","货车")], na.rm = TRUE)
-}
-
-# 3.5 Trans gasoline ----
-# 18 = 交通汽油柴油合计量 = 全部油品总量-目前已有的数据
-for (i in by_nrgbal_years) {
-  by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "gasoline"] <- 
-    # 各年份油品总量
-    nrgcheck_total[which(nrgcheck_total$year == i), "油品消费量"] - 
-    # 目前已有的各类油耗数据
-    sum(by_nrgbal_ls[[i]][, c("gasoline", "diesel", "kerosene","residual","lpg")])
-}
-
-# 3.6  Ind gas----
-# 7 = 若谷天然气总量-生活消费-服务业-交通-发电
-for (i in by_nrgbal_years) {
-  by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "ind"), "gas"] <- 
-    # 若谷核对统计局总量
-    nrgcheck_total[which(nrgcheck_total$year == i), "天然气消费量"] - 
-    # 生活消费
-    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "hh"), "gas"] -
-    # 服务业
-    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "com"), "gas"] -
-    # 交通
-    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "gas"] -
-    # 发电
-    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "tf"), "gas"]
-}
-
-# Data export ----
-nrgbal_out <- createWorkbook()
-for (i in by_nrgbal_years) {
-  addWorksheet(nrgbal_out, i)
-  writeData(nrgbal_out, i, by_nrgbal_ls[[i]])
-}
-if (file.exists("生成能源平衡表.xlsx")) {
-  file.remove("生成能源平衡表.xlsx")
-}
-saveWorkbook(nrgbal_out, "生成能源平衡表.xlsx")
 
 
 # Agri ----
