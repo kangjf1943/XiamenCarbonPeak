@@ -591,7 +591,7 @@ if (set_cache_nrgbal == FALSE) {
   saveWorkbook(nrgbal_out, "生成能源平衡表.xlsx")
 }
 
-
+# HISTORY ----
 if (set_cache_hiscalc == FALSE) {
   # Agri ----
   ## Activity level ----
@@ -742,10 +742,10 @@ if (set_cache_hiscalc == FALSE) {
   
   # 假设：营运车辆2018-2019年数据为历史数据线性外推
   for (i in global_trans_subsector[1:3]) {
-    by_trans_act[which(by_trans_act$year > 2017), i] <- 
+    by_trans_act[which(by_trans_act$year %in% c(2018:2019)), i] <- 
       tail(func_linear(by_trans_act, i, startyear = 2018, endyear = 2019)[, i], 2)
   }
-  by_trans_act[which(by_trans_act$year > 2014), "农村客车"] <- 
+  by_trans_act[which(by_trans_act$year %in% c(2015:2019)), "农村客车"] <- 
     tail(func_linear(by_trans_act, "农村客车", 
                      startyear = 2015, endyear = 2019)[, "农村客车"], 5)
   
@@ -860,7 +860,7 @@ if (set_cache_hiscalc == FALSE) {
   if (set_nrgplng_scope == FALSE) {
     by_trans_nrgintst_ls[["航空"]] <- 
       data.frame(year = c(2005: 2019), kerosene = c(0))
-  } 
+  }
   
   
   # Service -----
@@ -1518,7 +1518,7 @@ for (set_scalc in set_scalcs) {
   # 航空
   trans_act$"航空" <- 
     func_rate(
-      baseyear = 2019, basevalue = func_lastone(global_avn_act$avn_rpk), 
+      baseyear = 2019, basevalue = func_lastone(by_trans_act$航空), 
       rate_df = func_stage(
         year = c(2019, 2024, 2029, 2034, 2040, 2050, 2060), 
         value = c(9.02, 8.33, 7.68, 7.30, 4.00, 2.0, 2.0)))$value
