@@ -20,8 +20,9 @@ set_dataexport <- FALSE # 是否导出数据文件
 set_figureexport <- FALSE # 是否输出图片
 set_parmexport <- FALSE # 是否输出各参数图表
 
-# GLOBAL VAR ----
+
 if (set_cache_globalvar == FALSE) {
+  # GLOBAL VAR ----
   ## Names ----
   # 能源类别
   global_nrg_class <- c("rawcoal", "coalproduct", 
@@ -394,8 +395,8 @@ if (set_cache_globalvar == FALSE) {
 }
 
 
-# NRG BALANCE ----
 if (set_cache_nrgbal == FALSE) {
+  # NRG BALANCE ----
   # 构建空能源平衡表
   by_nrgbal_years <- as.character(c(2015: 2019))
   by_nrgbal_ls <- vector("list", 5)
@@ -410,7 +411,7 @@ if (set_cache_nrgbal == FALSE) {
         gas = 0, electricity = 0)
   }
   
-  # 1.1 Transformation input ----
+  ## 1.1 Transformation input ----
   # 输入发电那一行
   for (j in by_nrgbal_years) {
     for (i in c("rawcoal", "coalproduct", 
@@ -423,31 +424,31 @@ if (set_cache_nrgbal == FALSE) {
   }
   
   for (i in by_nrgbal_years) {
-    # 1.2 Household rawcoal ----
+    ## 1.2 Household rawcoal ----
     by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "hh"), "rawcoal"] <- 
       global_hh_coal[which(global_hh_coal$year == i), "生活用煤"]
-    # 1.3 Agri diesel ----
+    ## 1.3 Agri diesel ----
     by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "agri"), "diesel"] <- 
       global_agri_diesel[which(global_agri_diesel$year == i), "农用柴油使用量"]
-    # 1.4 Trans kerosene ----
+    ## 1.4 Trans kerosene ----
     by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "kerosene"] <- 
       global_avnnrg[which(global_avnnrg$year == i), "kerosene"]
-    # 1.5 Ind & Com & Household LPG ----
+    ## 1.5 Ind & Com & Household LPG ----
     by_nrgbal_ls[[i]][which(
       by_nrgbal_ls[[i]]$iterm %in% c("ind", "com", "hh")), "lpg"] <- 
       as.numeric(global_ind_com_hh_lpg[which(global_ind_com_hh_lpg$year == i), 
                                        c("工业", "服务业", "生活消费")])
-    # 1.6 Com & Household gas ----
+    ## 1.6 Com & Household gas ----
     by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm %in% c("com", "hh")), "gas"] <- 
       as.numeric(
         global_com_hh_gas[which(global_com_hh_gas$year == i), c("服务业", "生活消费")])
-    # 1.7 Trans gas ----
+    ## 1.7 Trans gas ----
     by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "gas"] <- 
       sum(global_trans_gas[which(
         global_trans_gas$year == i), c("公交合计", "出租车合计")])
   }
   
-  # 1.8 Electricity ----
+  ## 1.8 Electricity ----
   for (i in by_nrgbal_years) {
     # 发电量
     by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "tf"), "electricity"] <- 
@@ -470,7 +471,7 @@ if (set_cache_nrgbal == FALSE) {
       global_elecaggsec[which(global_elecaggsec$year == i), "##第三产业"]
   }
   
-  # 2.1 Ind oil ----
+  ## 2.1 Ind oil ----
   # 构造每年全市工业GDP/规上工业GDP缩放因子
   by_nrgbal_ind_scalefac <- func_cross(
     global_gdp[c("year", "indgdp")], global_indscale_gdp, method = "rate")
@@ -491,7 +492,7 @@ if (set_cache_nrgbal == FALSE) {
                         c("gasoline", "diesel", "residual")]
   }
   
-  # 3.1 Ind coalproduct ----
+  ## 3.1 Ind coalproduct ----
   # 填写工业煤制品
   # 读取黄若谷统计局核对数据
   by_nrgbal_check <- 
@@ -511,7 +512,7 @@ if (set_cache_nrgbal == FALSE) {
         by_nrgbal_check[["coal"]]$year == i), "工业"] 
   }
   
-  # 3.2 Ind coal ----
+  ## 3.2 Ind coal ----
   # 4 = 若谷煤合计-刚算的煤制品-生活用煤-发电用煤
   # 读取若谷总量数据
   nrgcheck_total <- func_read_trans("LPLPNXCQ")
@@ -533,7 +534,7 @@ if (set_cache_nrgbal == FALSE) {
       by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "tf"), "rawcoal"]
   }
   
-  # 3.3 Trans residual ----
+  ## 3.3 Trans residual ----
   # 9 = 水运燃料油消耗量（港口局数据推算，慧梅）
   for (i in by_nrgbal_years) {
     by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "residual"] <- 
@@ -541,7 +542,7 @@ if (set_cache_nrgbal == FALSE) {
                                 c("国内客运", "国内货运", "国际客运", "国际货运")])
   }
   
-  # 3.4 Trans diesel ----
+  ## 3.4 Trans diesel ----
   for (i in by_nrgbal_years) {
     by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "diesel"] <- 
       sum(global_water_railway_diesel[which(
@@ -556,7 +557,7 @@ if (set_cache_nrgbal == FALSE) {
         global_roadnonoper_diesel$year == i), c("非营运客车","货车")], na.rm = TRUE)
   }
   
-  # 3.5 Trans gasoline ----
+  ## 3.5 Trans gasoline ----
   # 18 = 交通汽油柴油合计量 = 全部油品总量-目前已有的数据
   for (i in by_nrgbal_years) {
     by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "gasoline"] <- 
@@ -566,7 +567,7 @@ if (set_cache_nrgbal == FALSE) {
       sum(by_nrgbal_ls[[i]][, c("gasoline", "diesel", "kerosene","residual","lpg")])
   }
   
-  # 3.6  Ind gas----
+  ## 3.6  Ind gas----
   # 7 = 若谷天然气总量-生活消费-服务业-交通-发电
   for (i in by_nrgbal_years) {
     by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "ind"), "gas"] <- 
@@ -594,8 +595,9 @@ if (set_cache_nrgbal == FALSE) {
   saveWorkbook(nrgbal_out, "生成能源平衡表.xlsx")
 }
 
-# HISTORY ----
+
 if (set_cache_hiscalc == FALSE) {
+  # HISTORY ----
   # Agri ----
   ## Activity level ----
   # 农业的播种面积
@@ -1171,8 +1173,8 @@ if (set_cache_hiscalc == FALSE) {
 }
 
 # SCENARIO ANLYS ----
-# Init ----
 if (set_cache_init == FALSE) {
+  # Init ----
   # 情景包括：惯性，弱低碳，强低碳，提前退煤，退煤5个情景
   init_scenarios <- 
     c("BAU", "BAU_WLC_OTHER", "BAU_SLC_OTHER", "BAU_24COAL", "BAU_26COAL")
@@ -1203,9 +1205,9 @@ if (set_cache_init == FALSE) {
 }
 
 
-# Analysis ----
 global_starttime <- Sys.time()
 for (set_scalc in set_scalcs) {
+  # Analysis ----
   # Agriculture ----
   ## Activity level ----
   agri_act <- 
@@ -2108,8 +2110,8 @@ for (set_scalc in set_scalcs) {
 Sys.time() - global_starttime
 
 
-# Output ----
 if (set_resultout == TRUE) {
+  # Output ----
   ## Peak time of nrg and emis ----
   print(func_scompplot(tot_emissum_ls, "co2"))
   for (i in set_scalcs) {
@@ -2197,8 +2199,8 @@ if (set_resultout == TRUE) {
 }
 
 
-# Data export ----
 if (set_dataexport == TRUE) {
+  # Data export ----
   ## Peak year of nrg and emis by scenarios ----
   exp_var <- data.frame(scenario = set_scalcs, nrg_peak = NA, emis_peak = NA)
   for (i in set_scalcs) {
@@ -2252,8 +2254,8 @@ if (set_dataexport == TRUE) {
 }
 
 
-# Figure export ----
 if (set_figureexport == TRUE) {
+  # Figure export ----
   ## History GDP str plot ---- 
   png(
     filename = paste0("历史产业结构图", Sys.Date(), ".png"), 
@@ -2354,8 +2356,9 @@ if (set_figureexport == TRUE) {
   dev.off()
 }
 
-# Parameters export ----
+
 if (set_parmexport == TRUE) {
+  # Parameters export ----
   ## Agri
   # 活动水平，能耗强度，能耗总量
   par(mfrow = c(3, 2))
