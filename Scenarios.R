@@ -18,6 +18,7 @@ for (i in c(global_sectors, "tot")) {
 for (i in c("tot_emisbysec_ls", "trans_carprop_ls")) {
   assign(i, init_output_templatels)
 }
+ind_ori_act_prop <- init_output_templatels
 tot_nrgbysec_ls <- init_output_templatels
 tot_emispergdp_ls <- init_output_templatels
 trans_carprop_ls <- init_output_templatels
@@ -87,78 +88,78 @@ for (set_scalc in set_scalcs) {
   ## Activity level ----
   # 先计算未来子部门GDP所占比重
   if (set_calc_cache == FALSE) { ### Cache ----
-    ind_ori_act_prop <- data.frame(year = c(2019:2060))
-    ind_ori_act_prop[, "食品饮料及烟草制造业"] <- func_interp_2(
+    ind_ori_act_prop[[set_scalc]] <- data.frame(year = c(2019:2060))
+    ind_ori_act_prop[[set_scalc]][, "食品饮料及烟草制造业"] <- func_interp_2(
       year = c(2019, 2030, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"食品饮料及烟草制造业"), 3, 2))$value
-    ind_ori_act_prop[, "纺织及服装制造业"] <- func_interp_2(
+    ind_ori_act_prop[[set_scalc]][, "纺织及服装制造业"] <- func_interp_2(
       year = c(2019, 2030, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"纺织及服装制造业"), 3, 2))$value
-    ind_ori_act_prop[, "木材及家具制造业"] <- func_interp_2(
+    ind_ori_act_prop[[set_scalc]][, "木材及家具制造业"] <- func_interp_2(
       year = c(2019, 2030, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"木材及家具制造业"), 1, 0.5))$value
-    ind_ori_act_prop[, "造纸及印刷"] <- func_interp_2(
+    ind_ori_act_prop[[set_scalc]][, "造纸及印刷"] <- func_interp_2(
       year = c(2019, 2030, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"造纸及印刷"), 1.5, 1))$value
-    ind_ori_act_prop[, "文体工美用品制造业"] <- func_interp_2(
+    ind_ori_act_prop[[set_scalc]][, "文体工美用品制造业"] <- func_interp_2(
       year = c(2019, 2040, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"文体工美用品制造业"), 2, 4))$value
-    ind_ori_act_prop[, "石油及炼焦"] <- func_interp_2(
+    ind_ori_act_prop[[set_scalc]][, "石油及炼焦"] <- func_interp_2(
       year = c(2019, 2030, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"石油及炼焦"), 0.1, 0))$value
-    ind_ori_act_prop[, "医药制造业"] <- func_interp_2(
+    ind_ori_act_prop[[set_scalc]][, "医药制造业"] <- func_interp_2(
       year = c(2019, 2030, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"医药制造业"), 2, 4))$value
-    ind_ori_act_prop[, "非金属矿物制品业"] <- func_interp_2(
+    ind_ori_act_prop[[set_scalc]][, "非金属矿物制品业"] <- func_interp_2(
       year = c(2019, 2030, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"非金属矿物制品业"), 1.3, 0.5))$value
-    ind_ori_act_prop[, "金属加工制造业"] <- func_interp_2(
+    ind_ori_act_prop[[set_scalc]][, "金属加工制造业"] <- func_interp_2(
       year = c(2019, 2040, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"金属加工制造业"), 7, 3))$value
-    ind_ori_act_prop[, "电力、热力生产和供应业"] <- func_interp_2(
+    ind_ori_act_prop[[set_scalc]][, "电力、热力生产和供应业"] <- func_interp_2(
       year = c(2019, 2030, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"电力、热力生产和供应业"), 
                 0.9, 0.1))$value
   }
   if (grepl("SLC", set_scalc)) { ### SLC ----
-    ind_ori_act_prop[, "化学工业"] <- func_interp_2(
+    ind_ori_act_prop[[set_scalc]][, "化学工业"] <- func_interp_2(
       year = c(2019, 2030, 2045, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"化学工业"), 5, 0.5, 0))$value
-    ind_ori_act_prop[, "设备制造业"] <- func_interp_2(
+    ind_ori_act_prop[[set_scalc]][, "设备制造业"] <- func_interp_2(
       year = c(2019, 2030, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"设备制造业"), 15, 16))$value
-    ind_ori_act_prop[, "电子电气制造业"] <- func_interp_2(
+    ind_ori_act_prop[[set_scalc]][, "电子电气制造业"] <- func_interp_2(
       year = c(2019, 2030, 2060), 
       value = c(
         func_lastone(by_ind_ori_act_prop$"电子电气制造业"), 57, 64))$value
   } else if (grepl("WLC", set_scalc)) { ### WLC ----
-    ind_ori_act_prop[, "化学工业"] <- func_interp_2(
+    ind_ori_act_prop[[set_scalc]][, "化学工业"] <- func_interp_2(
       year = c(2019, 2035, 2050, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"化学工业"), 5, 0.5, 0))$value
-    ind_ori_act_prop[, "设备制造业"] <- func_interp_2(
+    ind_ori_act_prop[[set_scalc]][, "设备制造业"] <- func_interp_2(
       year = c(2019, 2040, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"设备制造业"), 15, 16))$value
-    ind_ori_act_prop[, "电子电气制造业"] <- func_interp_2(
+    ind_ori_act_prop[[set_scalc]][, "电子电气制造业"] <- func_interp_2(
       year = c(2019, 2040, 2060), 
       value = c(
         func_lastone(by_ind_ori_act_prop$"电子电气制造业"), 57, 64))$value
   } else { ### BAU ----
     # 时间推迟，比例不同
-    ind_ori_act_prop[, "化学工业"] <- func_interp_2(
+    ind_ori_act_prop[[set_scalc]][, "化学工业"] <- func_interp_2(
       year = c(2019, 2035, 2050, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"化学工业"), 7, 3, 0))$value
-    ind_ori_act_prop[, "设备制造业"] <- func_interp_2(
+    ind_ori_act_prop[[set_scalc]][, "设备制造业"] <- func_interp_2(
       year = c(2019, 2040, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"设备制造业"), 13, 15))$value
-    ind_ori_act_prop[, "电子电气制造业"] <- func_interp_2(
+    ind_ori_act_prop[[set_scalc]][, "电子电气制造业"] <- func_interp_2(
       year = c(2019, 2040, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"电子电气制造业"), 50, 52))$value
   }
-  ind_ori_act_prop[, "其他制造业"] <- func_saturate(
-    ind_ori_act_prop[c("year", global_ind_subsector[global_ind_subsector != "其他制造业"])], "value")$value
+  ind_ori_act_prop[[set_scalc]][, "其他制造业"] <- func_saturate(
+    ind_ori_act_prop[[set_scalc]][c("year", global_ind_subsector[global_ind_subsector != "其他制造业"])], "value")$value
   # 计算未来各子部门GDP
   ind_act <- 
-    func_nrg_sum(ind_ori_act_prop[c("year", global_ind_subsector)], 
+    func_nrg_sum(ind_ori_act_prop[[set_scalc]][c("year", global_ind_subsector)], 
                  prj_global_gdp[c("year","indgdp")], "indgdp")
   ind_act[global_ind_subsector] <- ind_act[global_ind_subsector]/100
   
@@ -820,7 +821,7 @@ for (set_scalc in set_scalcs) {
   
   # RESULT ----
   ## Total energy ----
-  if (set_thrmfac_meth == TRUE) { ### Elecfac meth ----
+  if (set_thrmfac_meth == TRUE) { ### Thrmfac meth ----
     # 计算外调电力火电折标煤系数
     tot_ori_elecequalfac <- 
       func_elecequalfac(res_nrgsum_ls[[set_scalc]], tfres_act[c("year", "importthrm")])
@@ -945,7 +946,7 @@ Sys.time() - global_starttime
 
 # Output ----
 if (set_resultout == TRUE) {
-  # 比较不同情景总排放和达峰时间差异
+  ## Peak time of nrg and emis ----
   print(func_scompplot(tot_emissum_ls, "co2"))
   for (i in set_scalcs) {
     cat(i, "\n", 
@@ -953,62 +954,82 @@ if (set_resultout == TRUE) {
         "emission peak in", func_peakyear(tot_emissum_ls[[i]], "co2"), "\n")
   }
   
-  # 查看特定年份服务业能耗中电力占比
-  com_nrgsum_ce_ls <- com_nrgsum_ls
+  
+  ## Key index ----
+  # 各情景下服务业和生活部门电力消费量所占比例
+  # 构建列表用于储存结果
+  idx_all <- vector("list", length(set_scalcs))
+  names(idx_all) <- set_scalcs
+  
+  # 转入各情景服务业和家庭部门各类能耗量
+  idx_comnrgfuelce_ls <- com_nrgsum_ls
+  idx_hhnrgfuelce_ls <- hh_nrgsum_ls
+  
+  # 计算相应标准煤量和电力所占比重
   for (i in set_scalcs) {
+    # 服务业各种能耗标准煤量
     # 将LPG和天然气换算成标准量
-    com_nrgsum_ce_ls[[i]][c("year", "lpg", "gas")] <- 
-      func_toce(com_nrgsum_ce_ls[[i]][c("year", "lpg", "gas")])
+    idx_comnrgfuelce_ls[[i]][c("year", "lpg", "gas")] <- 
+      func_toce(idx_comnrgfuelce_ls[[i]][c("year", "lpg", "gas")])
     # 将电力换算成标准量
     # 问题：直接用最后一个情景的电力换算系数
-    com_nrgsum_ce_ls[[i]][c("year", "electricity")] <- 
-      func_cross(com_nrgsum_ce_ls[[i]][c("year", "electricity")], 
+    idx_comnrgfuelce_ls[[i]][c("year", "electricity")] <- 
+      func_cross(idx_comnrgfuelce_ls[[i]][c("year", "electricity")], 
                  tot_ori_elecequalfac, method = "product")
-    # 计算电力占比
-    com_nrgsum_ce_ls[[i]][, "elecprop"] <- 
-      com_nrgsum_ce_ls[[i]][, "electricity"]/
-      (rowSums(com_nrgsum_ce_ls[[i]][names(com_nrgsum_ce_ls[[i]]) != "year"]))
-  }
-  result_var <- func_mrgcol(com_nrgsum_ce_ls[set_scalcs], "elecprop", set_scalcs)
-  result_var[which(result_var$year %in% c(2019, 2025, 2030, 2035)), ]
-  
-  # 查看特定年份生活能耗中电力占比
-  hh_nrgsum_ce_ls <- hh_nrgsum_ls
-  for (i in set_scalcs) {
+    
+    # 家庭各种能耗标准煤量
     # 将LPG和天然气换算成标准量
-    hh_nrgsum_ce_ls[[i]][c("year", "lpg", "gas")] <- 
-      func_toce(hh_nrgsum_ce_ls[[i]][c("year", "lpg", "gas")])
+    idx_hhnrgfuelce_ls[[i]][c("year", "lpg", "gas")] <- 
+      func_toce(idx_hhnrgfuelce_ls[[i]][c("year", "lpg", "gas")])
     # 将电力换算成标准量
     # 问题：直接用最后一个情景的电力换算系数
-    hh_nrgsum_ce_ls[[i]][c("year", "electricity")] <- 
-      func_cross(hh_nrgsum_ce_ls[[i]][c("year", "electricity")], 
+    idx_hhnrgfuelce_ls[[i]][c("year", "electricity")] <- 
+      func_cross(idx_hhnrgfuelce_ls[[i]][c("year", "electricity")], 
                  tot_ori_elecequalfac, method = "product")
-    # 计算电力占比
-    hh_nrgsum_ce_ls[[i]][, "elecprop"] <- 
-      hh_nrgsum_ce_ls[[i]][, "electricity"]/
-      (rowSums(hh_nrgsum_ce_ls[[i]][names(hh_nrgsum_ce_ls[[i]]) != "year"]))
+    
+    # 计算服务业和家庭部门电力标准煤占比
+    idx_all[[i]] <- data.frame(
+      year = c(2019: 2060), 
+      # 工业GDP化工占比
+      化工占工业占比 = ind_ori_act_prop[[set_scalc]]$"化学工业", 
+      # 工业GDP设备制造业占比
+      设备制造业占比 = ind_ori_act_prop[[set_scalc]]$"设备制造业", 
+      # 工业GDP电子电气占比
+      电子电气业占比 = ind_ori_act_prop[[set_scalc]]$"电子电气制造业", 
+      # 工业单位GDP能耗
+      工业单位GDP能耗 = tot_nrgbysec_ls[[set_scalc]]$ind/prj_global_gdp$indgdp,
+      # 私家车电动车比例
+      私家电动车比例 = trans_carprop_ls[[set_scalc]]$elec, 
+      # 服务业单位GDP能耗
+      服务业单位GDP能耗 = tot_nrgbysec_ls[[set_scalc]]$com/prj_global_gdp$comgdp, 
+      # 服务业能耗电力占比
+      服务业耗电占比 = idx_comnrgfuelce_ls[[i]][, "electricity"]/
+        (rowSums(idx_comnrgfuelce_ls[[i]][names(
+          idx_comnrgfuelce_ls[[i]]) != "year"])), 
+      # 家庭人均生活能耗
+      人均生活能耗 = tot_nrgbysec_ls[[set_scalc]]$hh / 
+        prj_global_population$population, 
+      # 家庭能耗电力占比
+      家庭耗电占比 = idx_hhnrgfuelce_ls[[i]][, "electricity"]/
+        (rowSums(idx_hhnrgfuelce_ls[[i]][names(
+          idx_hhnrgfuelce_ls[[i]]) != "year"])))
   }
-  result_var <- func_mrgcol(hh_nrgsum_ce_ls[set_scalcs], "elecprop", set_scalcs)
-  result_var[which(result_var$year %in% c(2019, 2025, 2030, 2035)), ]
-  
-  # 输出关键指标
-  # 构建指标数据框
-  idx_all <- data.frame(
-    year = c(2019: 2060),
-    ind_nrgpergdp = tot_nrgbysec_ls[[set_scalc]]$ind / 
-      prj_global_gdp$indgdp[prj_global_gdp$year %in% c(2019: 2060)], 
-    com_nrgpergdp = tot_nrgbysec_ls[[set_scalc]]$com / 
-      prj_global_gdp$comgdp[prj_global_gdp$year %in% c(2019: 2060)], 
-    hh_nrgpercap = tot_nrgbysec_ls[[set_scalc]]$hh / 
-      prj_global_population$population[prj_global_population$year %in% c(2019: 2060)])
+
   # 输出特定年份结果
-  idx_output <- 
-    idx_all[which(idx_all$year %in% c(2019, 2025, 2030, 2035)), ]
-  # 添加相对值
-  for (i in c("ind_nrgpergdp", "com_nrgpergdp", "hh_nrgpercap")) {
-    idx_output[, paste0(i, "_changerate")] <- 
-      func_conservrate(idx_output[, i])
+  idx_output <- vector("list", length(set_scalcs))
+  names(idx_output) <- set_scalcs
+  
+  for (i in set_scalcs) {
+    idx_output[[i]] <- 
+      idx_all[[i]][which(idx_all[[i]]$year %in% c(2019, 2025, 2030, 2035)), ]
+    # 添加相对值
+    for (j in c("工业单位GDP能耗", "服务业单位GDP能耗", "人均生活能耗")) {
+      idx_output[[i]][, paste0(j, "变化率")] <- 
+        func_conservrate(idx_output[[i]][, j])
+    }
   }
+  cat("\n", "Key index:", "\n")
+  print(idx_output)
 }
 
 
