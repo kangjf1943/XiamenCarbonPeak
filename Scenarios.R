@@ -29,9 +29,9 @@ rm(init_output_templatels,
 
 # Settings ----
 set_scalcs <- 
-  c("BAU", "BAU_SLC_OTHER")
+  c("BAU_SLC_OTHER")
 set_plotstyle <- "base"
-set_calc_cache <- TRUE
+set_calc_cache <- FALSE
 set_elecfac_meth <- TRUE
 set_resultout <- TRUE
 set_dataexport <- FALSE
@@ -352,6 +352,8 @@ for (set_scalc in set_scalcs) {
   # 纯电动私家车
   trans_act$"纯电动私家车" <- 
     trans_act[, "私家车"]*trans_carprop_ls[[set_scalc]]$elec
+  # 删除私家车总量一列
+  trans_act$"私家车" <- NULL
   
   # 航空
   trans_act$"航空" <- 
@@ -359,7 +361,7 @@ for (set_scalc in set_scalcs) {
       baseyear = 2019, basevalue = func_lastone(global_avn_act$avn_rpk), 
       rate_df = func_stage(
         year = c(2019, 2024, 2029, 2034, 2040, 2050, 2060), 
-        value = c(0.0902, 0.0833, 0.0768, 0.0730, 0.04, 0.02, 0.02)))$value
+        value = c(9.02, 8.33, 7.68, 7.30, 4.00, 2.0, 2.0)))$value
   
   
   ## Energy intensity ----
@@ -456,7 +458,7 @@ for (set_scalc in set_scalcs) {
                     "residual")$residual
   }
   
-  # 能源规划口径下：航空
+  # 航空
   trans_nrgintst_ls[["航空"]] <- 
     func_interp_3(
       year = c(2019, 2040, 2060), scale = c(1, 0.8, 0.7), 
@@ -765,7 +767,8 @@ for (set_scalc in set_scalcs) {
                   value = c(func_lastone(global_elecgen$"#太阳能"), 
                             global_solarelecgen_fut$"潜在发电量"*10000))$value + 
     # 加上垃圾发电量：继续扩容
-    func_interp_3(year = c(2019, 2035, 2060), scale = c(1, 1.5, 1.7), 
+    # 环能公司：2025年满负荷运行将达到2019年的2.5倍，保守预测为2倍
+    func_interp_3(year = c(2019, 2025, 2035, 2060), scale = c(1, 2, 2.5, 3.0), 
                   base = func_lastone(global_elecgen$"#垃圾发电"))$value + 
     # 加上水电：假设不变
     func_lastone(global_elecgen$"#水电")
@@ -1025,7 +1028,7 @@ if (set_dataexport == TRUE) {
   exp_var <- func_mrgcol(tot_emissum_ls[set_scalcs], "co2", set_scalcs)
   func_dataexp("各情景总排放量", mydata = exp_var)
   
-  # Tot emis of secs of certain scenario ----
+  ## Tot emis of secs of certain scenario ----
   exp_var <- tot_emisbysec_ls[["BAU_26COAL"]]
   func_dataexp("惯性情景各部门排放量", mydata = exp_var)
   
