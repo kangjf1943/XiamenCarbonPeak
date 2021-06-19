@@ -582,17 +582,6 @@ if (set_cache_nrgbal == FALSE) {
       # 发电
       by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "tf"), "gas"]
   }
-  
-  # Data export ----
-  nrgbal_out <- createWorkbook()
-  for (i in by_nrgbal_years) {
-    addWorksheet(nrgbal_out, i)
-    writeData(nrgbal_out, i, by_nrgbal_ls[[i]])
-  }
-  if (file.exists("生成能源平衡表.xlsx")) {
-    file.remove("生成能源平衡表.xlsx")
-  }
-  saveWorkbook(nrgbal_out, "生成能源平衡表.xlsx")
 }
 
 
