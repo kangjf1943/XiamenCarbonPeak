@@ -32,7 +32,7 @@ set_scalcs <-
   c("BAU_SLC_OTHER")
 set_plotstyle <- "base"
 set_calc_cache <- FALSE
-set_elecfac_meth <- TRUE
+set_thrmfac_meth <- TRUE
 set_resultout <- TRUE
 set_dataexport <- FALSE
 set_figureexport <- TRUE
@@ -820,7 +820,7 @@ for (set_scalc in set_scalcs) {
   
   # RESULT ----
   ## Total energy ----
-  if (set_elecfac_meth == TRUE) { ### Elecfac meth ----
+  if (set_thrmfac_meth == TRUE) { ### Elecfac meth ----
     # 计算外调电力火电折标煤系数
     tot_ori_elecequalfac <- 
       func_elecequalfac(res_nrgsum_ls[[set_scalc]], tfres_act[c("year", "importthrm")])
@@ -1050,7 +1050,6 @@ if (set_dataexport == TRUE) {
   } else {
     func_dataexp("各情景五年GDP和能耗强度-能源规划口径",mydata = exp_var)
   }
-  
   
   ## Emis per GDP of scenarios ----
   exp_var <- 
