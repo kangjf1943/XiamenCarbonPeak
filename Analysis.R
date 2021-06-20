@@ -2113,11 +2113,16 @@ Sys.time() - global_starttime
 if (set_resultout == TRUE) {
   # Output ----
   ## Peak time of nrg and emis ----
+  # 作图：各情景排放总量图
   print(func_scompplot(tot_emissum_ls, "co2"))
+  # 输出各情景能耗和碳排放峰值年份
+  idx_peakyear <- data.frame(
+    scenarios = set_scalcs, nrg_peakyear = NA, emis_peakyear = NA)
   for (i in set_scalcs) {
-    cat(i, "\n", 
-        "energy peak in", func_peakyear(tot_nrgsum_ls[[i]], "energyconsump"), "\n", 
-        "emission peak in", func_peakyear(tot_emissum_ls[[i]], "co2"), "\n")
+    idx_peakyear$nrg_peakyear[idx_peakyear$scenarios == i] <- 
+      func_peakyear(tot_nrgsum_ls[[i]], "energyconsump")
+    idx_peakyear$emis_peakyear[idx_peakyear$scenarios == i] <- 
+      func_peakyear(tot_emissum_ls[[i]], "co2")
   }
   
   
