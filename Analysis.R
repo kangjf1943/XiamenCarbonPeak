@@ -7,7 +7,7 @@ set_thrmfac_meth <- TRUE # 是否采用煤电折标煤系数
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 
 # 缓存相关设置
-set_cache_globalvar <- TRUE # 是否已有全局变量缓存
+set_cache_globalvar <- FALSE # 是否已有全局变量缓存
 set_cache_nrgbal <- TRUE # 是否已有能源平衡表缓存
 set_cache_hiscalc <- FALSE # 是否已有历史数据计算缓存
 set_cache_init <- FALSE # 是否已有初始化缓存
@@ -258,7 +258,7 @@ if (set_cache_globalvar == FALSE) {
                    "gas", "electricity"))
   for (i in names(global_indscale_nrgls_bynrg)) {
     global_indscale_nrgls_bynrg[[i]] <- 
-      global_indscale_nrgls_bynrg[[i]][global_ind_finesec]
+      global_indscale_nrgls_bynrg[[i]][c("year", global_ind_finesec)]
     global_indscale_nrgls_bynrg[[i]][is.na(global_indscale_nrgls_bynrg[[i]])] <- 0
   }
   comment(global_indscale_nrgls_bynrg) <- 
@@ -1287,6 +1287,7 @@ for (set_scalc in set_scalcs) {
       value = c(func_lastone(by_ind_ori_act_prop$"电力、热力生产和供应业"), 
                 0.9, 0.1))$value
   }
+    
   if (grepl("SLC", set_scalc)) { ### SLC ----
     ind_ori_act_prop[[set_scalc]][, "化学工业"] <- func_interp_2(
       year = c(2019, 2030, 2045, 2060), 
