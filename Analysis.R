@@ -2124,7 +2124,7 @@ if (set_resultout == TRUE) {
     idx_peakyear$emis_peakyear[idx_peakyear$scenarios == i] <- 
       func_peakyear(tot_emissum_ls[[i]], "co2")
   }
-  
+  idx_peakyear
   
   ## Key index ----
   # 各情景下服务业和生活部门电力消费量所占比例
@@ -2162,28 +2162,27 @@ if (set_resultout == TRUE) {
     idx_all[[i]] <- data.frame(
       year = c(2019: 2060), 
       # 工业GDP化工占比
-      化工占工业占比 = ind_ori_act_prop[[set_scalc]]$"化学工业", 
+      化工占工业占比 = ind_ori_act_prop[[i]]$"化学工业", 
       # 工业GDP设备制造业占比
-      设备制造业占比 = ind_ori_act_prop[[set_scalc]]$"设备制造业", 
+      设备制造业占比 = ind_ori_act_prop[[i]]$"设备制造业", 
       # 工业GDP电子电气占比
-      电子电气业占比 = ind_ori_act_prop[[set_scalc]]$"电子电气制造业", 
+      电子电气业占比 = ind_ori_act_prop[[i]]$"电子电气制造业", 
       # 工业单位GDP能耗
-      工业单位GDP能耗 = tot_nrgbysec_ls[[set_scalc]]$ind/prj_global_gdp$indgdp,
+      工业单位GDP能耗 = tot_nrgbysec_ls[[i]]$ind/prj_global_gdp$indgdp,
       # 私家车电动车比例
-      私家电动车比例 = trans_carprop_ls[[set_scalc]]$elec, 
+      私家电动车比例 = trans_carprop_ls[[i]]$elec*100, 
       # 服务业单位GDP能耗
-      服务业单位GDP能耗 = tot_nrgbysec_ls[[set_scalc]]$com/prj_global_gdp$comgdp, 
+      服务业单位GDP能耗 = tot_nrgbysec_ls[[i]]$com/prj_global_gdp$comgdp, 
       # 服务业能耗电力占比
       服务业耗电占比 = idx_comnrgfuelce_ls[[i]][, "electricity"]/
         (rowSums(idx_comnrgfuelce_ls[[i]][names(
-          idx_comnrgfuelce_ls[[i]]) != "year"])), 
+          idx_comnrgfuelce_ls[[i]]) != "year"]))*100, 
       # 家庭人均生活能耗
-      人均生活能耗 = tot_nrgbysec_ls[[set_scalc]]$hh / 
-        prj_global_population$population, 
+      人均生活能耗 = tot_nrgbysec_ls[[i]]$hh / prj_global_population$population, 
       # 家庭能耗电力占比
       家庭耗电占比 = idx_hhnrgfuelce_ls[[i]][, "electricity"]/
         (rowSums(idx_hhnrgfuelce_ls[[i]][names(
-          idx_hhnrgfuelce_ls[[i]]) != "year"])))
+          idx_hhnrgfuelce_ls[[i]]) != "year"]))*100)
   }
   
   # 输出特定年份结果
@@ -2196,9 +2195,16 @@ if (set_resultout == TRUE) {
     # 添加相对值
     for (j in c("工业单位GDP能耗", "服务业单位GDP能耗", "人均生活能耗")) {
       idx_output[[i]][, paste0(j, "变化率")] <- 
-        func_conservrate(idx_output[[i]][, j])
+        func_conservrate(idx_output[[i]][, j])*100
     }
+    # 规定输出小数位数和顺序
+    idx_output[[i]] <- round(
+      idx_output[[i]], 2)[c(
+        "year", "化工占工业占比", "设备制造业占比", "电子电气业占比", 
+        "私家电动车比例", "服务业单位GDP能耗变化率", "服务业耗电占比", 
+        "人均生活能耗变化率", "家庭耗电占比", "工业单位GDP能耗")]
   }
+  
   cat("\n", "Key index:", "\n")
   print(idx_output)
 }
