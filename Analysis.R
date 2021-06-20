@@ -1766,7 +1766,7 @@ for (set_scalc in set_scalcs) {
   hh_nrgintst_ls <- vector("list", length(global_hh_subsector))
   names(hh_nrgintst_ls) <- global_hh_subsector
   # 生活用电强度
-  if (grepl("OTHER", set_scalc)) { ### OTHER ----
+  if (grepl("SLC", set_scalc)) { ### SLC ----
     hh_nrgintst_ls[[1]] <- func_interp_3(
       year = c(2019, 2035, 2060), 
       scale = c(1, 1.2, 1.4), 
@@ -1774,7 +1774,7 @@ for (set_scalc in set_scalcs) {
   } else { ### BAU ----
     hh_nrgintst_ls[[1]] <- func_interp_3(
       year = c(2019, 2035, 2060), 
-      scale = c(1, 1.4, 1.6), 
+      scale = c(1, 1.5, 1.6), 
       base = func_lastone(by_hh_nrgintst_ls[["household"]][, "electricity"]))
   }
   names(hh_nrgintst_ls[[1]])[2] <- "electricity"
@@ -1783,7 +1783,7 @@ for (set_scalc in set_scalcs) {
   hh_nrgintst_ls[[1]]$rawcoal <- 0
   
   # 生活液化石油气
-  if (grepl("OTHER", set_scalc)) { ### OTHER ----
+  if (grepl("SLC", set_scalc)) { ### SLC ----
     hh_nrgintst_ls[[2]] <- 
       func_interp_3(year = c(2019, 2035, 2060), 
                     scale = c(1, 0.8, 0.5), 
@@ -1792,13 +1792,13 @@ for (set_scalc in set_scalcs) {
   } else { ### BAU ----
     hh_nrgintst_ls[[2]] <- 
       func_interp_3(year = c(2019, 2040, 2060), 
-                    scale = c(1, 1.2, 0.7), 
+                    scale = c(1, 1.3, 0.7), 
                     base = func_lastone(by_hh_nrgintst_ls[["lpg"]]$lpg), 
                     "lpg")
   }
   
   # 生活天然气
-  if (grepl("OTHER", set_scalc)) { ### OTHER ----
+  if (grepl("SLC", set_scalc)) { ### SLC ----
     hh_nrgintst_ls[[3]] <- 
       func_interp_3(year = c(2019, 2035, 2060), 
                     scale = c(1, 0.8, 0.5), 
@@ -1807,7 +1807,7 @@ for (set_scalc in set_scalcs) {
   } else { ### BAU ----
     hh_nrgintst_ls[[3]] <- 
       func_interp_3(year = c(2019, 2040, 2060), 
-                    scale = c(1, 1.2, 0.7), 
+                    scale = c(1, 1.3, 0.7), 
                     base = func_lastone(by_hh_nrgintst_ls[["gas"]]$gas), 
                     "gas")
   }
@@ -1829,7 +1829,7 @@ for (set_scalc in set_scalcs) {
       namenrgoris = list("lpg"), 
       namenrgsubs = list("electricity"), 
       yearsubs = list(c(2019, 2060)), 
-      propsubs = list(c(0, 0.7)), 
+      propsubs = list(c(0, 0.6)), 
       alterscales = list(0.8))
   } else { ### BAU ----
     # 电气化率低，时间迟
@@ -1859,7 +1859,7 @@ for (set_scalc in set_scalcs) {
       namenrgoris = list("gas"), 
       namenrgsubs = list("electricity"), 
       yearsubs = list(c(2019, 2060)), 
-      propsubs = list(c(0, 0.7)), 
+      propsubs = list(c(0, 0.6)), 
       alterscales = list(0.8))
   } else { ### BAU ----
     # 电气化率低，时间迟
