@@ -2377,6 +2377,28 @@ if (set_figureexport == TRUE) {
                  "#50C878", 
                  "#007FFF"))
   dev.off()
+  
+  ## Emissec of scenarios ----
+  png(
+    filename = paste0("各部门总排放", Sys.Date(), ".png"),
+    type = "cairo", # 抗锯齿
+    res = 300, # 300ppi 分辨率
+    width = 1600, height = 1100,
+    bg = "transparent" # 透明背景
+  )
+  func_excelplot(ggplot(melt(tot_emisbysec_ls[["BAU_SLC_OTHER"]], id = "year")) + 
+                   geom_line(aes(year, value, color = variable), size = 1.5), 
+                 "top") + 
+    labs(x = "", y = "二氧化碳排放（万吨）") +
+    scale_color_manual(
+      name = "", 
+      breaks = global_sectors[1: 6], 
+      labels = c("农业", "工业", "建筑业", "交通", "服务业", "生活"), 
+      values = c("green", 
+                 "orange",  
+                 "darkgrey", 
+                 "red", "blue", "purple"))
+  dev.off()
 }
 
 
