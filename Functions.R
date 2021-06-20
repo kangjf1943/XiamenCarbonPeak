@@ -995,7 +995,7 @@ func_scenarios <-
 }
 # 升级版
 # 输入列表查看同名列差异
-func_scompplot <- function(ls_var, namecol) {
+func_scompplot <- function(ls_var, namecol, size = 1.5) {
   # 挑出内容非空的列表元素
   ls_var <- ls_var[vapply(ls_var, Negate(is.null), NA)]
   # 转化成长数据框
@@ -1004,7 +1004,7 @@ func_scompplot <- function(ls_var, namecol) {
   df_var_long <- 
     melt(df_var, id = "year")
   # 画图
-  ggplot(df_var_long) + geom_line(aes(year, value, color = variable))
+  ggplot(df_var_long) + geom_line(aes(year, value, color = variable), size = size)
 }
 
 # 模仿Excel的作图风格
