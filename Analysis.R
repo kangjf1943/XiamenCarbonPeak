@@ -1828,8 +1828,8 @@ for (set_scalc in set_scalcs) {
       nrgori = hh_nrgintst_ls[[2]], 
       namenrgoris = list("lpg"), 
       namenrgsubs = list("electricity"), 
-      yearsubs = list(c(2019, 2040, 2060)), 
-      propsubs = list(c(0, 0.6, 0.8)), 
+      yearsubs = list(c(2019, 2060)), 
+      propsubs = list(c(0, 0.7)), 
       alterscales = list(0.8))
   } else { ### BAU ----
     # 电气化率低，时间迟
@@ -1858,8 +1858,8 @@ for (set_scalc in set_scalcs) {
       nrgori = hh_nrgintst_ls[[3]], 
       namenrgoris = list("gas"), 
       namenrgsubs = list("electricity"), 
-      yearsubs = list(c(2019, 2040, 2060)), 
-      propsubs = list(c(0, 0.6, 0.8)), 
+      yearsubs = list(c(2019, 2060)), 
+      propsubs = list(c(0, 0.7)), 
       alterscales = list(0.8))
   } else { ### BAU ----
     # 电气化率低，时间迟
