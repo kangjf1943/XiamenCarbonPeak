@@ -2092,16 +2092,6 @@ for (set_scalc in set_scalcs) {
     rowSums(
       tot_emisbysec_ls[[set_scalc]][names(tot_emisbysec_ls[[set_scalc]]) != "year"])
   
-  # 输出各部门达峰时间
-  cat("\n", set_scalc, "\n")
-  for (i in global_sectors[1:6]) {
-    cat(i, "peak in", 
-        func_peakyear(tot_emisbysec_ls[[set_scalc]], i), "\n")
-  }
-  # 比较不同部门排放
-  print(ggplot(melt(tot_emisbysec_ls[[set_scalc]], id = "year")) + 
-          geom_line(aes(year, value, color = variable), size = 1.5))
-  
   ## Emis per GDP ----
   tot_emispergdp_ls[[set_scalc]] <- 
     func_cross(tot_emissum_ls[[set_scalc]], prj_global_gdp[c("year", "GDP")], "rate")
@@ -2125,6 +2115,17 @@ if (set_resultout == TRUE) {
       func_peakyear(tot_emissum_ls[[i]], "co2")
   }
   idx_peakyear
+  
+  ## Peak time of secs ----
+  # 输出各情景各部门达峰时间
+  idx_peakyearsec <- data.frame(scenarios = set_scalcs)
+  for (i in set_scalcs) {
+    for (j in global_sectors[1:6]) {
+      idx_peakyearsec[which(idx_peakyearsec$scenarios == i), j] <- 
+        func_peakyear(tot_emisbysec_ls[[i]], j)
+    }
+  }
+  idx_peakyearsec
   
   ## Key index ----
   # 各情景下服务业和生活部门电力消费量所占比例
@@ -2227,8 +2228,8 @@ if (set_dataexport == TRUE) {
   func_dataexp("各情景总排放量", mydata = exp_var)
   
   ## Tot emis of secs of certain scenario ----
-  exp_var <- tot_emisbysec_ls[["BAU_26COAL"]]
-  func_dataexp("惯性情景各部门排放量", mydata = exp_var)
+  exp_var <- tot_emisbysec_ls[["BAU_SLC_OTHER"]]
+  func_dataexp("强化减排情景各部门排放量", mydata = exp_var)
   
   ## Five year change rate of emis ----
   exp_var <- 
