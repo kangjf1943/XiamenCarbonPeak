@@ -2,14 +2,15 @@
 # 计算内容或口径相关设置
 # 设置要计算的情景
 set_scalcs <- 
-  c("BAU", "BAU_WLC_OTHER", "BAU_SLC_OTHER", "BAU_24COAL", "BAU_26COAL") 
+  c("BAU", "BAU_WLC_OTHER", "BAU_WLC", "BAU_SLC", "BAU_SLC_OTHER", 
+    "BAU_24COAL", "BAU_26COAL") 
 set_thrmfac_meth <- TRUE # 是否采用煤电折标煤系数
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 
 # 缓存相关设置
 set_cache_globalvar <- FALSE # 是否已有全局变量缓存
 set_cache_nrgbal <- TRUE # 是否已有能源平衡表缓存
-set_cache_hiscalc <- FALSE # 是否已有历史数据计算缓存
+set_cache_hiscalc <- TRUE # 是否已有历史数据计算缓存
 set_cache_init <- FALSE # 是否已有初始化缓存
 
 # 结果相关设置
@@ -1170,7 +1171,8 @@ if (set_cache_init == FALSE) {
   # Init ----
   # 情景包括：惯性，弱低碳，强低碳，提前退煤，退煤5个情景
   init_scenarios <- 
-    c("BAU", "BAU_WLC_OTHER", "BAU_SLC_OTHER", "BAU_24COAL", "BAU_26COAL")
+    c("BAU", "BAU_WLC", "BAU_WLC_OTHER", "BAU_SLC", "BAU_SLC_OTHER", 
+      "BAU_24COAL", "BAU_26COAL")
   # 构建输出结果变量
   # 需要输出的主要数据性质
   init_outputs <- c("_nrgsum_ls", "_emissum_dir_ls", "_emissum_ls")
@@ -1299,7 +1301,7 @@ for (set_scalc in set_scalcs) {
         func_lastone(by_ind_ori_act_prop$"电子电气制造业"), 57, 64))$value
   } else if (grepl("WLC", set_scalc)) { ### WLC ----
     ind_ori_act_prop[[set_scalc]][, "化学工业"] <- func_interp_2(
-      year = c(2019, 2035, 2050, 2060), 
+      year = c(2019, 2037, 2052, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"化学工业"), 6, 2, 0))$value
     ind_ori_act_prop[[set_scalc]][, "设备制造业"] <- func_interp_2(
       year = c(2019, 2040, 2060), 
@@ -1307,7 +1309,7 @@ for (set_scalc in set_scalcs) {
     ind_ori_act_prop[[set_scalc]][, "电子电气制造业"] <- func_interp_2(
       year = c(2019, 2040, 2060), 
       value = c(
-        func_lastone(by_ind_ori_act_prop$"电子电气制造业"), 53, 57))$value
+        func_lastone(by_ind_ori_act_prop$"电子电气制造业"), 53, 55))$value
   } else { ### BAU ----
     # 时间推迟，比例不同
     ind_ori_act_prop[[set_scalc]][, "化学工业"] <- func_interp_2(
@@ -1503,12 +1505,12 @@ for (set_scalc in set_scalcs) {
                     value = c(0.022, 0.05, 0.10, 0.80, 1), "elec")
   } else if (grepl("WLC", set_scalc)) { ### WLC ----
     trans_carprop_ls[[set_scalc]] <- 
-      func_interp_2(year = c(2019, 2030, 2040, 2050, 2060), 
+      func_interp_2(year = c(2019, 2033, 2040, 2050, 2060), 
                     value = c(0.022, 0.05, 0.10, 0.80, 1), "elec")
   } else { ### BAU ----
-    trans_carprop_ls[[set_scalc]] <- func_interp_2(
-      year = c(2019, 2035, 2045, 2055, 2060), 
-      value = c(0.022, 0.05, 0.10, 0.80, 1), "elec")
+    trans_carprop_ls[[set_scalc]] <- 
+      func_interp_2(year = c(2019, 2035, 2045, 2055, 2060), 
+                    value = c(0.022, 0.05, 0.10, 0.80, 1), "elec")
   }
   trans_carprop_ls[[set_scalc]]$nonelec <- 
     1 - trans_carprop_ls[[set_scalc]]$elec
@@ -1711,7 +1713,7 @@ for (set_scalc in set_scalcs) {
                       c(2019, 2037, 2053, 2060)), 
       propsubs = list(c(0, 0.6, 1, 1), 
                       c(0, 0.6, 1, 1)), 
-      alterscales = list(0.8, 0.8))
+      alterscales = list(0.9, 0.9))
   } else { ### BAU ----
     # 燃气的电气化推迟
     com_nrgintst_ls[[2]] <- func_nrgsub(
@@ -1826,8 +1828,8 @@ for (set_scalc in set_scalcs) {
       nrgori = hh_nrgintst_ls[[2]], 
       namenrgoris = list("lpg"), 
       namenrgsubs = list("electricity"), 
-      yearsubs = list(c(2019, 2040, 2055, 2060)), 
-      propsubs = list(c(0, 0.6, 0.9, 0.9)), 
+      yearsubs = list(c(2019, 2040, 2060)), 
+      propsubs = list(c(0, 0.6, 0.8)), 
       alterscales = list(0.8))
   } else { ### BAU ----
     # 电气化率低，时间迟
@@ -1856,8 +1858,8 @@ for (set_scalc in set_scalcs) {
       nrgori = hh_nrgintst_ls[[3]], 
       namenrgoris = list("gas"), 
       namenrgsubs = list("electricity"), 
-      yearsubs = list(c(2019, 2037, 2055, 2060)), 
-      propsubs = list(c(0, 0.6, 0.9, 0.9)), 
+      yearsubs = list(c(2019, 2040, 2060)), 
+      propsubs = list(c(0, 0.6, 0.8)), 
       alterscales = list(0.8))
   } else { ### BAU ----
     # 电气化率低，时间迟
