@@ -21,6 +21,38 @@ set_figureexport <- FALSE # 是否输出图片
 set_parmexport <- FALSE # 是否输出各参数图表
 
 
+if (set_cache_init == FALSE) {
+  # INIT ----
+  # 情景包括：惯性，弱低碳，强低碳，提前退煤，退煤5个情景
+  init_scenarios <- 
+    c("BAU", "BAU_WLC_OTHER", "BAU_SLC_OTHER", "BAU_24COAL", "BAU_26COAL")
+  # 构建输出结果变量
+  # 需要输出的主要数据性质
+  init_outputs <- c("_nrgsum_ls", "_emissum_dir_ls", "_emissum_ls")
+  # 输出结果的形式模板
+  init_output_templatels <- vector("list", length(init_scenarios))
+  names(init_output_templatels) <- init_scenarios
+  # 生成输出结果包装盒
+  for (i in c(global_sectors, "tot")) {
+    for (j in init_outputs) {
+      assign(paste0(i, j), init_output_templatels)
+    }
+  }
+  # 增加其他所需输出变量
+  for (i in c("tot_emisbysec_ls", "trans_carprop_ls")) {
+    assign(i, init_output_templatels)
+  }
+  ind_ori_act_prop <- init_output_templatels
+  tot_nrgbysec_ls <- init_output_templatels
+  tot_emispergdp_ls <- init_output_templatels
+  trans_carprop_ls <- init_output_templatels
+  # 删除不必要的包装盒
+  # 电力等不区分直接排放和间接排放故删除
+  rm(init_output_templatels, 
+     tf_emissum_dir_ls, res_emissum_dir_ls, tot_emissum_dir_ls)
+}
+
+
 if (set_cache_globalvar == FALSE) {
   # GLOBAL VAR ----
   ## Names ----
@@ -1167,39 +1199,6 @@ if (set_cache_hiscalc == FALSE) {
 }
 
 # SCENARIO ANLYS ----
-if (set_cache_init == FALSE) {
-  # Init ----
-  # 情景包括：惯性，弱低碳，强低碳，提前退煤，退煤5个情景
-  init_scenarios <- 
-    c("BAU", "BAU_WLC", "BAU_WLC_OTHER", "BAU_SLC", "BAU_SLC_OTHER", 
-      "BAU_24COAL", "BAU_26COAL")
-  # 构建输出结果变量
-  # 需要输出的主要数据性质
-  init_outputs <- c("_nrgsum_ls", "_emissum_dir_ls", "_emissum_ls")
-  # 输出结果的形式模板
-  init_output_templatels <- vector("list", length(init_scenarios))
-  names(init_output_templatels) <- init_scenarios
-  # 生成输出结果包装盒
-  for (i in c(global_sectors, "tot")) {
-    for (j in init_outputs) {
-      assign(paste0(i, j), init_output_templatels)
-    }
-  }
-  # 增加其他所需输出变量
-  for (i in c("tot_emisbysec_ls", "trans_carprop_ls")) {
-    assign(i, init_output_templatels)
-  }
-  ind_ori_act_prop <- init_output_templatels
-  tot_nrgbysec_ls <- init_output_templatels
-  tot_emispergdp_ls <- init_output_templatels
-  trans_carprop_ls <- init_output_templatels
-  # 删除不必要的包装盒
-  # 电力等不区分直接排放和间接排放故删除
-  rm(init_output_templatels, 
-     tf_emissum_dir_ls, res_emissum_dir_ls, tot_emissum_dir_ls)
-}
-
-
 global_starttime <- Sys.time()
 for (set_scalc in set_scalcs) {
   # Analysis ----
