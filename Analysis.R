@@ -2347,23 +2347,25 @@ if (set_figureexport == TRUE) {
     filename = paste0("各情景总排放总", Sys.Date(), ".png"),
     type = "cairo", # 抗锯齿
     res = 300, # 300ppi 分辨率
-    width = 1600, height = 900,
+    width = 1600, height = 1100,
     bg = "transparent" # 透明背景
   )
   
-  func_excelplot(func_scompplot(tot_emissum_ls, "co2"), "top") + 
+  func_excelplot(func_scompplot(
+    tot_emissum_ls[c(
+      "BAU", "BAU_WLC_OTHER", "BAU_SLC_OTHER", "BAU_26COAL")], "co2", 
+    size = 1.2), "top") + 
     labs(x = "", y = "二氧化碳排放（万吨）") +
     scale_y_continuous(breaks = seq(0, 3500, by = 500)) + 
     scale_x_continuous(breaks = seq(2015, 2060, by = 5)) +
     scale_color_manual(
       name = "", 
-      breaks = set_scalcs, 
-      labels = c("惯性情景", paste0("单部门减排-", c(1:4)), 
-                 "多部门减排", "退煤情景", "提前退煤情景"), 
+      breaks = c("BAU", "BAU_WLC_OTHER", "BAU_SLC_OTHER", "BAU_26COAL"), 
+      labels = c("惯性情景", "减排情景", "强化减排", "退煤情景"), 
       values = c("#800000", 
-                 "#FF0000", "#FFA500", "#FFD700", "#FFFF00", 
+                 "orange",  
                  "#50C878", 
-                 "#007FFF", "#003399"))
+                 "#007FFF"))
   dev.off()
 }
 
