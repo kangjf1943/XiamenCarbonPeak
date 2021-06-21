@@ -9,8 +9,8 @@ set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 # 缓存相关设置
 set_cache_globalvar <- TRUE # 是否已有全局变量缓存
 set_cache_nrgbal <- TRUE # 是否已有能源平衡表缓存
-set_cache_hiscalc <- TRUE # 是否已有历史数据计算缓存
-set_cache_init <- FALSE # 是否已有初始化缓存
+set_cache_hiscalc <- FALSE # 是否已有历史数据计算缓存
+set_cache_init <- TRUE # 是否已有初始化缓存
 
 # 结果相关设置
 set_plotstyle <- "base" # 设置作图风格
@@ -45,6 +45,7 @@ if (set_cache_init == FALSE) {
   tot_nrgbysec_ls <- init_output_templatels
   tot_emispergdp_ls <- init_output_templatels
   trans_carprop_ls <- init_output_templatels
+  trans_act_ls <- init_output_templatels
   # 删除不必要的包装盒
   # 电力等不区分直接排放和间接排放故删除
   rm(init_output_templatels, 
@@ -1443,53 +1444,55 @@ for (set_scalc in set_scalcs) {
   # Transportation ----
   ## Activity level ----
   if (set_calc_cache == FALSE) { ### Cache ----
-    trans_act <- data.frame(year = c(2019: 2060))
+    trans_act_ls[[set_scalc]] <- data.frame(year = c(2019: 2060))
     for (i in global_trans_subsector) {
-      trans_act[, i] <- NA
+      trans_act_ls[[set_scalc]][, i] <- NA
     }
     # 公路
     # 常规公交和快速公交以初始3%的增长率增长至2030年饱和
     for (i in c("常规公交", "快速公交")) {
-      trans_act[, i] <- 
+      trans_act_ls[[set_scalc]][, i] <- 
         func_curve_1(
           baseyear = 2019, basevalue = func_lastone(by_trans_act[, i]), 
           maxyear = 2030, endyear = 2060, init_rate = 0.03)$value
     }
     
     # 出租车保持不变或波动
-    trans_act[, "出租车"] <- 
+    trans_act_ls[[set_scalc]][, "出租车"] <- 
       func_curve_1(
         baseyear = 2019, basevalue = func_lastone(by_trans_act[, "出租车"]), 
         maxyear = 2035, endyear = 2060, init_rate = -0.01)$value
     
     # 农村客运因城乡交流频繁，2025年前以初始7%的速率增长
-    trans_act[, "农村客车"] <- 
+    trans_act_ls[[set_scalc]][, "农村客车"] <- 
       func_curve_1(
         baseyear = 2019, basevalue = func_lastone(by_trans_act[, "农村客车"]), 
         maxyear = 2025, endyear = 2060, init_rate = 0.06)$value
     
     # 公路其他柴油
     # 按照初始增长率5%增长，至2030年饱和
-    trans_act[, "公路其他柴油"] <- 
+    trans_act_ls[[set_scalc]][, "公路其他柴油"] <- 
       func_curve_1(
         baseyear = 2019, 
         basevalue = func_lastone(by_trans_act[, "公路其他柴油"]), 
         maxyear = 2030, endyear = 2060, init_rate = 0.05)$value
     
     # 水运
-    trans_act$"水路客运" <- func_interp_3(
+    trans_act_ls[[set_scalc]]$"水路客运" <- func_interp_3(
       year = c(2019, 2025, 2060), scale = c(1, 1.05, 1.10), 
       base = func_lastone(by_trans_act$"水路客运"))$value
     comment(trans_act$"水路客运") <- "万人公里"
-    trans_act$"水路货运" <- func_interp_3(
+    trans_act_ls[[set_scalc]]$"水路货运" <- func_interp_3(
       year = c(2019, 2025, 2060), scale = c(1, 1.5, 2.0), 
       base = func_lastone(by_trans_act$水路货运))$value
     comment(trans_act$"水路货运") <- "万吨公里"
+  } else {
+    trans_act_ls[[set_scalc]] <- trans_act_ls[[set_scalcs[1]]]
   }
   
   # 私家车：先预测全部私家车变化趋势再分成常规和纯电动私家车
   # 全部私家车按照初始增长率5%增长，至2035年饱和
-  trans_act[, "私家车"] <- 
+  trans_act_ls[[set_scalc]][, "私家车"] <- 
     func_curve_1(
       baseyear = 2019, 
       basevalue = func_lastone(by_trans_act[, "公路其他汽油"]), 
@@ -1514,16 +1517,16 @@ for (set_scalc in set_scalcs) {
     1 - trans_carprop_ls[[set_scalc]]$elec
   
   # 公路其他汽油：常规私家车保有量
-  trans_act[, "公路其他汽油"] <- 
-    trans_act[, "私家车"]*trans_carprop_ls[[set_scalc]]$nonelec
+  trans_act_ls[[set_scalc]][, "公路其他汽油"] <- 
+    trans_act_ls[[set_scalc]][, "私家车"]*trans_carprop_ls[[set_scalc]]$nonelec
   # 纯电动私家车
-  trans_act$"纯电动私家车" <- 
-    trans_act[, "私家车"]*trans_carprop_ls[[set_scalc]]$elec
+  trans_act_ls[[set_scalc]]$"纯电动私家车" <- 
+    trans_act_ls[[set_scalc]][, "私家车"]*trans_carprop_ls[[set_scalc]]$elec
   # 删除私家车总量一列
-  trans_act$"私家车" <- NULL
+  trans_act_ls[[set_scalc]]$"私家车" <- NULL
   
   # 航空
-  trans_act$"航空" <- 
+  trans_act_ls[[set_scalc]]$"航空" <- 
     func_rate(
       baseyear = 2019, basevalue = func_lastone(by_trans_act$航空), 
       rate_df = func_stage(
@@ -1632,7 +1635,7 @@ for (set_scalc in set_scalcs) {
       base = func_lastone(by_trans_nrgintst_ls[["航空"]]$kerosene), "kerosene")
   
   ## Energy and emission ----
-  trans_nrgsum_ls[[set_scalc]] <- func_nrg_sum_ls(trans_nrgintst_ls, trans_act)
+  trans_nrgsum_ls[[set_scalc]] <- func_nrg_sum_ls(trans_nrgintst_ls, trans_act_ls[[set_scalc]])
   trans_nrgsum_ls[[set_scalc]] <- func_ls2df(trans_nrgsum_ls[[set_scalc]])
   trans_emissum_dir_ls[[set_scalc]] <- 
     func_emissum(trans_nrgsum_ls[[set_scalc]], prj_emisfac_df)
@@ -2273,6 +2276,14 @@ if (set_dataexport == TRUE) {
   for (i in set_scalcs) {
     func_dataexp(paste0("关键指标-", i), mydata = idx_output[[i]])
   }
+  
+  ## For project ----
+  # 刘洋：惯性情景电动车预测
+  func_dataexp(
+    "惯性情景电动车预测2刘洋", 
+    mydata = trans_act_ls$BAU[which(
+      trans_act_ls$BAU$year %in% c(2020, 2025, 2030, 2035, 2050)), 
+      c("year", "纯电动私家车")])
 }
 
 
@@ -2448,7 +2459,7 @@ if (set_parmexport == TRUE) {
   ### Trans
   par(mfrow = c(3, 3))
   for (i in global_trans_subsector) {
-    func_history_project(by_trans_act, i, trans_act, i,
+    func_history_project(by_trans_act, i, trans_act_ls[[set_scalc]], i,
                          xlab = "", ylab = i, style = set_plotstyle)
   }
   
