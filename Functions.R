@@ -1070,16 +1070,26 @@ func_datacomp <- function(var_1, name_source_1, var_2, name_source_2, name_comp)
 }
 
 # 导出结果数据的函数
-# 输入；工作簿名，内含工作表名（默认为“new”），待导出数据
-func_dataexp <- function(wbname, shtname = "new", mydata) {
+# 输入；工作簿名，待导出数据及其类型，类型默认为数据框
+func_dataexp <- function(wbname, mydata, mydata_type = "df") {
   # 添加工作表后缀：导出时间戳和文件类型
   wbname <- paste0(wbname, Sys.Date(), "-", format(Sys.time(), "%H%M%S"), ".xlsx")
   # 创建工作簿变量
   wb <- createWorkbook()
-  # 创建工作表
-  addWorksheet(wb = wb, sheetName = shtname)
-  # 写入数据
-  writeData(wb = wb, sheet = shtname, x = mydata)
+  if (mydata_type == "df") {
+    #如果要导出的是数据框
+    # 创建工作表
+    addWorksheet(wb = wb, sheetName = "data")
+    # 写入数据
+    writeData(wb = wb, sheet = "data", x = mydata)
+  } else {
+    # 如果要导出的是列表
+    # 循环创建工作表
+    for (i in names(mydata)) {
+      addWorksheet(wb = wb, sheetName = i)
+      writeData(wb = wb, sheet = i, x = mydata[[i]])
+    }
+  }
   # 导出Excel文件
   saveWorkbook(wb = wb, file = wbname, returnValue = T)
 }
