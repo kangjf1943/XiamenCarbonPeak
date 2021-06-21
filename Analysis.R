@@ -8,9 +8,9 @@ set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 
 # 缓存相关设置
 set_cache_globalvar <- FALSE # 是否已有全局变量缓存
-set_cache_nrgbal <- TRUE # 是否已有能源平衡表缓存
+set_cache_nrgbal <- FALSE # 是否已有能源平衡表缓存
 set_cache_hiscalc <- FALSE # 是否已有历史数据计算缓存
-set_cache_init <- TRUE # 是否已有初始化缓存
+set_cache_init <- FALSE # 是否已有初始化缓存
 
 # 结果相关设置
 set_plotstyle <- "base" # 设置作图风格
@@ -42,14 +42,19 @@ if (set_cache_init == FALSE) {
     assign(i, init_output_templatels)
   }
   ind_ori_act_prop <- init_output_templatels
-  tot_nrgbysec_ls <- init_output_templatels
+  tot_nrgsecce_ls <- init_output_templatels
   tot_emispergdp_ls <- init_output_templatels
   trans_carprop_ls <- init_output_templatels
   trans_act_ls <- init_output_templatels
+  tot_nrgfuel_ls <- init_output_templatels
+  tot_nrgfuelce_ls <- init_output_templatels
+  tot_elecsumce_ls <- init_output_templatels
+  tot_nrgaggfuel <- init_output_templatels
+  tot_nrgaggfuelce <- init_output_templatels
+  tot_nrgsumce_ls <- init_output_templatels
   # 删除不必要的包装盒
   # 电力等不区分直接排放和间接排放故删除
-  rm(init_output_templatels, 
-     tf_emissum_dir_ls, res_emissum_dir_ls, tot_emissum_dir_ls)
+  rm(tf_emissum_dir_ls, res_emissum_dir_ls, tot_emissum_dir_ls)
 }
 
 
@@ -67,12 +72,13 @@ if (set_cache_globalvar == FALSE) {
   global_nrg_lookup <- 
     Reduce(rbind, 
            list(data.frame(ind_agg = c("煤炭"), 
-                           ind_ori = c("coal", 
+                           ind_ori = c("rawcoal", 
                                        "coalproduct")),
                 data.frame(ind_agg = c("油品"), 
-                           ind_ori = c("gasolline", 
+                           ind_ori = c("gasoline", 
                                        "diesel", 
                                        "residual", 
+                                       "kerosene", 
                                        "lpg")), 
                 data.frame(ind_agg = c("天然气"), 
                            ind_ori = c("gas")), 
@@ -2000,7 +2006,7 @@ for (set_scalc in set_scalcs) {
       tot_ori_elecequalfac[which(
         tot_ori_elecequalfac$year == 2059), "nrg_input"]
     # 计算外调电力折标煤量
-    tot_ori_elecequal <- func_cross(
+    tot_elecsumce_ls[[set_scalc]] <- func_cross(
       tot_ori_elecequalfac, 
       func_cross(tfres_act[c("year", "importthrm")], 
                  tfres_act[c("year", "importclean")], method = "sum"), 
@@ -2012,7 +2018,7 @@ for (set_scalc in set_scalcs) {
     
     # 计算本地发电和外调电力标准煤量之和
     tot_ori_elecstdcoal <- 
-      func_cross(tot_ori_elecequal, tot_ori_elecgenequal, method = "sum")
+      func_cross(tot_elecsumce_ls[[set_scalc]], tot_ori_elecgenequal, method = "sum")
     
     # 各部门电力消费占比
     tot_elecbysec <- 
@@ -2028,7 +2034,7 @@ for (set_scalc in set_scalcs) {
       func_nrg_sum(tot_elecsharebysec, tot_ori_elecstdcoal, "nrg_input")
     
     # 计算各部门能耗标准量
-    tot_nrgbysec_ls[[set_scalc]] <- data.frame(
+    tot_nrgsecce_ls[[set_scalc]] <- data.frame(
       year = c(2019: 2060), 
       agri = func_toce(agri_nrgsum_ls[[set_scalc]], agg = TRUE)$stdcoal + 
         tot_elecstdcoalbysec["agri"], 
@@ -2044,9 +2050,32 @@ for (set_scalc in set_scalcs) {
         tot_elecstdcoalbysec["hh"]
     )
     # 计算当前情景能耗标准量之和
-    tot_nrgsum_ls[[set_scalc]] <- data.frame(
-      year = tot_nrgbysec_ls[[set_scalc]]$year, 
-      energyconsump = rowSums(tot_nrgbysec_ls[[set_scalc]][, -1]))
+    tot_nrgsumce_ls[[set_scalc]] <- data.frame(
+      year = tot_nrgsecce_ls[[set_scalc]]$year, 
+      energyconsump = rowSums(tot_nrgsecce_ls[[set_scalc]][, -1]))
+    
+    ### Energy by fuels ----
+    # 计算分能源能耗
+    # 除了电力外其他能耗物理量及标准煤
+    tot_nrgfuel_ls[[set_scalc]] <- 
+      func_ls2df(list(agri_nrgsum_ls[[set_scalc]], ind_nrgsum_ls[[set_scalc]], 
+                      const_nrgsum_ls[[set_scalc]], trans_nrgsum_ls[[set_scalc]], 
+                      com_nrgsum_ls[[set_scalc]], hh_nrgsum_ls[[set_scalc]], 
+                      tf_nrgsum_ls[[set_scalc]]))
+    tot_nrgfuelce_ls[[set_scalc]] <- func_toce(tot_nrgfuel_ls[[set_scalc]])
+    
+    # 加上外调电力标准量
+    tot_nrgfuelce_ls[[set_scalc]] <- 
+      func_merge_2(list(tot_nrgfuelce_ls[[set_scalc]], tot_elecsumce_ls[[set_scalc]]))
+    names(tot_nrgfuelce_ls[[set_scalc]])[names(tot_nrgfuelce_ls[[set_scalc]]) ==
+                                           "nrg_input"] <- "electricity"
+    
+    # 聚合成煤油气电
+    tot_nrgaggfuel[[set_scalc]] <- 
+      func_secagg(tot_nrgfuel_ls[[set_scalc]], global_nrg_lookup)
+    tot_nrgaggfuelce[[set_scalc]] <- 
+      func_secagg(tot_nrgfuelce_ls[[set_scalc]], global_nrg_lookup)
+    
   } else { ### Equal meth ----
     # 一次能源能耗之和
     tot_nrgsum_byfuel <- func_ls2df(list(
@@ -2057,7 +2086,7 @@ for (set_scalc in set_scalcs) {
     # 换算成标准煤
     tot_nrgsum_byfuel_ce <- func_toce(tot_nrgsum_byfuel)
     # 换算成各年份总和
-    tot_nrgsum_ls[[set_scalc]] <- data.frame(
+    tot_nrgsumce_ls[[set_scalc]] <- data.frame(
       year = tot_nrgsum_byfuel_ce$year, 
       energyconsump = rowSums(tot_nrgsum_byfuel[names(tot_nrgsum_byfuel) != "year"]))
   }
@@ -2113,7 +2142,7 @@ if (set_resultout == TRUE) {
     scenarios = set_scalcs, nrg_peakyear = NA, emis_peakyear = NA)
   for (i in set_scalcs) {
     idx_peakyear$nrg_peakyear[idx_peakyear$scenarios == i] <- 
-      func_peakyear(tot_nrgsum_ls[[i]], "energyconsump")
+      func_peakyear(tot_nrgsumce_ls[[i]], "energyconsump")
     idx_peakyear$emis_peakyear[idx_peakyear$scenarios == i] <- 
       func_peakyear(tot_emissum_ls[[i]], "co2")
   }
@@ -2172,17 +2201,17 @@ if (set_resultout == TRUE) {
       # 工业GDP电子电气占比
       电子电气业占比 = ind_ori_act_prop[[i]]$"电子电气制造业", 
       # 工业单位GDP能耗
-      工业单位GDP能耗 = tot_nrgbysec_ls[[i]]$ind/prj_global_gdp$indgdp,
+      工业单位GDP能耗 = tot_nrgsecce_ls[[i]]$ind/prj_global_gdp$indgdp,
       # 私家车电动车比例
       私家电动车比例 = trans_carprop_ls[[i]]$elec*100, 
       # 服务业单位GDP能耗
-      服务业单位GDP能耗 = tot_nrgbysec_ls[[i]]$com/prj_global_gdp$comgdp, 
+      服务业单位GDP能耗 = tot_nrgsecce_ls[[i]]$com/prj_global_gdp$comgdp, 
       # 服务业能耗电力占比
       服务业耗电占比 = idx_comnrgfuelce_ls[[i]][, "electricity"]/
         (rowSums(idx_comnrgfuelce_ls[[i]][names(
           idx_comnrgfuelce_ls[[i]]) != "year"]))*100, 
       # 家庭人均生活能耗
-      人均生活能耗 = tot_nrgbysec_ls[[i]]$hh / prj_global_population$population, 
+      人均生活能耗 = tot_nrgsecce_ls[[i]]$hh / prj_global_population$population, 
       # 家庭能耗电力占比
       家庭耗电占比 = idx_hhnrgfuelce_ls[[i]][, "electricity"]/
         (rowSums(idx_hhnrgfuelce_ls[[i]][names(
@@ -2220,7 +2249,7 @@ if (set_dataexport == TRUE) {
   exp_var <- data.frame(scenario = set_scalcs, nrg_peak = NA, emis_peak = NA)
   for (i in set_scalcs) {
     exp_var[which(exp_var$scenario == i), "nrg_peak"] <- 
-      func_peakyear(tot_nrgsum_ls[[i]], "energyconsump")
+      func_peakyear(tot_nrgsumce_ls[[i]], "energyconsump")
     exp_var[which(exp_var$scenario == i), "emis_peak"] <- 
       func_peakyear(tot_emissum_ls[[i]], "co2")
   }
@@ -2240,8 +2269,8 @@ if (set_dataexport == TRUE) {
   for (i in set_scalcs) {
     # 能耗量相关指标
     exp_var[, paste0(i, "_nrg (万吨标煤)")] <- 
-      tot_nrgsum_ls[[i]][which(
-        tot_nrgsum_ls[[i]]$year %% 5 == 0), ]$energyconsump/10000
+      tot_nrgsumce_ls[[i]][which(
+        tot_nrgsumce_ls[[i]]$year %% 5 == 0), ]$energyconsump/10000
     exp_var[, paste0(i, " (吨标煤/万元GDP)")] <- 
       exp_var[, paste0(i, "_nrg (万吨标煤)")]*10000 / exp_var[, "GDP"]
     exp_var[, paste0(i, "_nrg变化率")] <- 
@@ -2284,6 +2313,8 @@ if (set_dataexport == TRUE) {
     mydata = trans_act_ls$BAU[which(
       trans_act_ls$BAU$year %in% c(2020, 2025, 2030, 2035, 2050)), 
       c("year", "纯电动私家车")])
+  
+  # 赵胜男：各情景煤油气电标准量
 }
 
 
@@ -2339,7 +2370,7 @@ if (set_figureexport == TRUE) {
     width = 1600, height = 1000,
     bg = "transparent" # 透明背景
   )
-  exp_var <- tot_nrgsum_ls
+  exp_var <- tot_nrgsumce_ls
   for (i in set_scalcs) {
     exp_var[[i]][, "energyconsump"] <- 
       exp_var[[i]][, "energyconsump"]/10000
@@ -2357,9 +2388,9 @@ if (set_figureexport == TRUE) {
                  "#007FFF", "#003399")) + 
     # 添加峰值年份线
     geom_vline(xintercept = 
-                 c(func_peakyear(tot_nrgsum_ls[["BAU"]], "energyconsump"), 
-                   func_peakyear(tot_nrgsum_ls[["BAU_INDSTR"]], "energyconsump"), 
-                   func_peakyear(tot_nrgsum_ls[["BAU_ELECCAR"]], "energyconsump")), 
+                 c(func_peakyear(tot_nrgsumce_ls[["BAU"]], "energyconsump"), 
+                   func_peakyear(tot_nrgsumce_ls[["BAU_INDSTR"]], "energyconsump"), 
+                   func_peakyear(tot_nrgsumce_ls[["BAU_ELECCAR"]], "energyconsump")), 
                color = c("#800000", "#FF0000", "#FFA500"), alpha = 0.3)
   func_excelplot(export_plot)
   dev.off()
