@@ -2315,6 +2315,8 @@ if (set_dataexport == TRUE) {
       c("year", "纯电动私家车")])
   
   # 赵胜男：各情景煤油气电标准量
+  func_dataexp(
+    "各情景煤油气电标准量2赵老师", mydata = tot_nrgaggfuelce, mydata_type = "ls")
 }
 
 
