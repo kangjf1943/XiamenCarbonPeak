@@ -2259,9 +2259,9 @@ if (set_dataexport == TRUE) {
   exp_var <- func_mrgcol(tot_emissum_ls[set_scalcs], "co2", set_scalcs)
   func_dataexp("各情景总排放量", mydata = exp_var)
   
-  ## Tot emis of secs of certain scenario ----
-  exp_var <- tot_emisbysec_ls[["BAU_SLC_OTHER"]]
-  func_dataexp("强化减排情景各部门排放量", mydata = exp_var)
+  ## Emissec of scenarios ----
+  func_dataexp("各情景各部门排放量", 
+               mydata = tot_emisbysec_ls, mydata_type = "ls")
   
   ## Five year change rate of emis ----
   exp_var <- 
