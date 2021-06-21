@@ -7,7 +7,7 @@ set_thrmfac_meth <- TRUE # 是否采用煤电折标煤系数
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 
 # 缓存相关设置
-set_cache_globalvar <- TRUE # 是否已有全局变量缓存
+set_cache_globalvar <- FALSE # 是否已有全局变量缓存
 set_cache_nrgbal <- TRUE # 是否已有能源平衡表缓存
 set_cache_hiscalc <- FALSE # 是否已有历史数据计算缓存
 set_cache_init <- TRUE # 是否已有初始化缓存
