@@ -2,7 +2,7 @@
 # 计算内容或口径相关设置
 # 设置要计算的情景
 set_scalcs <- 
-  c("BAU", "BAU_WLC_OTHER", "BAU_SLC_OTHER", "BAU_24COAL", "BAU_26COAL") 
+  c("BAU", "BAU_WLC_OTHER", "BAU_SLC_OTHER") 
 set_thrmfac_meth <- TRUE # 是否采用煤电折标煤系数
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 
@@ -1323,7 +1323,7 @@ for (set_scalc in set_scalcs) {
   ## Energy intensity ----
   ind_nrgintst_ls <- vector("list", 13)
   names(ind_nrgintst_ls) <- global_ind_subsector
-  if (grepl("OTHER", set_scalc)) { ### OTHER ----
+  if (grepl("OTHER", set_scalc)) { ### SLC ----
     # 假设大部分能耗强度略有减少
     for (i in global_ind_subsector) {
       ind_nrgintst_ls[[i]] <- cbind(
@@ -1335,7 +1335,18 @@ for (set_scalc in set_scalcs) {
             base = func_lastone(by_ind_nrgintst_ls[[i]][, j], 
                                 zero.rm =  FALSE))$value}))
     }
-    
+  } else if (grepl("WLC", set_scalc)) { ### WLC ----
+    # 假设大部分能耗强度略有减少
+    for (i in global_ind_subsector) {
+      ind_nrgintst_ls[[i]] <- cbind(
+        data.frame(year = c(2019: 2060)),
+        sapply(global_ind_nrgclass[1:6], function(j) {
+          func_interp_3(
+            year = c(2019, 2025, 2030, 2035, 2060), 
+            scale = c(1.0, 1.05, 1.0,  0.9,  0.8), 
+            base = func_lastone(by_ind_nrgintst_ls[[i]][, j], 
+                                zero.rm =  FALSE))$value}))
+    }
   } else { ### BAU ----
     # 效率较低
     for (i in global_ind_subsector) {
@@ -1344,7 +1355,7 @@ for (set_scalc in set_scalcs) {
         sapply(global_ind_nrgclass[1:6], function(j) {
           func_interp_3(
             year = c(2019, 2025, 2030, 2040, 2060), 
-            scale = c(1.0, 1.1, 1.2, 1, 1), 
+            scale = c(1.0, 1.1,  1.2,  1.0,  1.0), 
             base = func_lastone(by_ind_nrgintst_ls[[i]][, j], 
                                 zero.rm =  FALSE))$value}))
     }
@@ -1553,7 +1564,7 @@ for (set_scalc in set_scalcs) {
       by_trans_nrgintst_ls[["纯电动私家车"]]$electricity))$value
   
   # 水路客货运
-  if (grepl("OTHER", set_scalc)) { ### OTHER ----
+  if (grepl("SLC", set_scalc)) { ### SLC ----
     # 水路客运
     # 柴油和燃料油均基于历史数据和比率
     trans_nrgintst_ls[["水路客运"]] <- 
@@ -1561,27 +1572,54 @@ for (set_scalc in set_scalcs) {
                     scale = c(1, 0.85, 0.8), 
                     base = func_lastone(by_trans_nrgintst_ls[["水路客运"]]$diesel), 
                     "diesel")
-    trans_nrgintst_ls[["水路客运"]]$residual <- 
-      func_interp_2(year = c(2019, 2030, 2060), 
-                    value = c(
-                      func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual), 
-                      func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual)*0.85, 
-                      func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual)*0.80),
-                    "residual")$residual
+    trans_nrgintst_ls[["水路客运"]]$residual <- func_interp_2(
+      year = c(2019, 2030, 2060), 
+      value = c(
+        func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual), 
+        func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual)*0.85, 
+        func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual)*0.80),
+      "residual")$residual
     
     # 水路货运
     # 柴油：基于历史数据和比率
-    trans_nrgintst_ls[["水路货运"]] <- 
-      func_interp_3(year = c(2019, 2030, 2060), 
-                    scale = c(1, 0.85, 0.8), 
-                    base = func_lastone(by_trans_nrgintst_ls[["水路货运"]]$diesel),
-                    "diesel")
+    trans_nrgintst_ls[["水路货运"]] <- func_interp_3(
+      year = c(2019, 2030, 2060), 
+      scale = c(1, 0.85, 0.8), 
+      base = func_lastone(by_trans_nrgintst_ls[["水路货运"]]$diesel),"diesel")
     # 燃料油：基于历史数据和比率
-    trans_nrgintst_ls[["水路货运"]]$residual <- 
+    trans_nrgintst_ls[["水路货运"]]$residual <- func_interp_3(
+      year = c(2019, 2030, 2060), 
+      scale = c(1, 0.85, 0.8), 
+      base = func_lastone(by_trans_nrgintst_ls[["水路货运"]]$residual),
+      "residual")$residual
+  } else if (grepl("WLC", set_scalc)) { ### WLC ----
+    # 水路客运
+    # 柴油和燃料油均基于历史数据和比率
+    trans_nrgintst_ls[["水路客运"]] <- 
       func_interp_3(year = c(2019, 2030, 2060), 
-                    scale = c(1, 0.85, 0.8), 
-                    base = func_lastone(by_trans_nrgintst_ls[["水路货运"]]$residual),
-                    "residual")$residual
+                    scale = c(1, 0.9, 0.9), 
+                    base = func_lastone(by_trans_nrgintst_ls[["水路客运"]]$diesel), 
+                    "diesel")
+    trans_nrgintst_ls[["水路客运"]]$residual <- func_interp_2(
+      year = c(2019, 2030, 2060), 
+      value = c(
+        func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual), 
+        func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual)*0.9, 
+        func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual)*0.85),
+      "residual")$residual
+    
+    # 水路货运
+    # 柴油：基于历史数据和比率
+    trans_nrgintst_ls[["水路货运"]] <- func_interp_3(
+      year = c(2019, 2030, 2060), 
+      scale = c(1, 0.9, 0.9), 
+      base = func_lastone(by_trans_nrgintst_ls[["水路货运"]]$diesel),"diesel")
+    # 燃料油：基于历史数据和比率
+    trans_nrgintst_ls[["水路货运"]]$residual <- func_interp_3(
+      year = c(2019, 2030, 2060), 
+      scale = c(1, 0.9, 0.9), 
+      base = func_lastone(by_trans_nrgintst_ls[["水路货运"]]$residual),
+      "residual")$residual
   } else { ### BAU ----
     # 水路客运
     # 柴油和燃料油均基于历史数据和比率
@@ -2117,7 +2155,7 @@ if (set_resultout == TRUE) {
   # Output ----
   ## Peak time of nrg and emis ----
   # 作图：各情景排放总量图
-  print(func_scompplot(tot_emissum_ls, "co2"))
+  print(func_scompplot(tot_emissum_ls[set_scalcs], "co2"))
   # 输出各情景能耗和碳排放峰值年份
   idx_peakyear <- data.frame(scenarios = set_scalcs)
   idx_peakyear$nrg_peakyear <- sapply(set_scalcs, function(i) {
