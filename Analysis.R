@@ -2174,6 +2174,14 @@ if (set_resultout == TRUE) {
     }
   }
   idx_peakyearsec
+  # 输出时间轴图
+  ggplot(melt(idx_peakyearsec, id = "scenarios"), 
+         aes(x = value, y = variable)) + 
+    geom_point(aes(color = variable), size = 2) + 
+    geom_text(aes(label = value, hjust = -0.3), size = 3) + 
+    geom_segment(aes(yend = variable, color = variable), xend = 0, size = 1) +
+    xlim(c(2019, 2035)) + facet_wrap(~scenarios, ncol = 1) + 
+    theme_bw()
   
   ## Key index ----
   # 各情景下服务业和生活部门电力消费量所占比例
