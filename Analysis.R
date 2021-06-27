@@ -504,45 +504,25 @@ if (set_cache_nrgbal == FALSE) {
       global_elecaggsec[which(global_elecaggsec$year == i), "##第三产业"]
   }
   
-  ## 2.1 Ind oil ----
+  ## 2.1 Ind oil and coalproduct ----
   # 构造每年全市工业GDP/规上工业GDP缩放因子
   by_nrgbal_ind_scalefac <- func_cross(
     global_gdp[c("year", "indgdp")], global_indscale_gdp, method = "rate")
   names(by_nrgbal_ind_scalefac)[2] <- "scalefac"
-  # 不包含电力热力行业的工业能耗数据
-  by_nrgbal_indscale_oil <- 
+  # 不包含电力热力行业的工业煤制品和油品能耗数据
+  by_nrgbal_indscale_coalproductoil <- 
     func_ls2df(global_indscale_nrgaggsec[global_ind_subsector])
-  by_nrgbal_indscale_oil <- 
-    by_nrgbal_indscale_oil[c("year", "gasoline", "diesel", "residual")]
+  by_nrgbal_indscale_coalproductoil <- by_nrgbal_indscale_coalproductoil[
+    c("year", "coalproduct", "gasoline", "diesel", "residual")]
   # 进行缩放
-  by_nrgbal_ind_oil <- 
-    func_nrg_sum(by_nrgbal_indscale_oil, by_nrgbal_ind_scalefac, "scalefac")
+  by_nrgbal_ind_oil <- func_nrg_sum(
+    by_nrgbal_indscale_coalproductoil, by_nrgbal_ind_scalefac, "scalefac")
   
   for (i in by_nrgbal_years) {
     by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "ind"), 
-                      c("gasoline", "diesel", "residual")] <- 
+                      c("coalproduct", "gasoline", "diesel", "residual")] <- 
       by_nrgbal_ind_oil[which(by_nrgbal_ind_oil$year == i), 
-                        c("gasoline", "diesel", "residual")]
-  }
-  
-  ## 3.1 Ind coalproduct ----
-  # 填写工业煤制品
-  # 读取黄若谷统计局核对数据
-  by_nrgbal_check <- 
-    func_read_multitable(
-      "2IRV6STN", names_tbl = c("煤合计", "原煤", "油品", "天然气"), 
-      names_ls = c("coaltotal", "coal", "oil", "gas"))
-  # 更改单位
-  by_nrgbal_check <- lapply(
-    by_nrgbal_check, function(i) {
-      cbind(data.frame(year = as.numeric(by_nrgbal_years)), i[, -1]*10000)})
-  
-  for (i in by_nrgbal_years) {
-    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "ind"), "coalproduct"] <- 
-      by_nrgbal_check[["coaltotal"]][which(
-        by_nrgbal_check[["coaltotal"]]$year == i), "工业"] - 
-      by_nrgbal_check[["coal"]][which(
-        by_nrgbal_check[["coal"]]$year == i), "工业"] 
+                        c("coalproduct", "gasoline", "diesel", "residual")]
   }
   
   ## 3.2 Ind coal ----
@@ -556,15 +536,30 @@ if (set_cache_nrgbal == FALSE) {
       by_checknrgaggfuel[c("煤炭消费量", "油品消费量", "天然气消费量", "调入电力")], 
       c("吨", "吨", "万立方米", "万千瓦时"))
   
+  # 读取统计局标准量总量数据
+  by_checknrgaggfuelce <- func_read_trans("LPLPNXCQ", "XCP_煤油气电标准量")
+  by_checknrgaggfuelce[
+    c("煤炭消费量", "油品消费量", "天然气消费量", "调入电力")] <- 
+    by_checknrgaggfuelce[
+      c("煤炭消费量", "油品消费量", "天然气消费量", "调入电力")]*10000
+  
+  # 计算各年份工业原煤消费量
+  # 将值赋给能源平衡表
   for (i in by_nrgbal_years) {
     by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "ind"), "rawcoal"] <- 
-      by_checknrgaggfuel[which(by_checknrgaggfuel$year == i), "煤炭消费量"] - 
-      # 刚算的煤制品
-      by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "ind"), "coalproduct"] - 
-      # 生活用煤
-      by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "hh"), "rawcoal"] -
-      # 发电用煤
-      by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "tf"), "rawcoal"]
+      func_alter(
+        by_checknrgaggfuelce[which(by_checknrgaggfuelce$year == i), "煤炭消费量"] - 
+          # 刚算的煤制品
+          func_alter(by_nrgbal_ls[[i]][which(
+            by_nrgbal_ls[[i]]$iterm == "ind"), "coalproduct"], "coalproduct", "ce") - 
+          # 生活用煤
+          func_alter(by_nrgbal_ls[[i]][which(
+            by_nrgbal_ls[[i]]$iterm == "hh"), "rawcoal"], "rawcoal", "ce") -
+          # 发电用煤
+          func_alter(by_nrgbal_ls[[i]][which(
+            by_nrgbal_ls[[i]]$iterm == "tf"), "rawcoal"], "rawcoal", "ce"), 
+        "ce", "rawcoal"
+      )
   }
   
   ## 3.3 Trans residual ----
