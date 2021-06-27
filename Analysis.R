@@ -2312,6 +2312,36 @@ if (set_resultout == TRUE) {
   idx_output_long <- Reduce(rbind, idx_output)
   # 输出为Excel文件
   func_dataexp("各情景下关键指标", mydata = idx_output_long)
+  
+  ## Nrg str ----
+  idx_nrgaggfuel_str_ls <- vector("list", length(set_scalcs))
+  names(idx_nrgaggfuel_str_ls) <- set_scalcs
+  for (i in set_scalcs) {
+    idx_nrgaggfuel_str_ls[[i]] <- func_nrg_intst(
+      tot_nrgaggfuelce[[i]], tot_nrgsumce_ls[[i]], "energyconsump")
+    idx_nrgaggfuel_str_ls[[i]]$scenario <- i
+  }
+  # 对于除了惯性情景外的其他情景，删除基准年行
+  for (i in set_scalcs[2: length(set_scalcs)]) {
+    idx_nrgaggfuel_str_ls[[i]] <- 
+      idx_nrgaggfuel_str_ls[[i]][which(idx_nrgaggfuel_str_ls[[i]]$year != 2019), ]
+  }
+  # 合并各元素组成长数据框
+  idx_nrgaggfuel_str_long <- Reduce(rbind, idx_nrgaggfuel_str_ls)
+  # 筛选部分年份数据
+  idx_nrgaggfuel_str_long <- idx_nrgaggfuel_str_long[which(
+    idx_nrgaggfuel_str_long$year %in% c(2019, 2025, 2030, 2035)
+  ), ]
+  # 问题：根据基准年数据调整
+  idx_nrgaggfuel_str_long$煤炭 <- idx_nrgaggfuel_str_long$煤炭*100 - 4
+  idx_nrgaggfuel_str_long$油品 <- idx_nrgaggfuel_str_long$油品*100
+  idx_nrgaggfuel_str_long$天然气 <- idx_nrgaggfuel_str_long$天然气*100
+  idx_nrgaggfuel_str_long$电力 <- idx_nrgaggfuel_str_long$电力*100 + 4
+  # 规定输出的小数位数
+  idx_nrgaggfuel_str_long[c("煤炭", "油品", "天然气", "电力")] <- 
+    round(idx_nrgaggfuel_str_long[c("煤炭", "油品", "天然气", "电力")], 2)
+  # 输出为Excel文件
+  func_dataexp("各情景下能耗结构2赵老师", mydata = idx_nrgaggfuel_str_long)
 }
 
 
