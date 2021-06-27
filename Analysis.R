@@ -1192,10 +1192,10 @@ for (set_scalc in set_scalcs) {
     set_calc_cache <- FALSE
   }
   
-  # Agriculture ----
+  # Agri ----
   ## Activity level ----
   agri_act <- 
-    func_interp_3(year = c(2019, 2025, 2050, 2060), 
+    func_interp_3(year = c(2019, 2030, 2050, 2060), 
                   scale = c(1, 0.80, 0.63, 0.62), 
                   base = func_lastone(by_agri_act$agri), 
                   "area")
@@ -1205,12 +1205,12 @@ for (set_scalc in set_scalcs) {
   if (grepl("OTHER", set_scalc)) { #### OTHER ----
     # 近期由于机械化水平提高，用电强度增加，但柴油强度则依历史趋势下降
     agri_nrgintst_df <- func_interp_3(
-      year = c(2019, 2025, 2050, 2060), scale = c(1, 1, 0.5, 0.3), 
+      year = c(2019, 2030, 2060), scale = c(1, 1, 0.3), 
       base = func_lastone(by_agri_nrgintst$diesel), "diesel")
   } else { #### BAU ----
     # 效率较低
     agri_nrgintst_df <- func_interp_3(
-      year = c(2019, 2030, 2060), scale = c(1, 1, 0.3), 
+      year = c(2019, 2030, 2060), scale = c(1, 1, 0.5), 
       base = func_lastone(by_agri_nrgintst$diesel), "diesel")
   }
   
@@ -1218,7 +1218,7 @@ for (set_scalc in set_scalcs) {
   if (grepl("OTHER", set_scalc)) { #### OTHER ----
     # 近期由于机械化水平提高，用电强度增加，但柴油强度则依历史趋势下降
     agri_nrgintst_df$electricity <- 
-      func_interp_3(year = c(2019, 2025, 2045, 2060),
+      func_interp_3(year = c(2019, 2030, 2045, 2060),
                     scale = c(1, 1.1, 1.15, 0.9), 
                     base = func_lastone(by_agri_nrgintst$electricity), 
                     "electricity")$electricity
@@ -1329,7 +1329,7 @@ for (set_scalc in set_scalcs) {
         sapply(global_ind_nrgclass[1:6], function(j) {
           func_interp_3(
             year = c(2019, 2025, 2030, 2035, 2060), 
-            scale = c(1.0, 1.0, 1.10, 1.00, 0.7), 
+            scale = c(1.0, 1.0, 1.00, 0.95, 0.7), 
             base = func_lastone(by_ind_nrgintst_ls[[i]][, j], 
                                 zero.rm =  FALSE))$value}))
     }
@@ -1365,7 +1365,7 @@ for (set_scalc in set_scalcs) {
       ind_nrgintst_ls[[i]][, "gas"] <- 
         func_interp_3(
           year = c(2019, 2025, 2030, 2035, 2060), 
-          scale = c(1.0, 1.1, 1.20, 1.20, 1.00), 
+          scale = c(1.0, 1.0, 1.20, 1.20, 1.10), 
           base = func_lastone(by_ind_nrgintst_ls[[i]][, "gas"], 
                               zero.rm =  FALSE))$value
     }
@@ -1373,8 +1373,8 @@ for (set_scalc in set_scalcs) {
     for (i in global_ind_subsector) {
       ind_nrgintst_ls[[i]][, "gas"] <- 
         func_interp_3(
-          year = c(2019, 2030, 2035, 2060), 
-          scale = c(1.0, 1.4, 1.6, 1), 
+          year = c(2019, 2025, 2030, 2035, 2060), 
+          scale = c(1.0, 1.1, 1.4, 1.6, 1.1), 
           base = func_lastone(by_ind_nrgintst_ls[[i]][, "gas"], 
                               zero.rm =  FALSE))$value
     }
@@ -1386,7 +1386,7 @@ for (set_scalc in set_scalcs) {
       ind_nrgintst_ls[[i]][, "electricity"] <- 
         func_interp_3(
           year = c(2019, 2025, 2030, 2060), 
-          scale = c(1.0, 1.2, 1.2, 1.0), 
+          scale = c(1.0, 1.1, 1.2, 1.2), 
           base = func_lastone(by_ind_nrgintst_ls[[i]][, "electricity"], 
                               zero.rm =  FALSE))$value
     }
@@ -1421,7 +1421,7 @@ for (set_scalc in set_scalcs) {
   if (grepl("OTHER", set_scalc)) {#### OTHER ----
     const_nrgintst_df <- 
       func_interp_3(year = c(2019, 2025, 2040, 2060), 
-                    scale = c(1, 0.85, 0.85, 0.3), 
+                    scale = c(1, 0.8, 0.3, 0.1), 
                     base = func_lastone(by_const_nrgintst$electricity), 
                     "electricity")
   } else { #### BAU ----
@@ -1567,7 +1567,7 @@ for (set_scalc in set_scalcs) {
     # 柴油和燃料油均基于历史数据和比率
     trans_nrgintst_ls[["水路客运"]] <- 
       func_interp_3(year = c(2019, 2025, 2030, 2060), 
-                    scale = c(1, 0.96, 1.00, 0.8), 
+                    scale = c(1, 0.95, 1.00, 0.8), 
                     base = func_lastone(by_trans_nrgintst_ls[["水路客运"]]$diesel), 
                     "diesel")
     trans_nrgintst_ls[["水路客运"]]$residual <- func_interp_3(
@@ -1611,7 +1611,7 @@ for (set_scalc in set_scalcs) {
     # 柴油：基于历史数据和比率
     trans_nrgintst_ls[["水路货运"]] <- func_interp_3(
       year = c(2019, 2025, 2030, 2060), 
-      scale = c(1, 0.97, 0.97, 0.80), 
+      scale = c(1, 0.95, 0.99, 0.80), 
       base = func_lastone(by_trans_nrgintst_ls[["水路货运"]]$diesel),"diesel")
     # 燃料油：基于历史数据和比率
     trans_nrgintst_ls[["水路货运"]]$residual <- func_interp_3(
@@ -1683,18 +1683,18 @@ for (set_scalc in set_scalcs) {
   if (grepl("OTHER", set_scalc)) { ### OTHER ----
     # 服务业用电强度略有增加
     com_nrgintst_ls[[1]] <- 
-      func_interp_2(year = c(2019, 2025, 2060), 
-                    value = c(2958.967, 2958.967, 2958.967*0.9), 
+      func_interp_2(year = c(2019, 2025, 2030, 2060), 
+                    value = c(2958.967, 2958.967*1.05, 2958.967*1.04, 2958.967*0.9), 
                     "electricity")
     # 服务业燃气强度略有增加后减少，且逐渐为电气替代
     com_nrgintst_ls[[2]] <- 
-      func_interp_3(year = c(2019, 2025, 2060),
+      func_interp_3(year = c(2019, 2030, 2060),
                     scale = c(1, 1.2, 0.9), 
                     base = func_lastone(by_com_nrgintst_ls[[2]]$lpg), 
                     "lpg")
     com_nrgintst_ls[[2]]$gas <- 
-      func_interp_3(year = c(2019, 2025, 2060),
-                    scale = c(1, 1.2, 0.9), 
+      func_interp_3(year = c(2019, 2025, 2030, 2060),
+                    scale = c(1, 1.15, 1.2, 0.9), 
                     base = func_lastone(by_com_nrgintst_ls[[2]]$gas), 
                     "gas")$gas
   } else { ### BAU ----
@@ -1765,16 +1765,16 @@ for (set_scalc in set_scalcs) {
     # hh_lpg
     hh_ori_lpguser <- 
       func_cross(prj_global_population[c("year", "household")], 
-                 func_interp_3(year = c(2019, 2033, 2060), 
-                               scale = c(1, 0.70, 0.30), 
+                 func_interp_3(year = c(2019, 2025, 2035, 2060), 
+                               scale = c(1, 0.8, 0.75, 0.30), 
                                base = func_lastone(
                                  by_hh_ori_users_prop[c("year", "lpg")])))
     names(hh_ori_lpguser)[2] <- "lpg"
     # hh_gas
     hh_ori_gasuser <- 
       func_cross(prj_global_population[c("year", "household")], 
-                 func_interp_3(year = c(2019, 2030, 2060), 
-                               scale = c(1, 2, 2), 
+                 func_interp_3(year = c(2019, 2025, 2030, 2060), 
+                               scale = c(1, 1.2, 1.8, 2), 
                                base = func_lastone(
                                  by_hh_ori_users_prop[c("year", "gas")])))
     names(hh_ori_gasuser)[2] <- "gas"
@@ -1790,8 +1790,8 @@ for (set_scalc in set_scalcs) {
   # 生活用电强度
   if (grepl("SLC", set_scalc)) { #### SLC ----
     hh_nrgintst_ls[[1]] <- func_interp_3(
-      year = c(2019, 2025, 2035, 2060), 
-      scale = c(1, 1.13, 1.30, 1.4), 
+      year = c(2019, 2025, 2030, 2035, 2060), 
+      scale = c(1, 1.05, 1.20, 1.30, 1.4), 
       base = func_lastone(by_hh_nrgintst_ls[["household"]][, "electricity"]))
   } else { #### BAU ----
     hh_nrgintst_ls[[1]] <- func_interp_3(
@@ -1808,8 +1808,8 @@ for (set_scalc in set_scalcs) {
   # 生活液化石油气
   if (grepl("SLC", set_scalc)) { #### SLC ----
     hh_nrgintst_ls[[2]] <- 
-      func_interp_3(year = c(2019, 2025, 2035, 2060), 
-                    scale = c(1, 0.98, 0.97, 0.6), 
+      func_interp_3(year = c(2019, 2025, 2030, 2035, 2060), 
+                    scale = c(1, 0.97, 0.97, 0.97, 0.6), 
                     base = func_lastone(by_hh_nrgintst_ls[["lpg"]]$lpg), 
                     "lpg")
   } else { #### BAU ----
@@ -1824,8 +1824,8 @@ for (set_scalc in set_scalcs) {
   # 生活天然气
   if (grepl("SLC", set_scalc)) { #### SLC ----
     hh_nrgintst_ls[[3]] <- 
-      func_interp_3(year = c(2019, 2035, 2060), 
-                    scale = c(1, 0.9, 0.5), 
+      func_interp_3(year = c(2019, 2030, 2035, 2060), 
+                    scale = c(1, 1.1, 0.9, 0.5), 
                     base = func_lastone(by_hh_nrgintst_ls[["gas"]]$gas), 
                     "gas")
   } else { #### BAU ----
@@ -1929,7 +1929,15 @@ for (set_scalc in set_scalcs) {
   tfres_act <- tfres_act[c("year", "electricity")]
   names(tfres_act) <- c("year", "elecuse")
   # 本地发电量
-  if (grepl("24COAL", set_scalc)) { ### 24COAL ----
+  if  (grepl("SLC", set_scalc)) {
+    # 2025年开始减煤，两年内减为原来的3/4
+    tfres_act <- 
+      func_merge_2(list(
+        tfres_act, 
+        func_interp_3(
+          year = c(2019, 2025, 2028, 2050, 2060), scale = c(1, 1, 0.75, 0.5, 0.5), 
+          base = func_lastone(by_tfres_act$elecgen_thrm), "elecgen_thrm")))
+  } else if (grepl("24COAL", set_scalc)) { ### 24COAL ----
     # 2024年开始减煤，两年内减为原来的一半
     tfres_act <- 
       func_merge_2(list(
@@ -2180,14 +2188,20 @@ if (set_resultout == TRUE) {
   # Output ----
   ## Peak time of nrg and emis ----
   # 作图：各情景排放总量图
-  print(func_scompplot(tot_emissum_ls[set_scalcs], "co2"))
+  print(
+    ggarrange(plotlist = list(
+      func_scompplot(tot_emissum_ls[set_scalcs], "co2") + labs(y = "Emission"), 
+      func_scompplot(tot_nrgsumce_ls[set_scalcs], "energyconsump") + 
+        labs(y = "Energy")), nrow = 1, common.legend = TRUE)
+  )
+  
   # 输出各情景能耗和碳排放峰值年份
   idx_peakyear <- data.frame(scenarios = set_scalcs)
   idx_peakyear$nrg_peakyear <- sapply(set_scalcs, function(i) {
     func_peakyear(tot_nrgsumce_ls[[i]], "energyconsump")})
   idx_peakyear$emis_peakyear <- sapply(set_scalcs, function(i) {
     func_peakyear(tot_emissum_ls[[i]], "co2")})
-  idx_peakyear
+  print(idx_peakyear)
   
   ## Peak time of secs ----
   # 输出各情景各部门达峰时间
@@ -2198,15 +2212,17 @@ if (set_resultout == TRUE) {
         func_peakyear(tot_emisbysec_ls[[i]], j)
     }
   }
-  idx_peakyearsec
+  print(idx_peakyearsec)
   # 输出时间轴图
-  ggplot(melt(idx_peakyearsec, id = "scenarios"), 
-         aes(x = value, y = variable)) + 
-    geom_point(aes(color = variable), size = 2) + 
-    geom_text(aes(label = value, hjust = -0.3), size = 3) + 
-    geom_segment(aes(yend = variable, color = variable), xend = 0, size = 1) +
-    xlim(c(2019, 2035)) + facet_wrap(~scenarios, ncol = 1) + 
-    theme_bw()
+  print(
+    ggplot(melt(idx_peakyearsec, id = "scenarios"), 
+           aes(x = value, y = variable)) + 
+      geom_point(aes(color = variable), size = 2) + 
+      geom_text(aes(label = value, hjust = -0.3), size = 3) + 
+      geom_segment(aes(yend = variable, color = variable), xend = 0, size = 1) +
+      xlim(c(2019, 2035)) + facet_wrap(~scenarios, ncol = 1) + 
+      theme_bw()
+  )
   
   ## Key index ----
   # 各情景下服务业和生活部门电力消费量所占比例
