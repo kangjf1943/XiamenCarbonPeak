@@ -1182,6 +1182,7 @@ if (set_cache_hiscalc == FALSE) {
   by_tot_emissum$co2 <- rowSums(by_tot_emissec[names(by_tot_emissec) != "year"])
 }
 
+
 # SCENARIO ANLYS ----
 global_starttime <- Sys.time()
 for (set_scalc in set_scalcs) {
@@ -1202,24 +1203,34 @@ for (set_scalc in set_scalcs) {
   
   ## Energy intensity ----
   ### BR.Diesel ----
-  if (grepl("OTHER", set_scalc)) { #### OTHER ----
-    # 近期由于机械化水平提高，用电强度增加，但柴油强度则依历史趋势下降
-    agri_nrgintst_df <- func_interp_3(
+  # 柴油强度则依历史趋势下降
+  if (grepl("SLC", set_scalc)) {
+    agri_nrgintst_df <- func_interp_3( #### SLC ----
       year = c(2019, 2030, 2060), scale = c(1, 1, 0.3), 
       base = func_lastone(by_agri_nrgintst$diesel), "diesel")
+  } else if (grepl("WLC", set_scalc)) { #### WLC ----
+    agri_nrgintst_df <- func_interp_3(
+      year = c(2019, 2030, 2060), scale = c(1, 1, 0.4), 
+      base = func_lastone(by_agri_nrgintst$diesel), "diesel")
   } else { #### BAU ----
-    # 效率较低
     agri_nrgintst_df <- func_interp_3(
       year = c(2019, 2030, 2060), scale = c(1, 1, 0.5), 
       base = func_lastone(by_agri_nrgintst$diesel), "diesel")
   }
   
   ### BR.Elec ----
-  if (grepl("OTHER", set_scalc)) { #### OTHER ----
+  if (grepl("SLC", set_scalc)) { #### SLC ----
     # 近期由于机械化水平提高，用电强度增加，但柴油强度则依历史趋势下降
     agri_nrgintst_df$electricity <- 
       func_interp_3(year = c(2019, 2030, 2045, 2060),
                     scale = c(1, 1.1, 1.15, 0.9), 
+                    base = func_lastone(by_agri_nrgintst$electricity), 
+                    "electricity")$electricity
+  } else if (grepl("WLC", set_scalc)) { #### WLC ----
+    # 近期由于机械化水平提高，用电强度增加，但柴油强度则依历史趋势下降
+    agri_nrgintst_df$electricity <- 
+      func_interp_3(year = c(2019, 2030, 2045, 2060),
+                    scale = c(1, 1.15, 1.17, 0.95), 
                     base = func_lastone(by_agri_nrgintst$electricity), 
                     "electricity")$electricity
   } else { #### BAU ----
@@ -1360,12 +1371,21 @@ for (set_scalc in set_scalcs) {
   }
   ### BR.GasIntst ----
   # 但是天然气在短期内有所上升
-  if (grepl("OTHER", set_scalc)) { #### OTHER ----
+  if (grepl("SLC", set_scalc)) { #### SLC ----
     for (i in global_ind_subsector) {
       ind_nrgintst_ls[[i]][, "gas"] <- 
         func_interp_3(
           year = c(2019, 2025, 2030, 2035, 2060), 
           scale = c(1.0, 1.0, 1.20, 1.20, 1.10), 
+          base = func_lastone(by_ind_nrgintst_ls[[i]][, "gas"], 
+                              zero.rm =  FALSE))$value
+    }
+  } else if (grepl("WLC", set_scalc)) { #### WLC ----
+    for (i in global_ind_subsector) {
+      ind_nrgintst_ls[[i]][, "gas"] <- 
+        func_interp_3(
+          year = c(2019, 2025, 2030, 2035, 2060), 
+          scale = c(1.0, 1.05, 1.3, 1.40, 1.15), 
           base = func_lastone(by_ind_nrgintst_ls[[i]][, "gas"], 
                               zero.rm =  FALSE))$value
     }
@@ -1381,7 +1401,7 @@ for (set_scalc in set_scalcs) {
   }
   ### RB.ElecIntst ----
   # 电力在短期内有所上升，但比天然气上升幅度小
-  if (grepl("OTHER", set_scalc)) { #### OTHER ----
+  if (grepl("SLC", set_scalc)) { #### SLC ----
     for (i in global_ind_subsector) {
       ind_nrgintst_ls[[i]][, "electricity"] <- 
         func_interp_3(
@@ -1390,12 +1410,21 @@ for (set_scalc in set_scalcs) {
           base = func_lastone(by_ind_nrgintst_ls[[i]][, "electricity"], 
                               zero.rm =  FALSE))$value
     }
+  } else if (grepl("WLC", set_scalc)) { #### WLC ----
+    for (i in global_ind_subsector) {
+      ind_nrgintst_ls[[i]][, "electricity"] <- 
+        func_interp_3(
+          year = c(2019, 2025, 2030, 2060), 
+          scale = c(1.0, 1.15, 1.25, 1.25), 
+          base = func_lastone(by_ind_nrgintst_ls[[i]][, "electricity"], 
+                              zero.rm =  FALSE))$value
+    }
   } else { #### BAU ----
     for (i in global_ind_subsector) {
       ind_nrgintst_ls[[i]][, "electricity"] <- 
         func_interp_3(
           year = c(2019, 2030, 2035, 2060), 
-          scale = c(1.0, 1.3, 1.4, 1.0), 
+          scale = c(1.0, 1.3, 1.4, 1.3), 
           base = func_lastone(by_ind_nrgintst_ls[[i]][, "electricity"], 
                               zero.rm =  FALSE))$value
     }
@@ -1418,10 +1447,16 @@ for (set_scalc in set_scalcs) {
   
   ## Energy intensity ----
   ### BR.NrgIntst ----
-  if (grepl("OTHER", set_scalc)) {#### OTHER ----
+  if (grepl("SLC", set_scalc)) {#### SLC ----
     const_nrgintst_df <- 
       func_interp_3(year = c(2019, 2025, 2040, 2060), 
                     scale = c(1, 0.8, 0.3, 0.1), 
+                    base = func_lastone(by_const_nrgintst$electricity), 
+                    "electricity")
+  } else if (grepl("WLC", set_scalc)) {#### WLC ----
+    const_nrgintst_df <- 
+      func_interp_3(year = c(2019, 2025, 2040, 2060), 
+                    scale = c(1, 0.9, 0.7, 0.5), 
                     base = func_lastone(by_const_nrgintst$electricity), 
                     "electricity")
   } else { #### BAU ----
