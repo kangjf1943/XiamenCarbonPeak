@@ -2262,22 +2262,25 @@ if (set_resultout == TRUE) {
         ind_ori_act_prop[[i]]$"非金属矿物制品业" +
         ind_ori_act_prop[[i]]$"金属加工制造业" +
         ind_ori_act_prop[[i]]$"石油及炼焦", 
-      新兴行业增加值比例 = 
-        ind_ori_act_prop[[i]]$"医药制造业" +
-        ind_ori_act_prop[[i]]$"设备制造业" +
-        ind_ori_act_prop[[i]]$"电子电气制造业", 
       低能耗传统行业增加值比例 = 
         ind_ori_act_prop[[i]]$"纺织及服装制造业" +
         ind_ori_act_prop[[i]]$"木材及家具制造业" +
         ind_ori_act_prop[[i]]$"造纸及印刷" +
         ind_ori_act_prop[[i]]$"文体工美用品制造业" +
-        ind_ori_act_prop[[i]]$"其他制造业", 
-      # 工业单位GDP能耗
-      工业单位GDP能耗 = tot_nrgsecce_ls[[i]]$ind/prj_global_gdp$indgdp,
+        ind_ori_act_prop[[i]]$"其他制造业",
+      新兴行业增加值比例 = 
+        ind_ori_act_prop[[i]]$"医药制造业" +
+        ind_ori_act_prop[[i]]$"设备制造业" +
+        ind_ori_act_prop[[i]]$"电子电气制造业", 
       # 私家车电动车比例
       私家电动车比例 = trans_carprop_ls[[i]]$elec*100, 
       # 家庭人均生活能耗
-      人均生活能耗 = tot_nrgsecce_ls[[i]]$hh / prj_global_population$population
+      人均生活能耗 = tot_nrgsecce_ls[[i]]$hh / prj_global_population$population, 
+      # 能源结构
+      外调电力消费占比 = 
+        tot_nrgaggfuelce[[i]]$"电力"/tot_nrgsumce_ls[[i]]$energyconsump*100, 
+      # 工业单位GDP能耗
+      备用_工业单位GDP能耗 = tot_nrgsecce_ls[[i]]$ind/prj_global_gdp$indgdp
     )
   }
   
@@ -2289,20 +2292,26 @@ if (set_resultout == TRUE) {
     idx_output[[i]] <- 
       idx_all[[i]][which(idx_all[[i]]$year %in% c(2019, 2025, 2030, 2035)), ]
     # 添加相对值
-    for (j in c("工业单位GDP能耗", "人均生活能耗")) {
+    for (j in c("备用_工业单位GDP能耗", "人均生活能耗")) {
       idx_output[[i]][, paste0(j, "变化率")] <- 
         func_conservrate(idx_output[[i]][, j])*100
     }
     # 规定输出小数位数和顺序
-    idx_output[[i]] <- round(
-      idx_output[[i]], 2)[c(
-        "year", "高能耗传统行业增加值比例", "新兴行业增加值比例",
-        "低能耗传统行业增加值比例", "私家电动车比例", "人均生活能耗", 
-        "工业单位GDP能耗")]
+    idx_output[[i]] <- round(idx_output[[i]], 2)
   }
   
-  cat("\n", "Key index:", "\n")
-  print(idx_output)
+  # 给各元素数据框添加情景名称
+  for (i in set_scalcs) {
+    idx_output[[i]][, "scenario"] <- i
+  }
+  # 对于除了惯性情景外的其他情景，删除基准年行
+  for (i in set_scalcs[2: length(set_scalcs)]) {
+    idx_output[[i]] <- idx_output[[i]][which(idx_output[[i]]$year != 2019), ]
+  }
+  # 合并各元素组成长数据框
+  idx_output_long <- Reduce(rbind, idx_output)
+  # 输出为Excel文件
+  func_dataexp("各情景下关键指标", mydata = idx_output_long)
 }
 
 
