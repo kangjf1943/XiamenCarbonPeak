@@ -547,20 +547,20 @@ if (set_cache_nrgbal == FALSE) {
   
   ## 3.2 Ind coal ----
   # 4 = 若谷煤合计-刚算的煤制品-生活用煤-发电用煤
-  # 读取若谷总量数据
-  nrgcheck_total <- func_read_trans("LPLPNXCQ")
-  nrgcheck_total[c("煤炭消费量", "油品消费量", "天然气消费量", "调入电力")] <- 
-    nrgcheck_total[c("煤炭消费量", "油品消费量", "天然气消费量", "调入电力")]*10000
-  nrgcheck_total[c("煤炭消费量", "油品消费量", "天然气消费量", "调入电力")] <- 
+  # 读取统计局物理量总量数据
+  by_checknrgaggfuel <- func_read_trans("LPLPNXCQ")
+  by_checknrgaggfuel[c("煤炭消费量", "油品消费量", "天然气消费量", "调入电力")] <- 
+    by_checknrgaggfuel[c("煤炭消费量", "油品消费量", "天然气消费量", "调入电力")]*10000
+  by_checknrgaggfuel[c("煤炭消费量", "油品消费量", "天然气消费量", "调入电力")] <- 
     func_addnote(
-      nrgcheck_total[c("煤炭消费量", "油品消费量", "天然气消费量", "调入电力")], 
+      by_checknrgaggfuel[c("煤炭消费量", "油品消费量", "天然气消费量", "调入电力")], 
       c("吨", "吨", "万立方米", "万千瓦时"))
   
   for (i in by_nrgbal_years) {
     by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "ind"), "rawcoal"] <- 
-      nrgcheck_total[which(nrgcheck_total$year == i), "煤炭消费量"] - 
+      by_checknrgaggfuel[which(by_checknrgaggfuel$year == i), "煤炭消费量"] - 
       # 刚算的煤制品
-      by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "ind"), "coalproduct"] -
+      by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "ind"), "coalproduct"] - 
       # 生活用煤
       by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "hh"), "rawcoal"] -
       # 发电用煤
@@ -595,7 +595,7 @@ if (set_cache_nrgbal == FALSE) {
   for (i in by_nrgbal_years) {
     by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "gasoline"] <- 
       # 各年份油品总量
-      nrgcheck_total[which(nrgcheck_total$year == i), "油品消费量"] - 
+      by_checknrgaggfuel[which(by_checknrgaggfuel$year == i), "油品消费量"] - 
       # 目前已有的各类油耗数据
       sum(by_nrgbal_ls[[i]][, c("gasoline", "diesel", "kerosene","residual","lpg")])
   }
@@ -605,7 +605,7 @@ if (set_cache_nrgbal == FALSE) {
   for (i in by_nrgbal_years) {
     by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "ind"), "gas"] <- 
       # 若谷核对统计局总量
-      nrgcheck_total[which(nrgcheck_total$year == i), "天然气消费量"] - 
+      by_checknrgaggfuel[which(by_checknrgaggfuel$year == i), "天然气消费量"] - 
       # 生活消费
       by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "hh"), "gas"] -
       # 服务业
@@ -1483,11 +1483,9 @@ for (set_scalc in set_scalcs) {
     trans_act_ls[[set_scalc]]$"水路客运" <- func_interp_3(
       year = c(2019, 2025, 2060), scale = c(1, 1.05, 1.15), 
       base = func_lastone(by_trans_act$"水路客运"))$value
-    comment(trans_act$"水路客运") <- "万人公里"
     trans_act_ls[[set_scalc]]$"水路货运" <- func_interp_3(
       year = c(2019, 2025, 2060), scale = c(1, 1.5, 2.0), 
       base = func_lastone(by_trans_act$水路货运))$value
-    comment(trans_act$"水路货运") <- "万吨公里"
   } else {
     # 如果已有缓存，就继承缓存内容
     trans_act_ls[[set_scalc]] <- trans_act_ls[[set_scalcs[1]]]
@@ -1922,7 +1920,7 @@ for (set_scalc in set_scalcs) {
     sapply(
       names(by_tf_nrgintst)[names(by_tf_nrgintst) %in% "year" == FALSE], 
       function(i) {
-        func_interp_3(year = c(2019, 2025, 2060), scale = c(1, 0.95, 0.5), 
+        func_interp_3(year = c(2019, 2025, 2060), scale = c(1, 1, 0.9), 
                       base = func_lastone(by_tf_nrgintst[, i]))$value}))
   
   ## Activity level ----
