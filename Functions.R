@@ -501,7 +501,7 @@ func_compprice <- function(ori_df, name_gdpindex, baseyear) {
 func_alter <- function(nrg_in, name_in, name_out) {
   # 输入折标煤系数
   factors <- 
-    data.frame(nrg = c("coal", "coalproduct", 
+    data.frame(nrg = c("rawcoal", "coalproduct", 
                        "gasoline", "diesel", "kerosene", "residual", "lpg", 
                        "gas", "electricity", "ce"), 
                factor = c(0.7143, 0.6072, 
