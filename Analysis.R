@@ -2351,9 +2351,8 @@ if (set_resultout == TRUE) {
     idx_emisfuel_ls[[i]] <- 
       func_emissum(tot_nrgfuel_ls[[i]], prj_emisfac_df, agg = FALSE)
     idx_emisfuel_ls[[i]]$electricity <- 
-      tot_elecemis_ls[[i]]$co2
+      res_emissum_ls[[i]]$co2
   }
-  # 问题：每行总和跟总量不同？
   idx_emisaggfuel_ls <- func_secagg_ls(idx_emisfuel_ls, global_nrg_lookup)
   # 按照流程整理数据框
   for (i in set_scalcs[2: length(set_scalcs)]) {
