@@ -1320,7 +1320,7 @@ for (set_scalc in set_scalcs) {
   ## Energy intensity ----
   ind_nrgintst_ls <- vector("list", 13)
   names(ind_nrgintst_ls) <- global_ind_subsector
-  ### BR.NrgIntst ----
+  ### BR.MostNrgIntst ----
   if (grepl("OTHER", set_scalc)) { #### SLC ----
     # 假设大部分能耗强度略有减少
     for (i in global_ind_subsector) {
@@ -1329,7 +1329,7 @@ for (set_scalc in set_scalcs) {
         sapply(global_ind_nrgclass[1:6], function(j) {
           func_interp_3(
             year = c(2019, 2025, 2030, 2035, 2060), 
-            scale = c(1.0, 1.0, 1.05, 0.95, 0.6), 
+            scale = c(1.0, 1.0, 1.10, 1.00, 0.7), 
             base = func_lastone(by_ind_nrgintst_ls[[i]][, j], 
                                 zero.rm =  FALSE))$value}))
     }
@@ -1341,7 +1341,7 @@ for (set_scalc in set_scalcs) {
         sapply(global_ind_nrgclass[1:6], function(j) {
           func_interp_3(
             year = c(2019, 2025, 2030, 2035, 2060), 
-            scale = c(1.0, 1.05, 1.05,  0.9,  0.8), 
+            scale = c(1.0, 1.15, 1.10, 1.00,  0.8), 
             base = func_lastone(by_ind_nrgintst_ls[[i]][, j], 
                                 zero.rm =  FALSE))$value}))
     }
@@ -1358,17 +1358,18 @@ for (set_scalc in set_scalcs) {
                                 zero.rm =  FALSE))$value}))
     }
   }
+  ### BR.GasIntst ----
   # 但是天然气在短期内有所上升
-  if (grepl("OTHER", set_scalc)) {
+  if (grepl("OTHER", set_scalc)) { #### OTHER ----
     for (i in global_ind_subsector) {
       ind_nrgintst_ls[[i]][, "gas"] <- 
         func_interp_3(
-          year = c(2019, 2025, 2030, 2060), 
-          scale = c(1.0, 1.1, 1.2, 1), 
+          year = c(2019, 2025, 2030, 2035, 2060), 
+          scale = c(1.0, 1.1, 1.20, 1.20, 1.00), 
           base = func_lastone(by_ind_nrgintst_ls[[i]][, "gas"], 
                               zero.rm =  FALSE))$value
     }
-  } else {
+  } else { #### BAU ----
     for (i in global_ind_subsector) {
       ind_nrgintst_ls[[i]][, "gas"] <- 
         func_interp_3(
@@ -1378,9 +1379,9 @@ for (set_scalc in set_scalcs) {
                               zero.rm =  FALSE))$value
     }
   }
-  
+  ### RB.ElecIntst ----
   # 电力在短期内有所上升，但比天然气上升幅度小
-  if (grepl("OTHER", set_scalc)) {
+  if (grepl("OTHER", set_scalc)) { #### OTHER ----
     for (i in global_ind_subsector) {
       ind_nrgintst_ls[[i]][, "electricity"] <- 
         func_interp_3(
@@ -1389,7 +1390,7 @@ for (set_scalc in set_scalcs) {
           base = func_lastone(by_ind_nrgintst_ls[[i]][, "electricity"], 
                               zero.rm =  FALSE))$value
     }
-  } else {
+  } else { #### BAU ----
     for (i in global_ind_subsector) {
       ind_nrgintst_ls[[i]][, "electricity"] <- 
         func_interp_3(
@@ -1463,7 +1464,7 @@ for (set_scalc in set_scalcs) {
     trans_act_ls[[set_scalc]][, "农村客车"] <- 
       func_curve_1(
         baseyear = 2019, basevalue = func_lastone(by_trans_act[, "农村客车"]), 
-        maxyear = 2025, endyear = 2060, init_rate = 0.06)$value
+        maxyear = 2030, endyear = 2060, init_rate = 0.06)$value
     
     # 公路其他柴油
     # 按照初始增长率5%增长，至2030年饱和
@@ -1549,14 +1550,14 @@ for (set_scalc in set_scalcs) {
   trans_nrgintst_ls[["公路其他汽油"]] <- data.frame(year = c(2019: 2060))
   trans_nrgintst_ls[["公路其他汽油"]][, "gasoline"] <- func_interp_3(
     year = c(2019, 2030, 2040, 2060), 
-    scale = c(1, 1, 0.8, 0.7), 
+    scale = c(1, 1.05, 0.8, 0.7), 
     base = func_lastone(by_trans_nrgintst_ls[["公路其他汽油"]]$gasoline))$value
   
   # 纯电动私家车
   trans_nrgintst_ls[["纯电动私家车"]] <- data.frame(year = c(2019: 2060))
   trans_nrgintst_ls[["纯电动私家车"]][, "electricity"] <- func_interp_3(
     year = c(2019, 2030, 2040, 2060), 
-    scale = c(1, 1, 0.8, 0.7), 
+    scale = c(1, 1.05, 0.8, 0.7), 
     base = func_lastone(
       by_trans_nrgintst_ls[["纯电动私家车"]]$electricity))$value
   
@@ -1566,7 +1567,7 @@ for (set_scalc in set_scalcs) {
     # 柴油和燃料油均基于历史数据和比率
     trans_nrgintst_ls[["水路客运"]] <- 
       func_interp_3(year = c(2019, 2025, 2030, 2060), 
-                    scale = c(1, 0.97, 1.00, 0.8), 
+                    scale = c(1, 0.96, 1.00, 0.8), 
                     base = func_lastone(by_trans_nrgintst_ls[["水路客运"]]$diesel), 
                     "diesel")
     trans_nrgintst_ls[["水路客运"]]$residual <- func_interp_3(
@@ -1693,7 +1694,7 @@ for (set_scalc in set_scalcs) {
                     "lpg")
     com_nrgintst_ls[[2]]$gas <- 
       func_interp_3(year = c(2019, 2025, 2060),
-                    scale = c(1, 1.2, 0.8), 
+                    scale = c(1, 1.2, 0.9), 
                     base = func_lastone(by_com_nrgintst_ls[[2]]$gas), 
                     "gas")$gas
   } else { ### BAU ----
@@ -1914,7 +1915,7 @@ for (set_scalc in set_scalcs) {
     sapply(
       names(by_tf_nrgintst)[names(by_tf_nrgintst) %in% "year" == FALSE], 
       function(i) {
-        func_interp_3(year = c(2019, 2025, 2060), scale = c(1, 1, 0.9), 
+        func_interp_3(year = c(2019, 2025, 2030, 2060), scale = c(1, 1, 1, 0.9), 
                       base = func_lastone(by_tf_nrgintst[, i]))$value}))
   
   ## Activity level ----
