@@ -2169,31 +2169,6 @@ for (set_scalc in set_scalcs) {
 # 查看运行时间
 Sys.time() - global_starttime
 
-# test
-exp_var <- 
-  prj_global_gdp[c("year", "GDP")][which(prj_global_gdp$year %% 5 == 0), ]
-for (i in set_scalcs) {
-  # 能耗量相关指标
-  exp_var[, paste0(i, "_nrg (万吨标煤)")] <- 
-    tot_nrgsumce_ls[[i]][which(
-      tot_nrgsumce_ls[[i]]$year %% 5 == 0), ]$energyconsump/10000
-  exp_var[, paste0(i, " (吨标煤/万元GDP)")] <- 
-    exp_var[, paste0(i, "_nrg (万吨标煤)")]*10000 / exp_var[, "GDP"]
-  exp_var[, paste0(i, "_nrg变化率")] <- 
-    func_ratecalc(exp_var[, c("year", paste0(i, " (吨标煤/万元GDP)"))], 
-                  paste0(i, " (吨标煤/万元GDP)"))$rate*100
-  # 排放量相关指标
-  exp_var[, paste0(i, "_emis (万吨)")] <- 
-    tot_emissum_ls[[i]][which(
-      tot_emissum_ls[[i]]$year %% 5 == 0), ]$co2
-  exp_var[, paste0(i, " (吨/万元)")] <- 
-    exp_var[, paste0(i, "_emis (万吨)")]*10000 / exp_var[, "GDP"]
-  exp_var[, paste0(i, "_emis变化率")] <- 
-    func_ratecalc(exp_var[, c("year", paste0(i, " (吨/万元)"))], 
-                  paste0(i, " (吨/万元)"))$rate*100
-}
-exp_var$BAU_SLC_OTHER_nrg变化率
-
 
 if (set_resultout == TRUE) {
   # Output ----
