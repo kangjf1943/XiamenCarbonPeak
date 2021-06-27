@@ -2251,56 +2251,34 @@ if (set_resultout == TRUE) {
   idx_all <- vector("list", length(set_scalcs))
   names(idx_all) <- set_scalcs
   
-  # 转入各情景服务业和家庭部门各类能耗量
-  idx_comnrgfuelce_ls <- com_nrgsum_ls
-  idx_hhnrgfuelce_ls <- hh_nrgsum_ls
-  
   for (i in set_scalcs) {
-    # 服务业各种能耗标准煤量
-    # 将LPG和天然气换算成标准量
-    idx_comnrgfuelce_ls[[i]][c("year", "lpg", "gas")] <- 
-      func_toce(idx_comnrgfuelce_ls[[i]][c("year", "lpg", "gas")])
-    # 将电力换算成标准量
-    # 问题：直接用最后一个情景的电力换算系数
-    idx_comnrgfuelce_ls[[i]][c("year", "electricity")] <- 
-      func_cross(idx_comnrgfuelce_ls[[i]][c("year", "electricity")], 
-                 tot_ori_elecequalfac, method = "product")
-    
-    # 家庭各种能耗标准煤量
-    # 将LPG和天然气换算成标准量
-    idx_hhnrgfuelce_ls[[i]][c("year", "lpg", "gas")] <- 
-      func_toce(idx_hhnrgfuelce_ls[[i]][c("year", "lpg", "gas")])
-    # 将电力换算成标准量
-    # 问题：直接用最后一个情景的电力换算系数
-    idx_hhnrgfuelce_ls[[i]][c("year", "electricity")] <- 
-      func_cross(idx_hhnrgfuelce_ls[[i]][c("year", "electricity")], 
-                 tot_ori_elecequalfac, method = "product")
-    
     # 计算服务业和家庭部门电力标准煤占比
     idx_all[[i]] <- data.frame(
       year = c(2019: 2060), 
       # 工业GDP化工占比
-      化工占工业占比 = ind_ori_act_prop[[i]]$"化学工业", 
-      # 工业GDP设备制造业占比
-      设备制造业占比 = ind_ori_act_prop[[i]]$"设备制造业", 
-      # 工业GDP电子电气占比
-      电子电气业占比 = ind_ori_act_prop[[i]]$"电子电气制造业", 
+      高能耗传统行业增加值比例 = 
+        ind_ori_act_prop[[i]]$"化学工业" + 
+        ind_ori_act_prop[[i]]$"食品饮料及烟草制造业" +
+        ind_ori_act_prop[[i]]$"非金属矿物制品业" +
+        ind_ori_act_prop[[i]]$"金属加工制造业" +
+        ind_ori_act_prop[[i]]$"石油及炼焦", 
+      新兴行业增加值比例 = 
+        ind_ori_act_prop[[i]]$"医药制造业" +
+        ind_ori_act_prop[[i]]$"设备制造业" +
+        ind_ori_act_prop[[i]]$"电子电气制造业", 
+      低能耗传统行业增加值比例 = 
+        ind_ori_act_prop[[i]]$"纺织及服装制造业" +
+        ind_ori_act_prop[[i]]$"木材及家具制造业" +
+        ind_ori_act_prop[[i]]$"造纸及印刷" +
+        ind_ori_act_prop[[i]]$"文体工美用品制造业" +
+        ind_ori_act_prop[[i]]$"其他制造业", 
       # 工业单位GDP能耗
       工业单位GDP能耗 = tot_nrgsecce_ls[[i]]$ind/prj_global_gdp$indgdp,
       # 私家车电动车比例
       私家电动车比例 = trans_carprop_ls[[i]]$elec*100, 
-      # 服务业单位GDP能耗
-      服务业单位GDP能耗 = tot_nrgsecce_ls[[i]]$com/prj_global_gdp$comgdp, 
-      # 服务业能耗电力占比
-      服务业耗电占比 = idx_comnrgfuelce_ls[[i]][, "electricity"]/
-        (rowSums(idx_comnrgfuelce_ls[[i]][names(
-          idx_comnrgfuelce_ls[[i]]) != "year"]))*100, 
       # 家庭人均生活能耗
-      人均生活能耗 = tot_nrgsecce_ls[[i]]$hh / prj_global_population$population, 
-      # 家庭能耗电力占比
-      家庭耗电占比 = idx_hhnrgfuelce_ls[[i]][, "electricity"]/
-        (rowSums(idx_hhnrgfuelce_ls[[i]][names(
-          idx_hhnrgfuelce_ls[[i]]) != "year"]))*100)
+      人均生活能耗 = tot_nrgsecce_ls[[i]]$hh / prj_global_population$population
+    )
   }
   
   # 输出特定年份结果
@@ -2311,16 +2289,16 @@ if (set_resultout == TRUE) {
     idx_output[[i]] <- 
       idx_all[[i]][which(idx_all[[i]]$year %in% c(2019, 2025, 2030, 2035)), ]
     # 添加相对值
-    for (j in c("工业单位GDP能耗", "服务业单位GDP能耗", "人均生活能耗")) {
+    for (j in c("工业单位GDP能耗", "人均生活能耗")) {
       idx_output[[i]][, paste0(j, "变化率")] <- 
         func_conservrate(idx_output[[i]][, j])*100
     }
     # 规定输出小数位数和顺序
     idx_output[[i]] <- round(
       idx_output[[i]], 2)[c(
-        "year", "化工占工业占比", "设备制造业占比", "电子电气业占比", 
-        "私家电动车比例", "服务业单位GDP能耗变化率", "服务业耗电占比", 
-        "人均生活能耗变化率", "家庭耗电占比", "工业单位GDP能耗")]
+        "year", "高能耗传统行业增加值比例", "新兴行业增加值比例",
+        "低能耗传统行业增加值比例", "私家电动车比例", "人均生活能耗", 
+        "工业单位GDP能耗")]
   }
   
   cat("\n", "Key index:", "\n")
