@@ -498,13 +498,14 @@ func_compprice <- function(ori_df, name_gdpindex, baseyear) {
 }
 
 ## 转化能源类型
+# 问题：原煤折标煤系数应该为0.7143，但为了和统计局标准量一致，改为0.61
 func_alter <- function(nrg_in, name_in, name_out) {
   # 输入折标煤系数
   factors <- 
     data.frame(nrg = c("rawcoal", "coalproduct", 
                        "gasoline", "diesel", "kerosene", "residual", "lpg", 
                        "gas", "electricity", "ce"), 
-               factor = c(0.7143, 0.6072, 
+               factor = c(0.61, 0.6072, 
                           1.4714, 1.4571, 1.4714, 1.4286, 1.7143, 
                           13.3, 1.229, 1))
   alter_factor <- factors$factor[which(factors$nrg == name_in)] / 
