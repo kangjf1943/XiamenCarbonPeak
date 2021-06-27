@@ -1,8 +1,8 @@
 # SETTING ----
 # 计算内容或口径相关设置
 # 设置要计算的情景
-set_scalcs <- 
-  c("BAU", "BAU_SLC_OTHER") 
+set_scalcs <- init_scenarios
+  # c("BAU", "BAU_SLC_OTHER") 
 set_thrmfac_meth <- TRUE # 是否采用煤电折标煤系数
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 
@@ -1341,7 +1341,7 @@ for (set_scalc in set_scalcs) {
         sapply(global_ind_nrgclass[1:6], function(j) {
           func_interp_3(
             year = c(2019, 2025, 2030, 2035, 2060), 
-            scale = c(1.0, 1.15, 1.10, 1.00,  0.8), 
+            scale = c(1.0, 1.15, 1.15, 1.00,  0.8), 
             base = func_lastone(by_ind_nrgintst_ls[[i]][, j], 
                                 zero.rm =  FALSE))$value}))
     }
@@ -1353,7 +1353,7 @@ for (set_scalc in set_scalcs) {
         sapply(global_ind_nrgclass[1:6], function(j) {
           func_interp_3(
             year = c(2019, 2025, 2030, 2040, 2060), 
-            scale = c(1.0, 1.1,  1.2,  1.0,  1.0), 
+            scale = c(1.0, 1.20,  1.2,  1.0,  1.0), 
             base = func_lastone(by_ind_nrgintst_ls[[i]][, j], 
                                 zero.rm =  FALSE))$value}))
     }
@@ -1374,7 +1374,7 @@ for (set_scalc in set_scalcs) {
       ind_nrgintst_ls[[i]][, "gas"] <- 
         func_interp_3(
           year = c(2019, 2025, 2030, 2035, 2060), 
-          scale = c(1.0, 1.1, 1.4, 1.6, 1.1), 
+          scale = c(1.0, 1.1, 1.4, 1.6, 1.2), 
           base = func_lastone(by_ind_nrgintst_ls[[i]][, "gas"], 
                               zero.rm =  FALSE))$value
     }
@@ -1586,7 +1586,7 @@ for (set_scalc in set_scalcs) {
       value = c(
         func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual), 
         func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual)*0.9, 
-        func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual)*0.85),
+        func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual)*0.9),
       "residual")$residual
   } else { #### BAU ----
     # 柴油和燃料油均基于历史数据和比率
@@ -1601,7 +1601,7 @@ for (set_scalc in set_scalcs) {
                     value = c(
                       func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual), 
                       func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual), 
-                      func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual)*0.9),
+                      func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual)),
                     "residual")$residual
   }
   
@@ -1624,12 +1624,12 @@ for (set_scalc in set_scalcs) {
     # 柴油：基于历史数据和比率
     trans_nrgintst_ls[["水路货运"]] <- func_interp_3(
       year = c(2019, 2025, 2030, 2060), 
-      scale = c(1, 0.97, 0.95, 0.9), 
+      scale = c(1, 1, 1, 0.9), 
       base = func_lastone(by_trans_nrgintst_ls[["水路货运"]]$diesel),"diesel")
     # 燃料油：基于历史数据和比率
     trans_nrgintst_ls[["水路货运"]]$residual <- func_interp_3(
       year = c(2019, 2025, 2030, 2060), 
-      scale = c(1, 0.97, 0.95, 0.9), 
+      scale = c(1, 1, 1, 0.9), 
       base = func_lastone(by_trans_nrgintst_ls[["水路货运"]]$residual),
       "residual")$residual
   } else { #### BAU ----
@@ -1928,16 +1928,27 @@ for (set_scalc in set_scalcs) {
                                hh_nrgsum_ls[[set_scalc]]))
   tfres_act <- tfres_act[c("year", "electricity")]
   names(tfres_act) <- c("year", "elecuse")
+  ### BR.LocalElecGen ----
   # 本地发电量
-  if  (grepl("SLC", set_scalc)) {
-    # 2025年开始减煤，两年内减为原来的3/4
+  if  (grepl("SLC", set_scalc)) { #### SLC ----
+    # 2026年开始减煤，两年内减为原来的3/4
     tfres_act <- 
       func_merge_2(list(
         tfres_act, 
         func_interp_3(
-          year = c(2019, 2025, 2028, 2050, 2060), scale = c(1, 1, 0.75, 0.5, 0.5), 
+          year = c(2019, 2025, 2028, 2050, 2060), 
+          scale = c(1.0, 1.00, 0.75, 0.5, 0.5), 
           base = func_lastone(by_tfres_act$elecgen_thrm), "elecgen_thrm")))
-  } else if (grepl("24COAL", set_scalc)) { ### 24COAL ----
+  } else if (grepl("WLC", set_scalc)) { #### WLC ----
+    # 2028年开始减煤，两年内减为原来的3/4
+    tfres_act <- 
+      func_merge_2(list(
+        tfres_act, 
+        func_interp_3(
+          year = c(2019, 2027, 2031, 2050, 2060), 
+          scale = c(1.0, 1.00, 0.75, 0.5, 0.5), 
+          base = func_lastone(by_tfres_act$elecgen_thrm), "elecgen_thrm")))
+  } else if (grepl("24COAL", set_scalc)) { #### 24COAL ----
     # 2024年开始减煤，两年内减为原来的一半
     tfres_act <- 
       func_merge_2(list(
@@ -1945,7 +1956,7 @@ for (set_scalc in set_scalcs) {
         func_interp_3(
           year = c(2019, 2023, 2025, 2050, 2060), scale = c(1, 1, 0.5, 0, 0), 
           base = func_lastone(by_tfres_act$elecgen_thrm), "elecgen_thrm")))
-  } else if (grepl("26COAL", set_scalc)) { ### 26COAL ----
+  } else if (grepl("26COAL", set_scalc)) { #### 26COAL ----
     # 2026年开始减煤，五年内减为原来的一半
     tfres_act <- 
       func_merge_2(list(
