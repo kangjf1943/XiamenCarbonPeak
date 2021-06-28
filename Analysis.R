@@ -2311,7 +2311,16 @@ if (set_resultout == TRUE) {
       外调电力消费占比 = 
         tot_nrgaggfuelce[[i]]$"电力"/tot_nrgsumce_ls[[i]]$energyconsump*100, 
       # 工业单位GDP能耗
-      备用_工业单位GDP能耗 = tot_nrgsecce_ls[[i]]$ind/prj_global_gdp$indgdp
+      备用_工业单位GDP能耗 = tot_nrgsecce_ls[[i]]$ind/prj_global_gdp$indgdp, 
+      # 碳排放量
+      碳排放量 = tot_emissum_ls[[i]]$co2, 
+      # 能耗量
+      能耗量 = tot_nrgsumce_ls[[i]]$energyconsump/10000, 
+      # 单位GDP碳排放和能耗
+      单位GDP碳排放 = func_cross(
+        tot_emissum_ls[[i]], prj_global_gdp[c("year", "GDP")], "rate")$co2, 
+      单位GDP能耗 = func_cross(
+        tot_nrgsumce_ls[[i]], prj_global_gdp[c("year", "GDP")], "rate")$energyconsump
     )
   }
   
@@ -2326,6 +2335,11 @@ if (set_resultout == TRUE) {
     for (j in c("备用_工业单位GDP能耗", "人均生活能耗")) {
       idx_output[[i]][, paste0(j, "变化率")] <- 
         func_conservrate(idx_output[[i]][, j])*100
+    }
+    # 添加五年变化率
+    for (j in c("单位GDP碳排放", "单位GDP能耗")) {
+      idx_output[[i]][, paste0(j, "变化率")] <- 
+        func_ratecalc(idx_output[[i]], j)$rate*100
     }
     # 规定输出小数位数和顺序
     idx_output[[i]] <- round(idx_output[[i]], 2)
