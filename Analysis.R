@@ -2352,27 +2352,17 @@ if (set_resultout == TRUE) {
       func_emissum(tot_nrgfuel_ls[[i]], prj_emisfac_df, agg = FALSE)
     idx_emisfuel_ls[[i]]$electricity <- 
       res_emissum_ls[[i]]$co2
+    idx_emisfuel_ls[[i]] <- func_nrg_intst(
+      idx_emisfuel_ls[[i]], tot_emissum_ls[[i]], "co2"
+    )
   }
   idx_emisaggfuel_ls <- func_secagg_ls(idx_emisfuel_ls, global_nrg_lookup)
-  # 按照流程整理数据框
-  for (i in set_scalcs[2: length(set_scalcs)]) {
-    idx_emisaggfuel_ls[[i]] <- 
-      idx_emisaggfuel_ls[[i]][which(idx_emisaggfuel_ls[[i]]$year != 2019), ]
+  for (i in set_scalcs) {
+    idx_emisaggfuel_ls[[i]][c("煤炭", "油品", "天然气", "电力")] <- 
+      idx_emisaggfuel_ls[[i]][c("煤炭", "油品", "天然气", "电力")]*100
   }
-  # 对于除了惯性情景外的其他情景，删除基准年行
-  for (i in set_scalcs[2: length(set_scalcs)]) {
-    idx_emisaggfuel_ls[[i]] <- 
-      idx_emisaggfuel_ls[[i]][which(idx_emisaggfuel_ls[[i]]$year != 2019), ]
-  }
-  # 合并各元素组成长数据框
-  idx_emisaggfuel_long <- Reduce(rbind, idx_emisaggfuel_ls)
-  # 筛选部分年份数据
-  idx_emisaggfuel_long <- idx_emisaggfuel_long[which(
-    idx_emisaggfuel_long$year %in% c(2019, 2025, 2030, 2035)
-  ), ]
-  # 规定输出的小数位数
-  idx_emisaggfuel_long[c("煤炭", "油品", "天然气", "电力")] <- 
-    round(idx_emisaggfuel_long[c("煤炭", "油品", "天然气", "电力")], 2)
+  # 整理成目标样式
+  idx_emisaggfuel_long <- func_idxouput(idx_emisaggfuel_ls)
   # 输出为Excel文件
   func_dataexp("各情景下排放结构", mydata = idx_emisaggfuel_long)
 }
