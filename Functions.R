@@ -1095,6 +1095,30 @@ func_dataexp <- function(wbname, mydata, mydata_type = "df") {
   saveWorkbook(wb = wb, file = wbname, returnValue = T)
 }
 
+# 整理每五年导出数据函数
+func_idxouput <- function(var_ls) {
+  # 添加情景名称
+  for (i in set_scalcs) {
+    var_ls[[i]]$scenario <- i
+  }
+  # 对于除了惯性情景外的其他情景，删除基准年行
+  for (i in set_scalcs[2: length(set_scalcs)]) {
+    var_ls[[i]] <- 
+      var_ls[[i]][which(var_ls[[i]]$year != 2019), ]
+  }
+  # 合并各元素组成长数据框
+  var_ls_long <- Reduce(rbind, var_ls)
+  # 筛选部分年份数据
+  var_ls_long <- var_ls_long[which(
+    var_ls_long$year %in% c(2019, 2025, 2030, 2035)
+  ), ]
+  # 规定输出的小数位数
+  var_ls_long[names(var_ls_long) %in% c("year", "scenario") == FALSE] <- 
+    round(var_ls_long[names(var_ls_long) %in% c("year", "scenario") == FALSE], 
+          digits = 2)
+  var_ls_long
+}
+
 # # 考虑废弃的函数
 # # 计算乘积：可能跟上面的函数重复了 - 废弃？
 # func_merge_product <- function(var_1, name_1, var_2, name_2) {
