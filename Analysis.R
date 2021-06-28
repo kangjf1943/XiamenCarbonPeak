@@ -99,6 +99,23 @@ if (set_cache_globalvar == FALSE) {
                 data.frame(ind_agg = c("电力、热力生产和供应业"), 
                            ind_ori = c("电力、热力生产和供应业"))))
   
+  # 工业行业根据能源消耗强度分类
+  global_indsecclass_lookup <- 
+    Reduce(rbind, 
+      list(
+        data.frame(ind_agg = c("高能耗传统行业"), 
+                   ind_ori = c("化学工业", "食品饮料及烟草制造业", 
+                               "非金属矿物制品业", "金属加工制造业", 
+                               "石油及炼焦")), 
+        data.frame(ind_agg = c("低能耗传统行业"), 
+                   ind_ori = c("纺织及服装制造业", "木材及家具制造业", 
+                               "造纸及印刷", "文体工美用品制造业", 
+                               "其他制造业")), 
+        data.frame(ind_agg = c("新兴行业"), 
+                   ind_ori = c("医药制造业", "设备制造业", "电子电气制造业"))
+      )
+    )
+  
   # 工业子部门
   global_ind_ori_subsector <- c("食品饮料及烟草制造业", 
                                 "纺织及服装制造业", "木材及家具制造业", 
@@ -2365,6 +2382,18 @@ if (set_resultout == TRUE) {
   idx_emisaggfuel_long <- func_idxouput(idx_emisaggfuel_ls)
   # 输出为Excel文件
   func_dataexp("各情景下排放结构", mydata = idx_emisaggfuel_long)
+  
+  ## IndGdpStrAggsec ----
+  idx_indgdppropaggsec <- 
+    func_secagg_ls(ind_ori_act_prop, global_indsecclass_lookup)
+  plot(func_ratecalc(idx_indgdppropaggsec$BAU_WLC_OTHER, "新兴行业"))
+  plot(func_ratecalc(idx_indgdppropaggsec$BAU_SLC_OTHER, "新兴行业"))
+  
+  #私家车每年提升百分率
+  plot(trans_carprop_ls$BAU_WLC_OTHER$elec*100 - 
+         c(0, trans_carprop_ls$BAU_WLC_OTHER$elec[1:(length(2019:2059))])*100)
+  plot(trans_carprop_ls$BAU_SLC_OTHER$elec*100 - 
+         c(0, trans_carprop_ls$BAU_SLC_OTHER$elec[1:(length(2019:2059))])*100)
 }
 
 
