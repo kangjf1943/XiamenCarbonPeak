@@ -45,7 +45,9 @@ if (set_cache_globalvar == FALSE) {
                 data.frame(ind_agg = c("天然气"), 
                            ind_ori = c("gas")), 
                 data.frame(ind_agg = c("电力"), 
-                           ind_ori = c("electricity"))))
+                           ind_ori = c("electricity")), 
+                data.frame(ind_agg = c("非化石"), 
+                           ind_ori = c("clean"))))
   
   # 工业行业聚合方式
   global_ind_lookup <- 
@@ -442,6 +444,7 @@ if (set_cache_init == FALSE) {
   tot_nrgaggfuelce <- init_output_templatels
   tot_nrgsumce_ls <- init_output_templatels
   tot_elecemis_ls <- init_output_templatels
+  tot_cleansumce <- init_output_templatels
   # 删除不必要的包装盒
   # 电力等不区分直接排放和间接排放故删除
   rm(tf_emissum_dir_ls, res_emissum_dir_ls, tot_emissum_dir_ls)
@@ -2106,6 +2109,12 @@ for (set_scalc in set_scalcs) {
     # 计算本地发电标准煤量
     tot_ori_elecgenequal <- 
       func_toce(tf_nrgsum_ls[[set_scalc]], agg = TRUE)
+    # 本地发电标准煤量还要加上本地非化石能源标准煤量
+    tot_cleansumce[[set_scalc]] <- 
+      func_cross(tfres_act[c("year", "elecgen_clean")], tot_ori_elecequalfac)
+    tot_ori_elecgenequal <- func_cross(
+      tot_ori_elecgenequal, tot_cleansumce[[set_scalc]], "sum"
+    )
     
     # 计算本地发电和外调电力标准煤量之和
     tot_ori_elecstdcoal <- 
@@ -2155,11 +2164,15 @@ for (set_scalc in set_scalcs) {
                       tf_nrgsum_ls[[set_scalc]]))
     tot_nrgfuelce_ls[[set_scalc]] <- func_toce(tot_nrgfuel_ls[[set_scalc]])
     
-    # 加上外调电力标准量
-    tot_nrgfuelce_ls[[set_scalc]] <- 
-      func_merge_2(list(tot_nrgfuelce_ls[[set_scalc]], tot_elecsumce_ls[[set_scalc]]))
+    # 加上外调电力标准量和本地非化石能源
+    tot_nrgfuelce_ls[[set_scalc]] <- func_merge_2(
+      list(tot_nrgfuelce_ls[[set_scalc]], 
+           tot_elecsumce_ls[[set_scalc]], 
+           tot_cleansumce[[set_scalc]]))
     names(tot_nrgfuelce_ls[[set_scalc]])[names(tot_nrgfuelce_ls[[set_scalc]]) ==
                                            "nrg_input"] <- "electricity"
+    names(tot_nrgfuelce_ls[[set_scalc]])[names(tot_nrgfuelce_ls[[set_scalc]]) ==
+                                           "elecgen_clean"] <- "clean"
     
     # 聚合成煤油气电
     tot_nrgaggfuel[[set_scalc]] <- 
@@ -2355,9 +2368,10 @@ if (set_resultout == TRUE) {
   idx_nrgaggfuel_str_long$油品 <- idx_nrgaggfuel_str_long$油品*100
   idx_nrgaggfuel_str_long$天然气 <- idx_nrgaggfuel_str_long$天然气*100
   idx_nrgaggfuel_str_long$电力 <- idx_nrgaggfuel_str_long$电力*100 + 4
+  idx_nrgaggfuel_str_long$非化石 <- idx_nrgaggfuel_str_long$非化石*100
   # 规定输出的小数位数
-  idx_nrgaggfuel_str_long[c("煤炭", "油品", "天然气", "电力")] <- 
-    round(idx_nrgaggfuel_str_long[c("煤炭", "油品", "天然气", "电力")], 2)
+  idx_nrgaggfuel_str_long[c("煤炭", "油品", "天然气", "电力", "非化石")] <- 
+    round(idx_nrgaggfuel_str_long[c("煤炭", "油品", "天然气", "电力", "非化石")], 2)
   # 输出为Excel文件
   func_dataexp("各情景下能耗结构2赵老师", mydata = idx_nrgaggfuel_str_long)
   
@@ -2375,8 +2389,8 @@ if (set_resultout == TRUE) {
   }
   idx_emisaggfuel_ls <- func_secagg_ls(idx_emisfuel_ls, global_nrg_lookup)
   for (i in set_scalcs) {
-    idx_emisaggfuel_ls[[i]][c("煤炭", "油品", "天然气", "电力")] <- 
-      idx_emisaggfuel_ls[[i]][c("煤炭", "油品", "天然气", "电力")]*100
+    idx_emisaggfuel_ls[[i]][c("煤炭", "油品", "天然气", "电力", "非化石")] <- 
+      idx_emisaggfuel_ls[[i]][c("煤炭", "油品", "天然气", "电力", "非化石")]*100
   }
   # 整理成目标样式
   idx_emisaggfuel_long <- func_idxouput(idx_emisaggfuel_ls)
