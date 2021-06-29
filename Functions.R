@@ -507,7 +507,7 @@ func_alter <- function(nrg_in, name_in, name_out) {
                        "gas", "electricity", "ce"), 
                factor = c(0.61, 0.6072, 
                           1.4714, 1.4571, 1.4714, 1.4286, 1.7143, 
-                          13.3, 1.229, 1))
+                          12.5, 1.229, 1))
   alter_factor <- factors$factor[which(factors$nrg == name_in)] / 
     factors$factor[which(factors$nrg == name_out)]
   nrg_out <- nrg_in * alter_factor
