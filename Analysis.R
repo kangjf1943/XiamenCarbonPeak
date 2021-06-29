@@ -1,15 +1,16 @@
 # SETTING ----
 # 计算内容或口径相关设置
 # 设置要计算的情景
-set_scalcs <- init_scenarios
-  # c("BAU", "BAU_SLC_OTHER") 
+set_scalcs <- 
+  c("BAU", "BAU_SLC_OTHER", "BAU_SLC_26COAL1/4", 
+    "BAU_SLC_26COAL1/4_OTHER", "BAU_26COAL1/2") 
 set_thrmfac_meth <- TRUE # 是否采用煤电折标煤系数
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 
 # 缓存相关设置
-set_cache_globalvar <- FALSE # 是否已有全局变量缓存
-set_cache_nrgbal <- FALSE # 是否已有能源平衡表缓存
-set_cache_hiscalc <- FALSE # 是否已有历史数据计算缓存
+set_cache_globalvar <- TRUE # 是否已有全局变量缓存
+set_cache_nrgbal <- TRUE # 是否已有能源平衡表缓存
+set_cache_hiscalc <- TRUE # 是否已有历史数据计算缓存
 set_cache_init <- FALSE # 是否已有初始化缓存
 
 # 结果相关设置
@@ -414,8 +415,7 @@ if (set_cache_globalvar == FALSE) {
 if (set_cache_init == FALSE) {
   # INIT ----
   # 情景包括：惯性，弱低碳，强低碳，提前退煤，退煤5个情景
-  init_scenarios <- 
-    c("BAU", "BAU_WLC_OTHER", "BAU_SLC_OTHER", "BAU_24COAL", "BAU_26COAL")
+  init_scenarios <- set_scalcs
   # 构建输出结果变量
   # 需要输出的主要数据性质
   init_outputs <- c("_nrgsum_ls", "_emissum_dir_ls", "_emissum_ls")
@@ -1986,7 +1986,7 @@ for (set_scalc in set_scalcs) {
   names(tfres_act) <- c("year", "elecuse")
   ### BR.LocalElecGen ----
   # 本地发电量
-  if  (grepl("SLC", set_scalc)) { #### SLC ----
+  if  (grepl("26COAL1/4", set_scalc)) { #### 26COAL1/4 ----
     # 2026年开始减煤，两年内减为原来的3/4
     tfres_act <- 
       func_merge_2(list(
@@ -1995,7 +1995,7 @@ for (set_scalc in set_scalcs) {
           year = c(2019, 2025, 2028, 2050, 2060), 
           scale = c(1.0, 1.00, 0.75, 0.5, 0.5), 
           base = func_lastone(by_tfres_act$elecgen_thrm), "elecgen_thrm")))
-  } else if (grepl("WLC", set_scalc)) { #### WLC ----
+  } else if (grepl("28COAL1/4", set_scalc)) { #### 28COAL1/4 ----
     # 2028年开始减煤，两年内减为原来的3/4
     tfres_act <- 
       func_merge_2(list(
@@ -2004,7 +2004,7 @@ for (set_scalc in set_scalcs) {
           year = c(2019, 2027, 2031, 2050, 2060), 
           scale = c(1.0, 1.00, 0.75, 0.5, 0.5), 
           base = func_lastone(by_tfres_act$elecgen_thrm), "elecgen_thrm")))
-  } else if (grepl("24COAL", set_scalc)) { #### 24COAL ----
+  } else if (grepl("24COAL1/2", set_scalc)) { #### 24COAL1/2 ----
     # 2024年开始减煤，两年内减为原来的一半
     tfres_act <- 
       func_merge_2(list(
@@ -2012,7 +2012,7 @@ for (set_scalc in set_scalcs) {
         func_interp_3(
           year = c(2019, 2023, 2025, 2050, 2060), scale = c(1, 1, 0.5, 0, 0), 
           base = func_lastone(by_tfres_act$elecgen_thrm), "elecgen_thrm")))
-  } else if (grepl("26COAL", set_scalc)) { #### 26COAL ----
+  } else if (grepl("26COAL1/2", set_scalc)) { #### 26COAL1/2 ----
     # 2026年开始减煤，五年内减为原来的一半
     tfres_act <- 
       func_merge_2(list(
@@ -2590,14 +2590,14 @@ if (set_figureexport == TRUE) {
   
   func_excelplot(func_scompplot(
     tot_emissum_ls[c(
-      "BAU", "BAU_WLC_OTHER", "BAU_SLC_OTHER", "BAU_26COAL")], "co2", 
+      "BAU", "BAU_WLC_OTHER", "BAU_SLC_OTHER", "BAU_26COAL1/2")], "co2", 
     size = 1.2), "top") + 
     labs(x = "", y = "二氧化碳排放（万吨）") +
     scale_y_continuous(breaks = seq(0, 3500, by = 500)) + 
     scale_x_continuous(breaks = seq(2015, 2060, by = 5)) +
     scale_color_manual(
       name = "", 
-      breaks = c("BAU", "BAU_WLC_OTHER", "BAU_SLC_OTHER", "BAU_26COAL"), 
+      breaks = c("BAU", "BAU_WLC_OTHER", "BAU_SLC_OTHER", "BAU_26COAL1/2"), 
       labels = c("惯性情景", "减排情景", "强化减排", "退煤情景"), 
       values = c("#800000", 
                  "orange",  
