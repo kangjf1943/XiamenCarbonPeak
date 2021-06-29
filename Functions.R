@@ -289,7 +289,7 @@ comment(func_cross) <-
 
 
 ## 构建插值函数
-func_interp_2 <- function(year, value, name_value = "value", showplot = FALSE) {
+func_interp_2 <- function(year, value, name_value = "value", showplot = TRUE) {
   total_df <- data.frame(year = c(year[1]: year[length(year)]))
   for (j in c(1:(length(year) - 1))) {
     start_year <- year[j]
