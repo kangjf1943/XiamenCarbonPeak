@@ -451,6 +451,7 @@ if (set_cache_init == FALSE) {
   tot_elecsumce_ls <- init_output_templatels
   tot_nrgaggfuel <- init_output_templatels
   tot_nrgaggfuelce <- init_output_templatels
+  tot_nrgpropaggfuel <- init_output_templatels
   tot_nrgsumce_ls <- init_output_templatels
   tot_elecemis_ls <- init_output_templatels
   tot_cleansumce <- init_output_templatels
@@ -2183,11 +2184,14 @@ for (set_scalc in set_scalcs) {
     names(tot_nrgfuelce_ls[[set_scalc]])[names(tot_nrgfuelce_ls[[set_scalc]]) ==
                                            "elecgen_clean"] <- "clean"
     
-    # 聚合成煤油气电
+    # 聚合成煤油气电并计算相应比例
     tot_nrgaggfuel[[set_scalc]] <- 
       func_secagg(tot_nrgfuel_ls[[set_scalc]], global_nrg_lookup)
     tot_nrgaggfuelce[[set_scalc]] <- 
       func_secagg(tot_nrgfuelce_ls[[set_scalc]], global_nrg_lookup)
+    tot_nrgpropaggfuel[[set_scalc]] <- func_nrg_intst(
+      tot_nrgaggfuelce[[set_scalc]], tot_nrgsumce_ls[[set_scalc]], "energyconsump" 
+    )
     
   } else { ### Equal meth ----
     # 一次能源能耗之和
