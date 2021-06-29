@@ -538,9 +538,9 @@ func_toce <- function(nrg_df, agg = FALSE) {
     data.frame(nrg = c("rawcoal", "coalproduct", 
                        "gasoline", "diesel", "kerosene", "residual", "lpg", 
                        "gas"), 
-               factor = c(0.7143, 0.6072, 
+               factor = c(0.61, 0.6072, 
                           1.4714, 1.4571, 1.4714, 1.4286, 1.7143, 
-                          13.3))
+                          12.5))
   # 提取共同的列名
   name_nrg <- names(nrg_df)[names(nrg_df) %in% "year" == FALSE]
   name_factor <- factors$nrg
