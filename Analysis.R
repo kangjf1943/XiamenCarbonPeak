@@ -1,17 +1,17 @@
 # SETTING ----
 # 计算内容或口径相关设置
 # 设置要计算的情景
-set_scalcs <- "BAU_SLCPLUS_OTHER"
-  #c("BAU", "BAU_WLC_28COAL1/4", "BAU_SLCPLUS_OTHER", 
-   # "BAU_SLC_26COAL1/4_OTHER", "BAU_26COAL1/2") 
+set_scalcs <- 
+  c("BAU", "BAU_WLC_28COAL1/4", "BAU_SLCPLUS_OTHER",
+  "BAU_SLC_26COAL1/4_OTHER", "BAU_26COAL1/2")
 set_thrmfac_meth <- TRUE # 是否采用煤电折标煤系数
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 set_lowdev <- FALSE #是否采用经济低发展情景
 
 # 缓存相关设置
 set_cache_globalvar <- FALSE # 是否已有全局变量缓存
-set_cache_nrgbal <- TRUE # 是否已有能源平衡表缓存
-set_cache_hiscalc <- TRUE # 是否已有历史数据计算缓存
+set_cache_nrgbal <- FALSE # 是否已有能源平衡表缓存
+set_cache_hiscalc <- FALSE # 是否已有历史数据计算缓存
 set_cache_init <- FALSE # 是否已有初始化缓存
 
 # 结果相关设置
