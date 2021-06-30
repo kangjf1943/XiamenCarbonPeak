@@ -2,8 +2,7 @@
 # 计算内容或口径相关设置
 # 设置要计算的情景
 set_scalcs <- 
-  c("BAU", "BAU_SLC_OTHER", "BAU_SLC_26COAL1/4", 
-    "BAU_SLC_26COAL1/4_OTHER", "BAU_26COAL1/2") 
+  c("BAU", "BAU_SLC_OTHER", "BAU_SLC_26COAL1/4_OTHER", "BAU_26COAL1/2") 
 set_thrmfac_meth <- TRUE # 是否采用煤电折标煤系数
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 set_lowdev <- FALSE #是否采用经济低发展情景
@@ -11,7 +10,7 @@ set_lowdev <- FALSE #是否采用经济低发展情景
 # 缓存相关设置
 set_cache_globalvar <- FALSE # 是否已有全局变量缓存
 set_cache_nrgbal <- TRUE # 是否已有能源平衡表缓存
-set_cache_hiscalc <- FALSE # 是否已有历史数据计算缓存
+set_cache_hiscalc <- TRUE # 是否已有历史数据计算缓存
 set_cache_init <- FALSE # 是否已有初始化缓存
 
 # 结果相关设置
@@ -2013,7 +2012,8 @@ for (set_scalc in set_scalcs) {
         func_interp_3(
           year = c(2019, 2027, 2031, 2050, 2060), 
           scale = c(1.0, 1.00, 0.75, 0.5, 0.5), 
-          base = func_lastone(by_tfres_act$elecgen_thrm), "elecgen_thrm")))
+          base = by_tfres_act$elecgen_thrm[by_tfres_act$year == 2019],  
+          "elecgen_thrm")))
   } else if (grepl("24COAL1/2", set_scalc)) { #### 24COAL1/2 ----
     # 2024年开始减煤，两年内减为原来的一半
     tfres_act <- 
@@ -2021,7 +2021,8 @@ for (set_scalc in set_scalcs) {
         tfres_act, 
         func_interp_3(
           year = c(2019, 2023, 2025, 2050, 2060), scale = c(1, 1, 0.5, 0, 0), 
-          base = func_lastone(by_tfres_act$elecgen_thrm), "elecgen_thrm")))
+          base = by_tfres_act$elecgen_thrm[by_tfres_act$year == 2019],  
+          "elecgen_thrm")))
   } else if (grepl("26COAL1/2", set_scalc)) { #### 26COAL1/2 ----
     # 2026年开始减煤，五年内减为原来的一半
     tfres_act <- 
@@ -2029,7 +2030,8 @@ for (set_scalc in set_scalcs) {
         tfres_act, 
         func_interp_3(
           year = c(2019, 2025, 2030, 2050, 2060), scale = c(1, 1, 0.5, 0, 0), 
-          base = func_lastone(by_tfres_act$elecgen_thrm), "elecgen_thrm")))
+          base = by_tfres_act$elecgen_thrm[by_tfres_act$year == 2019], 
+          "elecgen_thrm")))
   } else { ### BAU ----
     # 2030年开始减煤，十年内减为原来的一半，之后保持
     tfres_act <- 
@@ -2037,7 +2039,8 @@ for (set_scalc in set_scalcs) {
         tfres_act, 
         func_interp_3(
           year = c(2019, 2030, 2040, 2060), scale = c(1, 1, 0.5, 0.5), 
-          base = func_lastone(by_tfres_act$elecgen_thrm), "elecgen_thrm")))
+          base = by_tfres_act$elecgen_thrm[by_tfres_act$year == 2019],  
+          "elecgen_thrm")))
   }
   
   # 本地清洁发电量
