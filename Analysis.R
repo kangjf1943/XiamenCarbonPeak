@@ -1,8 +1,9 @@
 # SETTING ----
 # 计算内容或口径相关设置
 # 设置要计算的情景
-set_scalcs <- 
-  c("BAU", "BAU_WLC_28COAL1/4", "BAU_SLC_26COAL1/4_OTHER", "BAU_26COAL1/2") 
+set_scalcs <- "BAU_SLCPLUS_OTHER"
+  #c("BAU", "BAU_WLC_28COAL1/4", "BAU_SLCPLUS_OTHER", 
+   # "BAU_SLC_26COAL1/4_OTHER", "BAU_26COAL1/2") 
 set_thrmfac_meth <- TRUE # 是否采用煤电折标煤系数
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 set_lowdev <- FALSE #是否采用经济低发展情景
@@ -1315,7 +1316,18 @@ for (set_scalc in set_scalcs) {
     value = c(func_lastone(by_ind_ori_act_prop$"电力、热力生产和供应业"), 
               0.9, 0.1))$value
   ### BR.IndStr ----
-  if (grepl("SLC", set_scalc)) { #### SLC ----
+  if (grepl("PLUS", set_scalc)) { #### PLUS ----
+    ind_ori_act_prop[[set_scalc]][, "化学工业"] <- func_interp_2(
+      year = c(2019, 2025, 2035, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"化学工业"), 5, 0, 0))$value
+    ind_ori_act_prop[[set_scalc]][, "设备制造业"] <- func_interp_2(
+      year = c(2019, 2030, 2060), 
+      value = c(func_lastone(by_ind_ori_act_prop$"设备制造业"), 16, 17))$value
+    ind_ori_act_prop[[set_scalc]][, "电子电气制造业"] <- func_interp_2(
+      year = c(2019, 2030, 2060), 
+      value = c(
+        func_lastone(by_ind_ori_act_prop$"电子电气制造业"), 59, 66))$value
+  } else if (grepl("SLC", set_scalc)) { #### SLC ----
     ind_ori_act_prop[[set_scalc]][, "化学工业"] <- func_interp_2(
       year = c(2019, 2030, 2045, 2060), 
       value = c(func_lastone(by_ind_ori_act_prop$"化学工业"), 5.5, 1, 0))$value
@@ -1362,7 +1374,18 @@ for (set_scalc in set_scalcs) {
   ind_nrgintst_ls <- vector("list", 13)
   names(ind_nrgintst_ls) <- global_ind_subsector
   ### BR.MostNrgIntst ----
-  if (grepl("OTHER", set_scalc)) { #### SLC ----
+  if (grepl("PLUS", set_scalc)) { #### PLUS ----
+    for (i in global_ind_subsector) {
+      ind_nrgintst_ls[[i]] <- cbind(
+        data.frame(year = c(2019: 2060)),
+        sapply(global_ind_nrgclass[1:6], function(j) {
+          func_interp_3(
+            year = c(2019, 2025, 2030, 2035, 2060), 
+            scale = c(1.0, 1.10, 1.05, 0.95, 0.6), 
+            base = func_lastone(by_ind_nrgintst_ls[[i]][, j], 
+                                zero.rm =  FALSE))$value}))
+    }
+  } else if (grepl("SLC", set_scalc)) { #### SLC ----
     # 假设大部分能耗强度略有减少
     for (i in global_ind_subsector) {
       ind_nrgintst_ls[[i]] <- cbind(
@@ -1401,7 +1424,16 @@ for (set_scalc in set_scalcs) {
   }
   ### BR.GasIntst ----
   # 但是天然气在短期内有所上升
-  if (grepl("SLC", set_scalc)) { #### SLC ----
+  if (grepl("PLUS", set_scalc)) { #### PLUS ----
+    for (i in global_ind_subsector) {
+      ind_nrgintst_ls[[i]][, "gas"] <- 
+        func_interp_3(
+          year = c(2019, 2025, 2030, 2060), 
+          scale = c(1.0, 1.20, 1.00, 1.00), 
+          base = func_lastone(by_ind_nrgintst_ls[[i]][, "gas"], 
+                              zero.rm =  FALSE))$value
+    }
+  } else if (grepl("SLC", set_scalc)) { #### SLC ----
     for (i in global_ind_subsector) {
       ind_nrgintst_ls[[i]][, "gas"] <- 
         func_interp_3(
@@ -1431,7 +1463,16 @@ for (set_scalc in set_scalcs) {
   }
   ### RB.ElecIntst ----
   # 电力在短期内有所上升，但比天然气上升幅度小
-  if (grepl("SLC", set_scalc)) { #### SLC ----
+  if (grepl("PLUS", set_scalc)) { #### PLUS ----
+    for (i in global_ind_subsector) {
+      ind_nrgintst_ls[[i]][, "electricity"] <- 
+        func_interp_3(
+          year = c(2019, 2025, 2030, 2060), 
+          scale = c(1.0, 1.1, 1.1, 1.2), 
+          base = func_lastone(by_ind_nrgintst_ls[[i]][, "electricity"], 
+                              zero.rm =  FALSE))$value
+    }
+  } else if (grepl("SLC", set_scalc)) { #### SLC ----
     for (i in global_ind_subsector) {
       ind_nrgintst_ls[[i]][, "electricity"] <- 
         func_interp_3(
@@ -1628,7 +1669,18 @@ for (set_scalc in set_scalcs) {
   
   # 水路客运
   ### RB.WaterPax ----
-  if (grepl("SLC", set_scalc)) { #### SLC ----
+  if (grepl("PLUS", set_scalc)) { #### PLUS ----
+    # 柴油和燃料油均基于历史数据和比率
+    trans_nrgintst_ls[["水路客运"]] <- 
+      func_interp_3(year = c(2019, 2025, 2030, 2060), 
+                    scale = c(1, 0.95, 0.9, 0.7), 
+                    base = func_lastone(by_trans_nrgintst_ls[["水路客运"]]$diesel), 
+                    "diesel")
+    trans_nrgintst_ls[["水路客运"]]$residual <- func_interp_3(
+      year = c(2019, 2025, 2030, 2060), scale = c(1.0, 0.92, 0.9, 0.75), 
+      base = func_lastone(by_trans_nrgintst_ls[["水路客运"]]$residual), "residual"
+    )$residual
+  } else if (grepl("SLC", set_scalc)) { #### SLC ----
     # 柴油和燃料油均基于历史数据和比率
     trans_nrgintst_ls[["水路客运"]] <- 
       func_interp_3(year = c(2019, 2025, 2030, 2060), 
@@ -1671,7 +1723,20 @@ for (set_scalc in set_scalcs) {
   }
   
   ### RB.WaterFrt ----
-  if (grepl("SLC", set_scalc)) { #### SLC ----
+  if (grepl("PLUS", set_scalc)) { #### PLUS ----
+    # 水路货运
+    # 柴油：基于历史数据和比率
+    trans_nrgintst_ls[["水路货运"]] <- func_interp_3(
+      year = c(2019, 2025, 2030, 2060), 
+      scale = c(1, 0.95, 0.90, 0.75), 
+      base = func_lastone(by_trans_nrgintst_ls[["水路货运"]]$diesel),"diesel")
+    # 燃料油：基于历史数据和比率
+    trans_nrgintst_ls[["水路货运"]]$residual <- func_interp_3(
+      year = c(2019, 2025, 2030, 2060), 
+      scale = c(1, 0.97, 0.93, 0.75), 
+      base = func_lastone(by_trans_nrgintst_ls[["水路货运"]]$residual),
+      "residual")$residual
+  } else if (grepl("SLC", set_scalc)) { #### SLC ----
     # 水路货运
     # 柴油：基于历史数据和比率
     trans_nrgintst_ls[["水路货运"]] <- func_interp_3(
@@ -1780,7 +1845,19 @@ for (set_scalc in set_scalcs) {
                     base = func_lastone(by_com_nrgintst_ls[[2]]$gas), 
                     "gas")$gas
   }
-  if (grepl("SLC", set_scalc)) { ### SLC ----
+  ### Br.Elec4GasLpg ----
+  if (grepl("PLUS", set_scalc)) { #### PLUS ----
+    # 燃气的电气化较早
+    com_nrgintst_ls[[2]] <- func_nrgsub(
+      nrgori = com_nrgintst_ls[[2]], 
+      namenrgoris = list("lpg", "gas"), 
+      namenrgsubs = list("electricity", "electricity"), 
+      yearsubs = list(c(2019, 2030, 2050, 2060), 
+                      c(2019, 2030, 2050, 2060)), 
+      propsubs = list(c(0, 0.7, 1, 1), 
+                      c(0, 0.7, 1, 1)), 
+      alterscales = list(0.8, 0.7))
+  } else if (grepl("SLC", set_scalc)) { #### SLC ----
     # 燃气的电气化较早
     com_nrgintst_ls[[2]] <- func_nrgsub(
       nrgori = com_nrgintst_ls[[2]], 
@@ -1791,7 +1868,7 @@ for (set_scalc in set_scalcs) {
       propsubs = list(c(0, 0.6, 1, 1), 
                       c(0, 0.6, 1, 1)), 
       alterscales = list(0.8, 0.8))
-  } else if (grepl("WLC", set_scalc)) { ### WLC ----
+  } else if (grepl("WLC", set_scalc)) { #### WLC ----
     com_nrgintst_ls[[2]] <- func_nrgsub(
       nrgori = com_nrgintst_ls[[2]], 
       namenrgoris = list("lpg", "gas"), 
@@ -1801,7 +1878,7 @@ for (set_scalc in set_scalcs) {
       propsubs = list(c(0, 0.6, 1, 1), 
                       c(0, 0.6, 1, 1)), 
       alterscales = list(0.9, 0.9))
-  } else { ### BAU ----
+  } else { #### BAU ----
     # 燃气的电气化推迟
     com_nrgintst_ls[[2]] <- func_nrgsub(
       nrgori = com_nrgintst_ls[[2]], 
@@ -1853,7 +1930,12 @@ for (set_scalc in set_scalcs) {
   names(hh_nrgintst_ls) <- global_hh_subsector
   ### BR.Elec ----
   # 生活用电强度
-  if (grepl("SLC", set_scalc)) { #### SLC ----
+  if (grepl("PLUS", set_scalc)) { #### PLUS ----
+    hh_nrgintst_ls[[1]] <- func_interp_3(
+      year = c(2019, 2025, 2030, 2035, 2060), 
+      scale = c(1, 1.15, 1.15, 1.25, 1.35), 
+      base = func_lastone(by_hh_nrgintst_ls[["household"]][, "electricity"]))
+  } else if (grepl("SLC", set_scalc)) { #### SLC ----
     hh_nrgintst_ls[[1]] <- func_interp_3(
       year = c(2019, 2025, 2030, 2035, 2060), 
       scale = c(1, 1.05, 1.20, 1.30, 1.4), 
@@ -1871,13 +1953,19 @@ for (set_scalc in set_scalcs) {
   
   ### BR.LPG ----
   # 生活液化石油气
-  if (grepl("SLC", set_scalc)) { #### SLC ----
+  if (grepl("PLUS", set_scalc)) { #### PLUS ----
+    hh_nrgintst_ls[[2]] <- 
+      func_interp_3(year = c(2019, 2025, 2030, 2035, 2060), 
+                    scale = c(1, 0.97, 0.93, 0.90, 0.6), 
+                    base = func_lastone(by_hh_nrgintst_ls[["lpg"]]$lpg), 
+                    "lpg")
+  } else if (grepl("SLC", set_scalc)) { #### SLC ----
     hh_nrgintst_ls[[2]] <- 
       func_interp_3(year = c(2019, 2025, 2030, 2035, 2060), 
                     scale = c(1, 0.97, 0.97, 0.97, 0.6), 
                     base = func_lastone(by_hh_nrgintst_ls[["lpg"]]$lpg), 
                     "lpg")
-  } else { #### BAU ----
+  }else { #### BAU ----
     hh_nrgintst_ls[[2]] <- 
       func_interp_3(year = c(2019, 2040, 2060), 
                     scale = c(1, 1.3, 0.7), 
@@ -1887,7 +1975,13 @@ for (set_scalc in set_scalcs) {
   
   ### BR.Gas -----
   # 生活天然气
-  if (grepl("SLC", set_scalc)) { #### SLC ----
+  if (grepl("PLUS", set_scalc)) { #### PLUS ----
+    hh_nrgintst_ls[[3]] <- 
+      func_interp_3(year = c(2019, 2030, 2035, 2060), 
+                    scale = c(1, 0.9, 0.8, 0.4), 
+                    base = func_lastone(by_hh_nrgintst_ls[["gas"]]$gas), 
+                    "gas")
+  } else if (grepl("SLC", set_scalc)) { #### SLC ----
     hh_nrgintst_ls[[3]] <- 
       func_interp_3(year = c(2019, 2030, 2035, 2060), 
                     scale = c(1, 1.1, 0.9, 0.5), 
@@ -1993,7 +2087,7 @@ for (set_scalc in set_scalcs) {
                                hh_nrgsum_ls[[set_scalc]]))
   tfres_act <- tfres_act[c("year", "electricity")]
   names(tfres_act) <- c("year", "elecuse")
-  ### BR.减煤 ----
+  ### BR.LowerCoal ----
   # 本地发电量
   if  (grepl("26COAL1/4", set_scalc)) { #### 26COAL1/4 ----
     # 2026年开始减煤，两年内减为原来的3/4
