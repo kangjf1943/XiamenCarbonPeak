@@ -2,7 +2,7 @@
 # 计算内容或口径相关设置
 # 设置要计算的情景
 set_scalcs <- 
-  c("BAU", "BAU_SLC_OTHER", "BAU_SLC_26COAL1/4_OTHER", "BAU_26COAL1/2") 
+  c("BAU", "BAU_WLC_28COAL1/4", "BAU_SLC_26COAL1/4_OTHER", "BAU_26COAL1/2") 
 set_thrmfac_meth <- TRUE # 是否采用煤电折标煤系数
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 set_lowdev <- FALSE #是否采用经济低发展情景
