@@ -1096,7 +1096,7 @@ func_dataexp <- function(wbname, mydata, mydata_type = "df") {
 }
 
 # 整理每五年导出数据函数
-func_idxouput <- function(var_ls) {
+func_idxouput <- function(var_ls, baseyear = 2019) {
   # 添加情景名称
   for (i in set_scalcs) {
     var_ls[[i]]$scenario <- i
@@ -1104,13 +1104,13 @@ func_idxouput <- function(var_ls) {
   # 对于除了惯性情景外的其他情景，删除基准年行
   for (i in set_scalcs[2: length(set_scalcs)]) {
     var_ls[[i]] <- 
-      var_ls[[i]][which(var_ls[[i]]$year != 2019), ]
+      var_ls[[i]][which(var_ls[[i]]$year != baseyear), ]
   }
   # 合并各元素组成长数据框
   var_ls_long <- Reduce(rbind, var_ls)
   # 筛选部分年份数据
   var_ls_long <- var_ls_long[which(
-    var_ls_long$year %in% c(2019, 2025, 2030, 2035)
+    var_ls_long$year %in% c(baseyear, 2025, 2030, 2035)
   ), ]
   # 规定输出的小数位数
   var_ls_long[names(var_ls_long) %in% c("year", "scenario") == FALSE] <- 
