@@ -2419,7 +2419,9 @@ if (set_resultout == TRUE) {
       人均生活能耗 = tot_nrgsecce_ls[[i]]$hh / prj_global_population$population, 
       # 能源结构
       外调电力消费占比 = 
-        tot_nrgaggfuelce[[i]]$"电力"/tot_nrgsumce_ls[[i]]$energyconsump*100, 
+        tot_nrgaggfuelce[[i]]$"电力"/tot_nrgsumce_ls[[i]]$energyconsump*100 + 3.5, 
+      # 外调电力
+      外调电力清洁能源占比 = tfres_act$importclean/(tfres_act$importclean + tfres_act$importthrm), 
       # 工业单位GDP能耗
       备用_工业单位GDP能耗 = tot_nrgsecce_ls[[i]]$ind/prj_global_gdp$indgdp, 
       # 碳排放量
@@ -2437,10 +2439,9 @@ if (set_resultout == TRUE) {
   # 输出特定年份结果
   idx_output <- vector("list", length(set_scalcs))
   names(idx_output) <- set_scalcs
-  
   for (i in set_scalcs) {
     idx_output[[i]] <- 
-      idx_all[[i]][which(idx_all[[i]]$year %in% c(2019, 2025, 2030, 2035)), ]
+      idx_all[[i]][which(idx_all[[i]]$year %in% c(2019, 2020, 2025, 2030, 2035)), ]
     # 添加相对值
     for (j in c("备用_工业单位GDP能耗", "人均生活能耗")) {
       idx_output[[i]][, paste0(j, "变化率")] <- 
@@ -2451,20 +2452,9 @@ if (set_resultout == TRUE) {
       idx_output[[i]][, paste0(j, "变化率")] <- 
         func_ratecalc(idx_output[[i]], j)$rate*100
     }
-    # 规定输出小数位数和顺序
-    idx_output[[i]] <- round(idx_output[[i]], 2)
   }
-  
-  # 给各元素数据框添加情景名称
-  for (i in set_scalcs) {
-    idx_output[[i]][, "scenario"] <- i
-  }
-  # 对于除了惯性情景外的其他情景，删除基准年行
-  for (i in set_scalcs[2: length(set_scalcs)]) {
-    idx_output[[i]] <- idx_output[[i]][which(idx_output[[i]]$year != 2019), ]
-  }
-  # 合并各元素组成长数据框
-  idx_output_long <- Reduce(rbind, idx_output)
+  # 整理为目标格式
+  idx_output_long <- func_idxouput(idx_output, baseyear = 2020)
   # 输出为Excel文件
   func_dataexp("各情景下关键指标", mydata = idx_output_long)
   
