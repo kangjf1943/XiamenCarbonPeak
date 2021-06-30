@@ -2499,7 +2499,7 @@ if (set_resultout == TRUE) {
   # 输出为Excel文件
   func_dataexp("各情景下能耗结构2赵老师", mydata = idx_nrgaggfuel_str_long)
   
-  ## Emispropaggfuel ----
+  ## EmisPropAggFuel ----
   idx_emisfuel_ls <- vector("list", length(set_scalcs))
   names(idx_emisfuel_ls) <- set_scalcs
   for (i in set_scalcs) {
