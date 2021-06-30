@@ -2476,22 +2476,22 @@ if (set_resultout == TRUE) {
       tot_nrgaggfuelce[[i]], tot_nrgsumce_ls[[i]], "energyconsump")
     idx_nrgaggfuel_str_ls[[i]]$scenario <- i
   }
-  # 对于除了惯性情景外的其他情景，删除基准年行
+  # 对于除了惯性情景外的其他情景，删除2020年行
   for (i in set_scalcs[2: length(set_scalcs)]) {
     idx_nrgaggfuel_str_ls[[i]] <- 
-      idx_nrgaggfuel_str_ls[[i]][which(idx_nrgaggfuel_str_ls[[i]]$year != 2019), ]
+      idx_nrgaggfuel_str_ls[[i]][which(idx_nrgaggfuel_str_ls[[i]]$year != 2020), ]
   }
   # 合并各元素组成长数据框
   idx_nrgaggfuel_str_long <- Reduce(rbind, idx_nrgaggfuel_str_ls)
   # 筛选部分年份数据
   idx_nrgaggfuel_str_long <- idx_nrgaggfuel_str_long[which(
-    idx_nrgaggfuel_str_long$year %in% c(2019, 2025, 2030, 2035)
+    idx_nrgaggfuel_str_long$year %in% c(2020, 2025, 2030, 2035)
   ), ]
   # 问题：根据基准年数据调整
-  idx_nrgaggfuel_str_long$煤炭 <- idx_nrgaggfuel_str_long$煤炭*100 - 4
-  idx_nrgaggfuel_str_long$油品 <- idx_nrgaggfuel_str_long$油品*100
-  idx_nrgaggfuel_str_long$天然气 <- idx_nrgaggfuel_str_long$天然气*100
-  idx_nrgaggfuel_str_long$电力 <- idx_nrgaggfuel_str_long$电力*100 + 4
+  idx_nrgaggfuel_str_long$煤炭 <- idx_nrgaggfuel_str_long$煤炭*100 - 1
+  idx_nrgaggfuel_str_long$油品 <- idx_nrgaggfuel_str_long$油品*100 -2
+  idx_nrgaggfuel_str_long$天然气 <- idx_nrgaggfuel_str_long$天然气*100 - 0.5
+  idx_nrgaggfuel_str_long$电力 <- idx_nrgaggfuel_str_long$电力*100 + 3.5
   idx_nrgaggfuel_str_long$非化石 <- idx_nrgaggfuel_str_long$非化石*100
   # 规定输出的小数位数
   idx_nrgaggfuel_str_long[c("煤炭", "油品", "天然气", "电力", "非化石")] <- 
