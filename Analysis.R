@@ -1993,7 +1993,7 @@ for (set_scalc in set_scalcs) {
                                hh_nrgsum_ls[[set_scalc]]))
   tfres_act <- tfres_act[c("year", "electricity")]
   names(tfres_act) <- c("year", "elecuse")
-  ### BR.LocalElecGen ----
+  ### BR.减煤 ----
   # 本地发电量
   if  (grepl("26COAL1/4", set_scalc)) { #### 26COAL1/4 ----
     # 2026年开始减煤，两年内减为原来的3/4
@@ -2032,7 +2032,7 @@ for (set_scalc in set_scalcs) {
           year = c(2019, 2025, 2030, 2050, 2060), scale = c(1, 1, 0.5, 0, 0), 
           base = by_tfres_act$elecgen_thrm[by_tfres_act$year == 2019], 
           "elecgen_thrm")))
-  } else { ### BAU ----
+  } else { #### BAU ----
     # 2030年开始减煤，十年内减为原来的一半，之后保持
     tfres_act <- 
       func_merge_2(list(
