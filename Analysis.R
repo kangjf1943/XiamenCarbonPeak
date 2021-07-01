@@ -2,7 +2,7 @@
 # 计算内容或口径相关设置
 # 设置要计算的情景
 set_scalcs <- 
-  c("BAU", "BAU_WLC_28COAL1/4", "BAU_SLCPLUS_OTHER",
+  c("BAU", "BAU_WLC_OTHER", "BAU_SLCPLUS_OTHER",
   "BAU_SLC_26COAL1/4_OTHER", "BAU_26COAL1/2")
 set_thrmfac_meth <- TRUE # 是否采用煤电折标煤系数
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
@@ -2448,8 +2448,8 @@ if (set_resultout == TRUE) {
         func_conservrate(idx_output[[i]][, j])*100
     }
     # 添加五年变化率
-    for (j in c("单位GDP碳排放", "单位GDP能耗")) {
-      idx_output[[i]][, paste0(j, "变化率")] <- 
+    for (j in c("单位GDP碳排放", "单位GDP能耗", "人均生活能耗")) {
+      idx_output[[i]][, paste0(j, "五年变化率")] <- 
         func_ratecalc(idx_output[[i]], j)$rate*100
     }
   }
