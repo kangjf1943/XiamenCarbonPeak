@@ -419,6 +419,12 @@ if (set_cache_globalvar == FALSE) {
   
   # 读取全省发电量
   global_provelecgen <- func_read_trans("S3CNPRZE", "发电量")
+  
+  # 读取外调电力折标煤系数
+  global_importthrm_cefac <- func_read_trans("2I4DKY2A", "XCP外调电力")
+  global_importthrm_cefac <- 
+    global_importthrm_cefac[c("year", "外调电力折标煤系数")]
+  names(global_importthrm_cefac) <- c("year", "nrg_input")
 }
 
 if (set_cache_init == FALSE) {
@@ -1089,12 +1095,9 @@ if (set_cache_hiscalc == FALSE) {
   ## Total energy ----
   if (set_thrmfac_meth == TRUE) { ### Elecequalfac meth ----
     ### Energy by secs ----
-    # 计算外调电力火电折标煤系数
-    by_tot_ori_elecequalfac <- 
-      func_elecequalfac(by_res_nrgfuel, by_tfres_act[c("year", "importthrm")])
     # 计算外调电力折标煤量
     by_tot_ori_elecequal <- func_cross(
-      by_tot_ori_elecequalfac, 
+      global_importthrm_cefac, 
       func_cross(by_tfres_act[c("year", "importthrm")], 
                  by_tfres_act[c("year", "importclean")], method = "sum"), 
       method = "product")
@@ -2198,17 +2201,14 @@ for (set_scalc in set_scalcs) {
   # RESULT ----
   ## Total energy ----
   if (set_thrmfac_meth == TRUE) { ### Thrmfac meth ----
-    # 计算外调电力火电折标煤系数
-    tot_ori_elecequalfac <- 
-      func_elecequalfac(res_nrgsum_ls[[set_scalc]], tfres_act[c("year", "importthrm")])
-    # 最后一年省电网火电发电为0，但电力折标煤系数设为和之前年份等同
-    tot_ori_elecequalfac[which(
-      tot_ori_elecequalfac$year == 2060), "nrg_input"] <- 
-      tot_ori_elecequalfac[which(
-        tot_ori_elecequalfac$year == 2059), "nrg_input"]
+    # 假设：外调电力火电折标煤系数保持基准年数据不变
+    tot_importthrm_cefac <- data.frame(
+      year = c(2019: 2060), 
+      nrg_input = func_lastone(global_importthrm_cefac$nrg_input)
+    )
     # 计算外调电力折标煤量
     tot_elecsumce_ls[[set_scalc]] <- func_cross(
-      tot_ori_elecequalfac, 
+      tot_importthrm_cefac, 
       func_cross(tfres_act[c("year", "importthrm")], 
                  tfres_act[c("year", "importclean")], method = "sum"), 
       method = "product")
@@ -2217,8 +2217,10 @@ for (set_scalc in set_scalcs) {
     tot_ori_elecgenequal <- 
       func_toce(tf_nrgsum_ls[[set_scalc]], agg = TRUE)
     # 本地发电标准煤量还要加上本地非化石能源标准煤量
+    # 问题：假设本地清洁能源折标煤系数为2.3万吨标煤/亿kWh
     tot_cleansumce[[set_scalc]] <- 
-      func_cross(tfres_act[c("year", "elecgen_clean")], tot_ori_elecequalfac)
+      func_cross(tfres_act[c("year", "elecgen_clean")], 
+                 data.frame(year = c(2019: 2060), nrg_input = 2.3))
     tot_ori_elecgenequal <- func_cross(
       tot_ori_elecgenequal, tot_cleansumce[[set_scalc]], "sum"
     )
@@ -2275,7 +2277,8 @@ for (set_scalc in set_scalcs) {
     tot_nrgfuelce_ls[[set_scalc]] <- func_merge_2(
       list(tot_nrgfuelce_ls[[set_scalc]], 
            tot_elecsumce_ls[[set_scalc]], 
-           tot_cleansumce[[set_scalc]]))
+           tot_cleansumce[[set_scalc]])
+    )
     names(tot_nrgfuelce_ls[[set_scalc]])[names(tot_nrgfuelce_ls[[set_scalc]]) ==
                                            "nrg_input"] <- "electricity"
     names(tot_nrgfuelce_ls[[set_scalc]])[names(tot_nrgfuelce_ls[[set_scalc]]) ==
@@ -2475,13 +2478,13 @@ if (set_resultout == TRUE) {
   idx_nrgaggfuel_str_long <- Reduce(rbind, idx_nrgaggfuel_str_ls)
   # 筛选部分年份数据
   idx_nrgaggfuel_str_long <- idx_nrgaggfuel_str_long[which(
-    idx_nrgaggfuel_str_long$year %in% c(2020, 2025, 2030, 2035)
+    idx_nrgaggfuel_str_long$year %in% c(2019, 2020, 2025, 2030, 2035)
   ), ]
   # 问题：根据基准年数据调整
-  idx_nrgaggfuel_str_long$煤炭 <- idx_nrgaggfuel_str_long$煤炭*100 - 1
-  idx_nrgaggfuel_str_long$油品 <- idx_nrgaggfuel_str_long$油品*100 -2
-  idx_nrgaggfuel_str_long$天然气 <- idx_nrgaggfuel_str_long$天然气*100 - 0.5
-  idx_nrgaggfuel_str_long$电力 <- idx_nrgaggfuel_str_long$电力*100 + 3.5
+  idx_nrgaggfuel_str_long$煤炭 <- idx_nrgaggfuel_str_long$煤炭*100
+  idx_nrgaggfuel_str_long$油品 <- idx_nrgaggfuel_str_long$油品*100
+  idx_nrgaggfuel_str_long$天然气 <- idx_nrgaggfuel_str_long$天然气*100
+  idx_nrgaggfuel_str_long$电力 <- idx_nrgaggfuel_str_long$电力*100
   idx_nrgaggfuel_str_long$非化石 <- idx_nrgaggfuel_str_long$非化石*100
   # 规定输出的小数位数
   idx_nrgaggfuel_str_long[c("煤炭", "油品", "天然气", "电力", "非化石")] <- 
