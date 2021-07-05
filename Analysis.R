@@ -2,7 +2,7 @@
 # 计算内容或口径相关设置
 # 设置要计算的情景
 set_scalcs <- 
-  c("BAU", "BAU_SLC_26COAL1/4_OTHER")
+  c("BAU", "BAU_WLC_OTHER", "BAU_SLCPLUS_OTHER", "BAU_SLC_26COAL1/4_OTHER")
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 set_lowdev <- FALSE #是否采用经济低发展情景
 
