@@ -1525,12 +1525,12 @@ for (set_scalc in set_scalcs) {
                     value = c(0.022, 0.05, 0.10, 0.60, 0.70), "elec")
   } else if (grepl("WLC", set_scalc)) { #### WLC ----
     trans_carprop_ls[[set_scalc]] <- 
-      func_interp_2(year = c(2019, 2033, 2040, 2050, 2060), 
-                    value = c(0.022, 0.05, 0.10, 0.40, 0.55), "elec")
+      func_interp_2(year = c(2019, 2025, 2030, 2050, 2060), 
+                    value = c(0.022, 0.03, 0.07, 0.50, 0.60), "elec")
   } else { #### BAU ----
     trans_carprop_ls[[set_scalc]] <- 
-      func_interp_2(year = c(2019, 2035, 2045, 2055, 2060), 
-                    value = c(0.022, 0.03, 0.07, 0.30, 0.40), "elec")
+      func_interp_2(year = c(2019, 2025, 2030, 2050, 2060), 
+                    value = c(0.022, 0.03, 0.04, 0.40, 0.50), "elec")
   }
   trans_carprop_ls[[set_scalc]]$nonelec <- 
     1 - trans_carprop_ls[[set_scalc]]$elec
