@@ -1437,21 +1437,21 @@ for (set_scalc in set_scalcs) {
   ### BR.NrgIntst ----
   if (grepl("SLC", set_scalc)) {#### SLC ----
     const_nrgintst[[set_scalc]] <- 
-      func_interp_3(year = c(2019, 2025, 2040, 2060), 
-                    scale = c(1, 0.8, 0.3, 0.1), 
+      func_interp_3(year = c(2019, 2023, 2040, 2060), 
+                    scale = c(1, 0.8, 0.4, 0.25), 
                     base = func_lastone(const_nrgintst[["BY"]]$electricity), 
                     "electricity")
   } else if (grepl("WLC", set_scalc)) {#### WLC ----
     const_nrgintst[[set_scalc]] <- 
-      func_interp_3(year = c(2019, 2025, 2040, 2060), 
-                    scale = c(1, 0.9, 0.7, 0.5), 
+      func_interp_3(year = c(2019, 2023, 2040, 2060), 
+                    scale = c(1, 0.8, 0.5, 0.4), 
                     base = func_lastone(const_nrgintst[["BY"]]$electricity), 
                     "electricity")
   } else { #### BAU ----
     # 效率较低
     const_nrgintst[[set_scalc]] <- 
-      func_interp_3(year = c(2019, 2025, 2050, 2060), 
-                    scale = c(1, 1.1, 1, 0.8), 
+      func_interp_3(year = c(2019, 2023, 2050, 2060), 
+                    scale = c(1, 0.9, 0.8, 0.7), 
                     base = func_lastone(const_nrgintst[["BY"]]$electricity), 
                     "electricity")
   }
