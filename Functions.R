@@ -1119,6 +1119,175 @@ func_idxouput <- function(var_ls, baseyear = 2019) {
   var_ls_long
 }
 
+# 计算结果 ----
+func_resultcalc <- function(name_scenario) {
+  # 根据情景名称设置起止年份
+  if (name_scenario == "BY") {
+    duration <- c(2000: 2019)
+  } else {
+    duration <- c(2019: 2060)
+  }
+  
+  ## Total energy ----
+  # 计算外调电力折标煤量
+  # 问题：外调电力火电折标煤系数保持基准年数据不变
+  importthrm_cefac <- data.frame(
+    year = tfres_act[[name_scenario]]$year, nrg_input = 2.98)
+  tot_elecsumce <- func_cross(
+    importthrm_cefac, 
+    func_cross(tfres_act[[name_scenario]][c("year", "importthrm")], 
+               tfres_act[[name_scenario]][c("year", "importclean")], method = "sum"), 
+    method = "product")
+  
+  # 计算本地发电标准煤量
+  # 其中的煤电投入标准量
+  tot_ori_elecgenequal <- 
+    func_toce(tf_nrgfuel[[name_scenario]], agg = TRUE)
+  # 其中的非化石能源发电标准煤量
+  # 问题：假设本地清洁能源折标煤系数为2.3万吨标煤/亿kWh
+  tot_cleansumce <- 
+    func_cross(tfres_act[[name_scenario]][c("year", "elecgen_clean")], 
+               data.frame(year = duration, nrg_input = 2.3))
+  # 加和为本地发电标准煤量
+  tot_ori_elecgenequal <- func_cross(
+    tot_ori_elecgenequal, tot_cleansumce, "sum"
+  )
+  
+  # 计算本地发电和外调电力标准煤量之和
+  tot_ori_elecstdcoal <- func_cross(
+    tot_elecsumce, tot_ori_elecgenequal, method = "sum")
+  
+  # 各部门电力消费占比
+  tot_elecsec <- 
+    func_mrgcol(list(agri_nrgfuel[[name_scenario]], ind_nrgfuel[[name_scenario]], 
+                     const_nrgfuel[[name_scenario]], trans_nrgfuel[[name_scenario]], 
+                     com_nrgfuel[[name_scenario]], hh_nrgfuel[[name_scenario]]), 
+                "electricity", namesnew = global_sectors[1:6])
+  tot_elecpropsec <- 
+    func_nrg_intst(tot_elecsec, tfres_act[[name_scenario]], "elecuse")
+  
+  # 分配电力标准煤量到各部门
+  tot_elecsecce <- 
+    func_nrg_sum(tot_elecpropsec, tot_ori_elecstdcoal, "nrg_input")
+  
+  # 计算各部门能耗标准量
+  tot_nrgsecce[[name_scenario]] <- func_mrgcol(
+    list(func_cross(
+      func_toce(agri_nrgfuel[[name_scenario]], agg = TRUE), 
+      tot_elecsecce[c("year", "agri")], method = "sum"
+    ), 
+    func_cross(
+      func_toce(ind_nrgfuel[[name_scenario]], agg = TRUE), 
+      tot_elecsecce[c("year", "ind")], method = "sum"
+    ), 
+    func_cross(
+      func_toce(const_nrgfuel[[name_scenario]], agg = TRUE), 
+      tot_elecsecce[c("year", "const")], method = "sum"
+    ), 
+    func_cross(
+      func_toce(trans_nrgfuel[[name_scenario]], agg = TRUE), 
+      tot_elecsecce[c("year", "trans")], method = "sum"
+    ), 
+    func_cross(
+      func_toce(com_nrgfuel[[name_scenario]], agg = TRUE), 
+      tot_elecsecce[c("year", "com")], method = "sum"
+    ), 
+    func_cross(
+      func_toce(hh_nrgfuel[[name_scenario]], agg = TRUE), 
+      tot_elecsecce[c("year", "hh")], method = "sum"
+    )), "stdcoal", global_sectors[1:6])
+  
+  # 计算当前情景能耗标准量之和
+  tot_nrgsumce[[name_scenario]] <- data.frame(
+    year = tot_nrgsecce[[name_scenario]]$year, 
+    energyconsump = rowSums(tot_nrgsecce[[name_scenario]][, -1]))
+  
+  ### Energy by fuels ----
+  # 计算分能源能耗
+  # 除了电力外其他能耗物理量及标准煤
+  tot_nrgfuel <- 
+    func_ls2df(list(agri_nrgfuel[[name_scenario]], ind_nrgfuel[[name_scenario]], 
+                    const_nrgfuel[[name_scenario]], trans_nrgfuel[[name_scenario]], 
+                    com_nrgfuel[[name_scenario]], hh_nrgfuel[[name_scenario]], 
+                    tf_nrgfuel[[name_scenario]]))
+  tot_nrgfuelce <- func_toce(tot_nrgfuel)
+  
+  # 加上外调电力标准量和本地非化石能源
+  tot_nrgfuelce <- func_merge_2(
+    list(tot_nrgfuelce, 
+         tot_elecsumce, 
+         tot_cleansumce)
+  )
+  names(tot_nrgfuelce)[names(tot_nrgfuelce) ==
+                                             "nrg_input"] <- "electricity"
+  names(tot_nrgfuelce)[names(tot_nrgfuelce) ==
+                                             "elecgen_clean"] <- "clean"
+  
+  # 聚合成煤油气电并计算相应比例
+  tot_nrgaggfuel[[name_scenario]] <- 
+    func_secagg(tot_nrgfuel, global_nrg_lookup)
+  tot_nrgaggfuelce <- 
+    func_secagg(tot_nrgfuelce, global_nrg_lookup)
+  tot_nrgpropaggfuel[[name_scenario]] <- func_nrg_intst(
+    tot_nrgaggfuelce, tot_nrgsumce[[name_scenario]], "energyconsump" 
+  )
+  
+  ## Total emission ----
+  # 各部门用电量
+  tot_elecsec <- 
+    func_mrgcol(list(agri_nrgfuel[[name_scenario]], ind_nrgfuel[[name_scenario]], 
+                     const_nrgfuel[[name_scenario]], trans_nrgfuel[[name_scenario]], 
+                     com_nrgfuel[[name_scenario]], hh_nrgfuel[[name_scenario]]), 
+                "electricity", namesnew = global_sectors[1:6])
+  tot_elecpropsec <- 
+    func_nrg_intst(tot_elecsec, tfres_act[[name_scenario]], "elecuse")
+  # 电力总排放
+  tot_elecemis <- 
+    func_cross(tf_diremissum[[name_scenario]], res_diremissum[[name_scenario]], "sum")
+  # 分配电力排放到各个终端部门
+  tot_elecemisbysec <- 
+    func_nrg_sum(tot_elecpropsec, tot_elecemis, "co2")
+  # 汇总各部门直接排放
+  tot_diremisbysec <- 
+    func_mrgcol(
+      list(agri_diremissum[[name_scenario]], ind_diremissum[[name_scenario]], 
+           const_diremissum[[name_scenario]], trans_diremissum[[name_scenario]], 
+           com_diremissum[[name_scenario]], hh_diremissum[[name_scenario]]), 
+      "co2", namesnew = global_sectors[1:6])
+  # 终端部门总排放=电力排放+直接排放
+  tot_emissec <- 
+    func_cross(tot_elecemisbysec, tot_diremisbysec, "sum")
+  # 总排放
+  tot_emissum[[name_scenario]] <- 
+    data.frame(year = tot_emissec$year)
+  tot_emissum[[name_scenario]]$co2 <- 
+    rowSums(
+      tot_emissec[names(tot_emissec) != "year"])
+  
+  ## Emis per GDP ----
+  if (name_scenario == "BY") {
+    tot_emispergdp <- 
+      func_cross(tot_emissum[[name_scenario]], global_gdp[c("year", "GDP")], "rate")
+  } else {
+    tot_emispergdp <- 
+      func_cross(tot_emissum[[name_scenario]], prj_global_gdp[c("year", "GDP")], "rate")
+  }
+  
+  # 需要的输出结果
+  # 总能耗，分能源大类能耗，分部门能耗，单位GDP能耗，总排放，各部门排放，单位GDP排放
+  return(list(
+    tot_nrgsumce[[name_scenario]], 
+    tot_nrgaggfuel[[name_scenario]], 
+    tot_nrgaggfuelce, 
+    tot_nrgpropaggfuel[[name_scenario]], 
+    tot_nrgsecce[[name_scenario]],
+    tot_emissum[[name_scenario]], 
+    tot_emispergdp, 
+    tot_emissec
+  )
+  )
+}
+
 # # 考虑废弃的函数
 # # 计算乘积：可能跟上面的函数重复了 - 废弃？
 # func_merge_product <- function(var_1, name_1, var_2, name_2) {
