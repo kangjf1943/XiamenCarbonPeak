@@ -1170,88 +1170,114 @@ for (set_scalc in set_scalcs) {
   
   # Industry ----
   ## Activity level ----
-  # 先计算未来子部门GDP所占比重
+  # 未来子部门GDP所占比重
   ind_ori_act_prop[[set_scalc]] <- data.frame(year = c(2019:2060))
   ind_ori_act_prop[[set_scalc]][, "食品饮料及烟草制造业"] <- func_interp_2(
-    year = c(2019, 2030, 2060), 
-    value = c(func_lastone(ind_ori_act_prop[["BY"]]$"食品饮料及烟草制造业"), 3, 2))$value
-  ind_ori_act_prop[[set_scalc]][, "纺织及服装制造业"] <- func_interp_2(
-    year = c(2019, 2030, 2060), 
-    value = c(func_lastone(ind_ori_act_prop[["BY"]]$"纺织及服装制造业"), 3, 2))$value
+    year = c(2019, 2030, 2060), value = c(
+      ind_ori_act_prop[["BY"]]$"食品饮料及烟草制造业"[ind_ori_act_prop$BY$year == 2019], 
+      3, 2))$value
   ind_ori_act_prop[[set_scalc]][, "木材及家具制造业"] <- func_interp_2(
-    year = c(2019, 2030, 2060), 
-    value = c(func_lastone(ind_ori_act_prop[["BY"]]$"木材及家具制造业"), 1, 0.5))$value
+    year = c(2019, 2030, 2060), value = c(
+      ind_ori_act_prop[["BY"]]$"木材及家具制造业"[ind_ori_act_prop$BY$year == 2019],
+      1.12, 0.5))$value
   ind_ori_act_prop[[set_scalc]][, "造纸及印刷"] <- func_interp_2(
-    year = c(2019, 2030, 2060), 
-    value = c(func_lastone(ind_ori_act_prop[["BY"]]$"造纸及印刷"), 1.5, 1))$value
+    year = c(2019, 2030, 2060), value = c(
+      ind_ori_act_prop[["BY"]]$"造纸及印刷"[ind_ori_act_prop$BY$year == 2019], 
+      1.5, 1))$value
   ind_ori_act_prop[[set_scalc]][, "文体工美用品制造业"] <- func_interp_2(
-    year = c(2019, 2040, 2060), 
-    value = c(func_lastone(ind_ori_act_prop[["BY"]]$"文体工美用品制造业"), 2, 4))$value
+    year = c(2019, 2040, 2060), value = c(
+      ind_ori_act_prop[["BY"]]$"文体工美用品制造业"[ind_ori_act_prop$BY$year == 2019], 
+      2, 2.3))$value
   ind_ori_act_prop[[set_scalc]][, "石油及炼焦"] <- func_interp_2(
-    year = c(2019, 2030, 2060), 
-    value = c(func_lastone(ind_ori_act_prop[["BY"]]$"石油及炼焦"), 0.1, 0))$value
+    year = c(2019, 2030, 2060), value = c(
+      ind_ori_act_prop[["BY"]]$"石油及炼焦"[ind_ori_act_prop$BY$year == 2019], 
+      ind_ori_act_prop[["BY"]]$"石油及炼焦"[ind_ori_act_prop$BY$year == 2020], 
+      ind_ori_act_prop[["BY"]]$"石油及炼焦"[ind_ori_act_prop$BY$year == 2018], 
+      0.1, 0))$value
   ind_ori_act_prop[[set_scalc]][, "医药制造业"] <- func_interp_2(
-    year = c(2019, 2030, 2060), 
-    value = c(func_lastone(ind_ori_act_prop[["BY"]]$"医药制造业"), 2, 4))$value
+    year = c(2019, 2020, 2021, 2030, 2060), value = c(
+      ind_ori_act_prop[["BY"]]$"医药制造业"[ind_ori_act_prop$BY$year == 2019], 
+      ind_ori_act_prop[["BY"]]$"医药制造业"[ind_ori_act_prop$BY$year == 2020], 
+      ind_ori_act_prop[["BY"]]$"医药制造业"[ind_ori_act_prop$BY$year == 2018], 
+      2, 4))$value
   ind_ori_act_prop[[set_scalc]][, "非金属矿物制品业"] <- func_interp_2(
-    year = c(2019, 2030, 2060), 
-    value = c(func_lastone(ind_ori_act_prop[["BY"]]$"非金属矿物制品业"), 1.3, 0.5))$value
+    year = c(2019, 2020, 2021, 2030, 2060), value = c(
+      ind_ori_act_prop[["BY"]]$"非金属矿物制品业"[ind_ori_act_prop$BY$year == 2019], 
+      ind_ori_act_prop[["BY"]]$"非金属矿物制品业"[ind_ori_act_prop$BY$year == 2020], 
+      ind_ori_act_prop[["BY"]]$"非金属矿物制品业"[ind_ori_act_prop$BY$year == 2018], 
+      1.3, 0.5))$value
   ind_ori_act_prop[[set_scalc]][, "金属加工制造业"] <- func_interp_2(
-    year = c(2019, 2040, 2060), 
-    value = c(func_lastone(ind_ori_act_prop[["BY"]]$"金属加工制造业"), 7, 3))$value
+    year = c(2019, 2040, 2060), value = c(
+      ind_ori_act_prop[["BY"]]$"金属加工制造业"[ind_ori_act_prop$BY$year == 2019], 
+      7, 3))$value
   ind_ori_act_prop[[set_scalc]][, "电力、热力生产和供应业"] <- func_interp_2(
-    year = c(2019, 2030, 2060), 
-    value = c(func_lastone(ind_ori_act_prop[["BY"]]$"电力、热力生产和供应业"), 
-              0.9, 0.1))$value
-  ### BR.IndStr ----
+    year = c(2019, 2030, 2060), value = c(
+      ind_ori_act_prop[["BY"]]$"电力、热力生产和供应业"[ind_ori_act_prop$BY$year == 2019],
+      0.9, 0.1))$value
+  
+  ### BR.Ind str ----
   if (grepl("PLUS", set_scalc)) { #### PLUS ----
     ind_ori_act_prop[[set_scalc]][, "化学工业"] <- func_interp_2(
-      year = c(2019, 2025, 2035, 2060), 
-      value = c(func_lastone(ind_ori_act_prop[["BY"]]$"化学工业"), 5, 0, 0))$value
+      year = c(2019, 2025, 2030, 2045, 2060), value = c(
+        ind_ori_act_prop[["BY"]]$"化学工业"[ind_ori_act_prop$BY$year == 2019], 
+        6.3, 5, 0, 0))$value
     ind_ori_act_prop[[set_scalc]][, "设备制造业"] <- func_interp_2(
-      year = c(2019, 2030, 2060), 
-      value = c(func_lastone(ind_ori_act_prop[["BY"]]$"设备制造业"), 16, 17))$value
+      year = c(2019, 2025, 2030, 2060), value = c(
+        ind_ori_act_prop[["BY"]]$"设备制造业"[ind_ori_act_prop$BY$year == 2019], 
+        13.8, 16, 20))$value
     ind_ori_act_prop[[set_scalc]][, "电子电气制造业"] <- func_interp_2(
-      year = c(2019, 2030, 2060), 
-      value = c(
-        func_lastone(ind_ori_act_prop[["BY"]]$"电子电气制造业"), 59, 66))$value
+      year = c(2019, 2025, 2030, 2060), value = c(
+        ind_ori_act_prop[["BY"]]$"电子电气制造业"[ind_ori_act_prop$BY$year == 2019], 
+        52, 57, 66))$value
   } else if (grepl("SLC", set_scalc)) { #### SLC ----
     ind_ori_act_prop[[set_scalc]][, "化学工业"] <- func_interp_2(
-      year = c(2019, 2030, 2045, 2060), 
-      value = c(func_lastone(ind_ori_act_prop[["BY"]]$"化学工业"), 5.5, 1, 0))$value
+      year = c(2019, 2025, 2030, 2045, 2060), value = c(
+        ind_ori_act_prop[["BY"]]$"化学工业"[ind_ori_act_prop$BY$year == 2019], 
+        6.3, 5.5, 1, 0))$value
     ind_ori_act_prop[[set_scalc]][, "设备制造业"] <- func_interp_2(
-      year = c(2019, 2030, 2060), 
-      value = c(func_lastone(ind_ori_act_prop[["BY"]]$"设备制造业"), 15, 16))$value
+      year = c(2019, 2025, 2030, 2060), value = c(
+        ind_ori_act_prop[["BY"]]$"设备制造业"[ind_ori_act_prop$BY$year == 2019], 
+        13.8, 15, 19))$value
     ind_ori_act_prop[[set_scalc]][, "电子电气制造业"] <- func_interp_2(
-      year = c(2019, 2030, 2060), 
-      value = c(
-        func_lastone(ind_ori_act_prop[["BY"]]$"电子电气制造业"), 57, 64))$value
+      year = c(2019, 2025, 2030, 2060), value = c(
+        ind_ori_act_prop[["BY"]]$"电子电气制造业"[ind_ori_act_prop$BY$year == 2019], 
+        52, 54.5, 65))$value
   } else if (grepl("WLC", set_scalc)) { #### WLC ----
     ind_ori_act_prop[[set_scalc]][, "化学工业"] <- func_interp_2(
-      year = c(2019, 2037, 2052, 2060), 
-      value = c(func_lastone(ind_ori_act_prop[["BY"]]$"化学工业"), 6, 2, 0))$value
+      year = c(2019, 2030, 2045, 2060), value = c(
+        ind_ori_act_prop[["BY"]]$"化学工业"[ind_ori_act_prop$BY$year == 2019], 
+        6, 2, 0))$value
     ind_ori_act_prop[[set_scalc]][, "设备制造业"] <- func_interp_2(
-      year = c(2019, 2040, 2060), 
-      value = c(func_lastone(ind_ori_act_prop[["BY"]]$"设备制造业"), 14, 15))$value
+      year = c(2019, 2030, 2060), value = c(
+        ind_ori_act_prop[["BY"]]$"设备制造业"[ind_ori_act_prop$BY$year == 2019], 
+        14, 17))$value
     ind_ori_act_prop[[set_scalc]][, "电子电气制造业"] <- func_interp_2(
-      year = c(2019, 2040, 2060), 
-      value = c(
-        func_lastone(ind_ori_act_prop[["BY"]]$"电子电气制造业"), 53, 55))$value
+      year = c(2019, 2030, 2060), value = c(
+        ind_ori_act_prop[["BY"]]$"电子电气制造业"[ind_ori_act_prop$BY$year == 2019], 
+        52.5, 62))$value
   } else { #### BAU ----
-    # 时间推迟，比例不同
     ind_ori_act_prop[[set_scalc]][, "化学工业"] <- func_interp_2(
-      year = c(2019, 2037, 2052, 2060), 
-      value = c(func_lastone(ind_ori_act_prop[["BY"]]$"化学工业"), 7, 3, 0))$value
+      year = c(2019, 2030, 2045, 2060), value = c(
+        ind_ori_act_prop[["BY"]]$"化学工业"[ind_ori_act_prop$BY$year == 2019], 
+        7, 3, 0))$value
     ind_ori_act_prop[[set_scalc]][, "设备制造业"] <- func_interp_2(
-      year = c(2019, 2040, 2060), 
-      value = c(func_lastone(ind_ori_act_prop[["BY"]]$"设备制造业"), 13, 15))$value
+      year = c(2019, 2030, 2060), value = c(
+        ind_ori_act_prop[["BY"]]$"设备制造业"[ind_ori_act_prop$BY$year == 2019], 
+        13, 15))$value
     ind_ori_act_prop[[set_scalc]][, "电子电气制造业"] <- func_interp_2(
-      year = c(2019, 2040, 2060), 
-      value = c(
-        func_lastone(ind_ori_act_prop[["BY"]]$"电子电气制造业"), 50, 52))$value
+      year = c(2019, 2030, 2060), value = c(
+        ind_ori_act_prop[["BY"]]$"电子电气制造业"[ind_ori_act_prop$BY$year == 2019], 
+        50, 55))$value
   }
-  ind_ori_act_prop[[set_scalc]][, "其他制造业"] <- func_saturate(
-    ind_ori_act_prop[[set_scalc]][c("year", global_ind_subsector[global_ind_subsector != "其他制造业"])], "value")$value
+  ind_ori_act_prop[[set_scalc]][, "纺织及服装制造业"] <- 
+    (100 - rowSums(ind_ori_act_prop[[set_scalc]][-1]))/2
+  ind_ori_act_prop[[set_scalc]][, "其他制造业"] <- 
+    ind_ori_act_prop[[set_scalc]][, "纺织及服装制造业"]
+  # 检测各行业比例加和是否为100%
+  if (sum(rowSums(ind_ori_act_prop[[set_scalc]][-1]) != 100) > 0) {
+    print("warning: sum larger than 100%.")
+    break
+  }
   # 计算未来各子部门GDP
   ind_act[[set_scalc]] <- 
     func_nrg_sum(ind_ori_act_prop[[set_scalc]][c("year", global_ind_subsector)], 
