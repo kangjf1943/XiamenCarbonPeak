@@ -2415,19 +2415,6 @@ if (set_resultout == TRUE) {
                 head(x$"纯电动私家车", 1))^(1/(2035-2019)) -1)*100)
     })
   )
-  
-  
-  ## IndGdpStrAggsec ----
-  idx_indgdppropaggsec <- 
-    func_secagg_ls(ind_ori_act_prop, global_indsecclass_lookup)
-  plot(func_ratecalc(idx_indgdppropaggsec$BAU_WLC_OTHER, "新兴行业"))
-  plot(func_ratecalc(idx_indgdppropaggsec$BAU_SLC_OTHER, "新兴行业"))
-  
-  #私家车每年提升百分率
-  plot(trans_carprop_ls$BAU_WLC_OTHER$elec*100 - 
-         c(0, trans_carprop_ls$BAU_WLC_OTHER$elec[1:(length(2019:2059))])*100)
-  plot(trans_carprop_ls$BAU_SLC_OTHER$elec*100 - 
-         c(0, trans_carprop_ls$BAU_SLC_OTHER$elec[1:(length(2019:2059))])*100)
 }
 
 
