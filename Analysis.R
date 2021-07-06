@@ -1450,8 +1450,8 @@ for (set_scalc in set_scalcs) {
   } else { #### BAU ----
     # 效率较低
     const_nrgintst[[set_scalc]] <- 
-      func_interp_3(year = c(2019, 2023, 2050, 2060), 
-                    scale = c(1, 0.9, 0.8, 0.7), 
+      func_interp_3(year = c(2019, 2023, 2040, 2060), 
+                    scale = c(1, 0.82, 0.56, 0.5), 
                     base = func_lastone(const_nrgintst[["BY"]]$electricity), 
                     "electricity")
   }
