@@ -2415,6 +2415,34 @@ if (set_resultout == TRUE) {
                 head(x$"纯电动私家车", 1))^(1/(2035-2019)) -1)*100)
     })
   )
+  
+  # 附表7：不同情景下分行业能源消费与碳排放量
+  # 能源部分
+  report_apptab7_1 <- tot_nrgsecce[-1]
+  for (i in set_scalcs) {
+    report_apptab7_1[[i]]$scenario <- i
+  }
+  report_apptab7_1 <- func_idxouput(report_apptab7_1, baseyear = 2020)
+  report_apptab7_1[global_sectors[1:6]] <- 
+    round(report_apptab7_1[global_sectors[1:6]]/10000)
+  names(report_apptab7_1)[names(report_apptab7_1) %in% global_sectors] <- 
+    paste(global_sectors[1:6], "nrg", sep = "_")
+  
+  # 碳排放部分
+  report_apptab7_2 <- tot_emissec[-1]
+  for (i in set_scalcs) {
+    report_apptab7_2[[i]]$scenario <- i
+  }
+  report_apptab7_2 <- func_idxouput(report_apptab7_2, baseyear = 2020)
+  names(report_apptab7_2)[names(report_apptab7_2) %in% global_sectors] <- 
+    paste(global_sectors[1:6], "emis", sep = "_")
+  
+  # 合并两个部分
+  report_apptab7 <- cbind(report_apptab7_1, report_apptab7_2)
+  report_apptab7 <- report_apptab7[c("scenario", "year", 
+    paste(rep(global_sectors[1:6], each = 2), c("nrg", "emis"), sep = "_"))]
+  func_dataexp("附表7_不同情景下分行业能源消费与碳排放量", 
+               mydata = report_apptab7)
 }
 
 
