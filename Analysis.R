@@ -2297,14 +2297,37 @@ if (set_resultout == TRUE) {
         func_conservrate(idx_output[[i]][, j])*100
     }
     # 添加五年变化率
-    for (j in c("单位GDP碳排放", "单位GDP能耗", "人均生活能耗")) {
+    for (j in c("人均生活能耗")) {
       idx_output[[i]][, paste0(j, "五年变化率")] <- 
-        func_ratecalc(idx_output[[i]], j)$rate*100
+        func_ratecalc(idx_output[[i]], j)$rate * 100
+    }
+    # 添加五年下降率
+    for (j in c("单位GDP碳排放", "单位GDP能耗")) {
+      idx_output[[i]][, paste0(j, "五年下降率")] <- 
+        func_ratecalc(idx_output[[i]], j)$rate * -100
     }
   }
   # 整理为目标格式
   idx_output_long <- func_idxouput(idx_output, baseyear = 2020)
-  idx_output_long[c("year", "单位GDP能耗五年变化率")]
+  
+  # 作图查看各指标五年变化趋势
+  ggarrange(plotlist = list(
+    ggplot(idx_output_long, aes(year, 高能耗传统行业增加值比例)) + 
+      geom_line(aes(color = scenario)), 
+    ggplot(idx_output_long, aes(year, 低能耗传统行业增加值比例)) + 
+      geom_line(aes(color = scenario)), 
+    ggplot(idx_output_long, aes(year, 新兴行业增加值比例)) + 
+      geom_line(aes(color = scenario)), 
+    ggplot(idx_output_long, aes(year, 能耗量)) + 
+      geom_line(aes(color = scenario)), 
+    ggplot(idx_output_long, aes(year, 碳排放量)) + 
+      geom_line(aes(color = scenario)), 
+    ggplot(idx_output_long, aes(year, 单位GDP能耗五年下降率)) + 
+      geom_line(aes(color = scenario)), 
+    ggplot(idx_output_long, aes(year, 单位GDP碳排放五年下降率)) + 
+      geom_line(aes(color = scenario))), 
+    nrow = 2, ncol = 4, common.legend = TRUE)
+  
   # 输出为Excel文件
   func_dataexp("各情景下关键指标", mydata = idx_output_long)
   
