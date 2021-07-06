@@ -2308,7 +2308,8 @@ if (set_resultout == TRUE) {
     }
   }
   # 整理为目标格式
-  idx_output_long <- func_idxouput(idx_output, baseyear = 2020)
+  idx_output_long <- 
+    func_idxouput(idx_output, baseyear = 2020, digits = 1)
   
   # 作图查看各指标五年变化趋势
   ggarrange(plotlist = list(
