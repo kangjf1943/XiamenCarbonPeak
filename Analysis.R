@@ -459,6 +459,7 @@ if (set_cache_init == FALSE) {
   hh_nrgsecfuel <- init_output_templatels
   tot_nrgaggfuelce <- init_output_templatels
   tot_emissec <- init_output_templatels
+  tot_emisaggfuel <- init_output_templatels
 }
 
 
@@ -1099,6 +1100,7 @@ if (set_cache_hiscalc == FALSE) {
   tot_emissum[["BY"]] <- tot_results[[6]]
   tot_emispergdp[["BY"]] <- tot_results[[7]]
   tot_emissec[["BY"]] <- tot_results[[8]]
+  tot_emisaggfuel[["BY"]] <- tot_results[[9]]
 }
 
 
@@ -2191,6 +2193,7 @@ for (set_scalc in set_scalcs) {
   tot_emissum[[set_scalc]] <- tot_results[[6]]
   tot_emispergdp[[set_scalc]] <- tot_results[[7]]
   tot_emissec[[set_scalc]] <- tot_results[[8]]
+  tot_emisaggfuel[[set_scalc]] <- tot_results[[9]]
 }
 # 查看运行时间
 Sys.time() - global_starttime
@@ -2332,7 +2335,8 @@ if (set_resultout == TRUE) {
   # 输出为Excel文件
   func_dataexp("各情景下关键指标", mydata = idx_output_long)
   
-  ## Nrg str ----
+  ## Emis and nrg str ~ agg fuel ----
+  # 生成各情景下煤油气电占比
   idx_nrgaggfuel_str_ls <- vector("list", length(set_scalcs))
   names(idx_nrgaggfuel_str_ls) <- set_scalcs
   for (i in set_scalcs) {
@@ -2340,28 +2344,44 @@ if (set_resultout == TRUE) {
       tot_nrgaggfuelce[[i]], tot_nrgsumce[[i]], "energyconsump")
     idx_nrgaggfuel_str_ls[[i]]$scenario <- i
   }
-  # 对于除了惯性情景外的其他情景，删除2020年行
-  for (i in set_scalcs[2: length(set_scalcs)]) {
-    idx_nrgaggfuel_str_ls[[i]] <- 
-      idx_nrgaggfuel_str_ls[[i]][which(idx_nrgaggfuel_str_ls[[i]]$year != 2020), ]
+  # 整理数据为所需格式和内容
+  idx_nrgpropaggfuel <- 
+    func_idxouput(idx_nrgaggfuel_str_ls, baseyear = 2019, digits = 3)
+  idx_nrgpropaggfuel[names(idx_nrgpropaggfuel) %in% 
+                       c("year", "scenario") == FALSE] <-
+    idx_nrgpropaggfuel[names(idx_nrgpropaggfuel) %in% 
+                         c("year", "scenario") == FALSE]*100
+  names(idx_nrgpropaggfuel)[names(idx_nrgpropaggfuel) %in% 
+                               c("year", "scenario") == FALSE] <- 
+    paste(names(idx_nrgpropaggfuel)[names(idx_nrgpropaggfuel) %in% 
+                                       c("year", "scenario") == FALSE], 
+          "能源占比", sep = "")
+  
+  # 生成各情景下煤油气电排放占比
+  idx_emispropaggfuel <- vector("list", length(set_scalcs))
+  names(idx_emisfuel_ls) <- set_scalcs
+  for (i in set_scalcs) {
+    idx_emispropaggfuel[[i]] <- func_nrg_intst(
+      tot_emisaggfuel[[i]], tot_emissum[[i]], "co2")
+    idx_emispropaggfuel[[i]]$scenario <- i
   }
-  # 合并各元素组成长数据框
-  idx_nrgaggfuel_str_long <- Reduce(rbind, idx_nrgaggfuel_str_ls)
-  # 筛选部分年份数据
-  idx_nrgaggfuel_str_long <- idx_nrgaggfuel_str_long[which(
-    idx_nrgaggfuel_str_long$year %in% c(2019, 2020, 2025, 2030, 2035)
-  ), ]
-  # 问题：根据基准年数据调整
-  idx_nrgaggfuel_str_long$煤炭 <- idx_nrgaggfuel_str_long$煤炭*100
-  idx_nrgaggfuel_str_long$油品 <- idx_nrgaggfuel_str_long$油品*100
-  idx_nrgaggfuel_str_long$天然气 <- idx_nrgaggfuel_str_long$天然气*100
-  idx_nrgaggfuel_str_long$电力 <- idx_nrgaggfuel_str_long$电力*100
-  idx_nrgaggfuel_str_long$非化石 <- idx_nrgaggfuel_str_long$非化石*100
-  # 规定输出的小数位数
-  idx_nrgaggfuel_str_long[c("煤炭", "油品", "天然气", "电力", "非化石")] <- 
-    round(idx_nrgaggfuel_str_long[c("煤炭", "油品", "天然气", "电力", "非化石")], 2)
-  # 输出为Excel文件
-  func_dataexp("各情景下能耗结构2赵老师", mydata = idx_nrgaggfuel_str_long)
+  idx_emispropaggfuel <- 
+    func_idxouput(idx_emispropaggfuel, baseyear = 2019, digits = 3)
+  idx_emispropaggfuel[names(idx_emispropaggfuel) %in% 
+                       c("year", "scenario") == FALSE] <-
+    idx_emispropaggfuel[names(idx_emispropaggfuel) %in% 
+                         c("year", "scenario") == FALSE]*100
+  names(idx_emispropaggfuel)[names(idx_emispropaggfuel) %in% 
+                               c("year", "scenario") == FALSE] <- 
+    paste(names(idx_emispropaggfuel)[names(idx_emispropaggfuel) %in% 
+                                       c("year", "scenario") == FALSE], 
+          "碳排放占比", sep = "")
+  
+  
+  # 合并能源结构和碳排放结构
+  report_apptab6 <- cbind(idx_nrgpropaggfuel, idx_emispropaggfuel)
+  func_dataexp("能源和碳排放结构", mydata = report_apptab6)
+  
   
   # 输出主要结论报告所需表格
   # 表2：减煤情景下厦门市能源与碳排放预测
@@ -2396,28 +2416,6 @@ if (set_resultout == TRUE) {
     })
   )
   
-  
-  ## EmisPropAggFuel ----
-  idx_emisfuel_ls <- vector("list", length(set_scalcs))
-  names(idx_emisfuel_ls) <- set_scalcs
-  for (i in set_scalcs) {
-    idx_emisfuel_ls[[i]] <- 
-      func_emissum(tot_nrgfuel[[i]], prj_emisfac_df, agg = FALSE)
-    idx_emisfuel_ls[[i]]$electricity <- 
-      res_diremissum[[i]]$co2
-    idx_emisfuel_ls[[i]] <- func_nrg_intst(
-      idx_emisfuel_ls[[i]], tot_emissum[[i]], "co2"
-    )
-  }
-  idx_emisaggfuel_ls <- func_secagg_ls(idx_emisfuel_ls, global_nrg_lookup)
-  for (i in set_scalcs) {
-    idx_emisaggfuel_ls[[i]][c("煤炭", "油品", "天然气", "电力", "非化石")] <- 
-      idx_emisaggfuel_ls[[i]][c("煤炭", "油品", "天然气", "电力", "非化石")]*100
-  }
-  # 整理成目标样式
-  idx_emisaggfuel_long <- func_idxouput(idx_emisaggfuel_ls)
-  # 输出为Excel文件
-  func_dataexp("各情景下排放结构", mydata = idx_emisaggfuel_long)
   
   ## IndGdpStrAggsec ----
   idx_indgdppropaggsec <- 

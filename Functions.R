@@ -1263,6 +1263,14 @@ func_resultcalc <- function(name_scenario) {
     rowSums(
       tot_emissec[names(tot_emissec) != "year"])
   
+  # 各类能源排放
+  # 除电力外其他能源排放量
+  tot_emisfuel <- func_emissum(tot_nrgfuel, prj_emisfac_df, agg = FALSE)
+  # 加上外调电力排放量
+  tot_emisfuel[, "electricity"] <- res_diremissum[[name_scenario]]$co2
+  # 聚合成煤油气电
+  tot_emisaggfuel <- func_secagg(tot_emisfuel, global_nrg_lookup)
+  
   ## Emis per GDP ----
   if (name_scenario == "BY") {
     tot_emispergdp <- 
@@ -1282,7 +1290,8 @@ func_resultcalc <- function(name_scenario) {
     tot_nrgsecce[[name_scenario]],
     tot_emissum[[name_scenario]], 
     tot_emispergdp, 
-    tot_emissec
+    tot_emissec, 
+    tot_emisaggfuel
   )
   )
 }
