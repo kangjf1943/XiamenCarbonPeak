@@ -2382,7 +2382,7 @@ if (set_resultout == TRUE) {
   report_apptab6 <- cbind(idx_nrgpropaggfuel, idx_emispropaggfuel)
   func_dataexp("能源和碳排放结构", mydata = report_apptab6)
   
-  
+  ## For report ----
   # 输出主要结论报告所需表格
   # 表2：减煤情景下厦门市能源与碳排放预测
   report_tab2 <- 
