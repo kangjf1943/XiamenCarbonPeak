@@ -1096,7 +1096,7 @@ func_dataexp <- function(wbname, mydata, mydata_type = "df") {
 }
 
 # 整理每五年导出数据函数
-func_idxouput <- function(var_ls, baseyear = 2019) {
+func_idxouput <- function(var_ls, baseyear = 2019, ...) {
   # 添加情景名称
   for (i in set_scalcs) {
     var_ls[[i]]$scenario <- i
@@ -1114,8 +1114,7 @@ func_idxouput <- function(var_ls, baseyear = 2019) {
   ), ]
   # 规定输出的小数位数
   var_ls_long[names(var_ls_long) %in% c("year", "scenario") == FALSE] <- 
-    round(var_ls_long[names(var_ls_long) %in% c("year", "scenario") == FALSE], 
-          digits = 2)
+    round(var_ls_long[names(var_ls_long) %in% c("year", "scenario") == FALSE], ...)
   var_ls_long
 }
 
