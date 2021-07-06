@@ -2463,8 +2463,8 @@ if (set_dataexport == TRUE) {
   func_dataexp("各情景总排放量", mydata = exp_var)
   
   ## Emissec of scenarios ----
-  func_dataexp("各情景各部门排放量", 
-               mydata = tot_emisbysec_ls, mydata_type = "ls")
+  func_dataexp("减煤情景各部门排放量", 
+               mydata = tot_emissec$`BAU_SLC_26COAL1/4_OTHER`)
   
   ## Five year change rate of emis ----
   exp_var <- 
