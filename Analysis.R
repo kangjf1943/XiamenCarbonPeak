@@ -2383,6 +2383,19 @@ if (set_resultout == TRUE) {
   report_tab2[3:4, 2:3] <- "--"
   func_dataexp("主要结论报告表2", mydata = report_tab2)
   
+  # 附表4：LEAP模型情景描述
+  data.frame(
+    新型行业行业比例年均增长量 = sapply(idx_output, function(x) {
+      round((tail(x$"新兴行业增加值比例", 1) - 
+               head(x$"新兴行业增加值比例", 1))/(2035-2019), digit = 1)
+    }), 
+    电动车年均增长率 = sapply(trans_act[-1], function(x) {
+      round(((x$"纯电动私家车"[x$year == 2035] / 
+                head(x$"纯电动私家车", 1))^(1/(2035-2019)) -1)*100)
+    })
+  )
+  
+  
   ## EmisPropAggFuel ----
   idx_emisfuel_ls <- vector("list", length(set_scalcs))
   names(idx_emisfuel_ls) <- set_scalcs
