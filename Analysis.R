@@ -1509,17 +1509,29 @@ for (set_scalc in set_scalcs) {
     trans_act[[set_scalc]] <- trans_act[[set_scalcs[1]]]
   }
   
+  ### BR.CarNum ----
   # 私家车：先预测全部私家车变化趋势再分成常规和纯电动私家车
-  # 全部私家车按照初始增长率5%增长，至2035年饱和
-  trans_act[[set_scalc]][, "私家车"] <- 
-    func_curve_1(
-      baseyear = 2019, 
-      basevalue = func_lastone(trans_act[["BY"]][, "公路其他汽油"]), 
-      maxyear = 2035, endyear = 2060, init_rate = 0.05)$value
-  # 开始拆分
-  # 常规私家车和纯电动私家车比例
+  # 全部私家车按照初始增长率增长，至2033-2035年饱和
+  if (grepl("PLUS", set_scalc)) { #### PLUS ----
+    trans_act[[set_scalc]][, "私家车"] <- 
+      func_curve_1(
+        baseyear = 2019, 
+        basevalue = func_lastone(trans_act[["BY"]][, "公路其他汽油"]), 
+        maxyear = 2035, endyear = 2060, init_rate = 0.03)$value
+  } else { #### NO PLUS ----
+    trans_act[[set_scalc]][, "私家车"] <- 
+      func_curve_1(
+        baseyear = 2019, 
+        basevalue = func_lastone(trans_act[["BY"]][, "公路其他汽油"]), 
+        maxyear = 2035, endyear = 2060, init_rate = 0.05)$value
+  }
+  # 开始拆分：常规私家车和纯电动私家车比例
   ### BR.Elec4Gasoline ----
-  if (grepl("SLC", set_scalc)) { #### SLC ----
+  if (grepl("PLUS", set_scalc)) { #### PLUS ----
+    trans_carprop_ls[[set_scalc]] <- 
+      func_interp_2(year = c(2019, 2025, 2030, 2050, 2060), 
+                    value = c(0.022, 0.05, 0.15, 0.65, 0.75), "elec")
+  } else if (grepl("SLC", set_scalc)) { #### SLC ----
     trans_carprop_ls[[set_scalc]] <- 
       func_interp_2(year = c(2019, 2025, 2030, 2050, 2060), 
                     value = c(0.022, 0.05, 0.10, 0.60, 0.70), "elec")
@@ -1590,11 +1602,11 @@ for (set_scalc in set_scalcs) {
     # 柴油和燃料油均基于历史数据和比率
     trans_nrgintst[[set_scalc]][["水路客运"]] <- func_interp_3(
       year = c(2019, 2025, 2030, 2060), 
-      scale = c(1, 0.95, 0.9, 0.7), 
+      scale = c(1, 0.95, 0.76, 0.7), 
       base = func_lastone(trans_nrgintst[["BY"]][["水路客运"]]$diesel), 
       "diesel")
     trans_nrgintst[[set_scalc]][["水路客运"]]$residual <- func_interp_3(
-      year = c(2019, 2025, 2030, 2060), scale = c(1.0, 0.92, 0.8, 0.7), 
+      year = c(2019, 2025, 2030, 2060), scale = c(1.0, 0.92, 0.75, 0.7), 
       base = func_lastone(trans_nrgintst[["BY"]][["水路客运"]]$residual), "residual"
     )$residual
   } else if (grepl("SLC", set_scalc)) { #### SLC ----
@@ -1645,12 +1657,12 @@ for (set_scalc in set_scalcs) {
     # 柴油：基于历史数据和比率
     trans_nrgintst[[set_scalc]][["水路货运"]] <- func_interp_3(
       year = c(2019, 2025, 2030, 2060), 
-      scale = c(1, 0.95, 0.90, 0.75), 
+      scale = c(1, 0.95, 0.85, 0.75), 
       base = func_lastone(trans_nrgintst[["BY"]][["水路货运"]]$diesel),"diesel")
     # 燃料油：基于历史数据和比率
     trans_nrgintst[[set_scalc]][["水路货运"]]$residual <- func_interp_3(
       year = c(2019, 2025, 2030, 2060), 
-      scale = c(1, 0.97, 0.93, 0.75), 
+      scale = c(1, 0.97, 0.85, 0.75), 
       base = func_lastone(trans_nrgintst[["BY"]][["水路货运"]]$residual),
       "residual")$residual
   } else if (grepl("SLC", set_scalc)) { #### SLC ----
@@ -1729,8 +1741,26 @@ for (set_scalc in set_scalcs) {
   
   ## Energy intensity ----
   com_nrgintst[[set_scalc]] <- vector("list", 2)
+  ### BR.ComNrgintst ----
   names(com_nrgintst[[set_scalc]]) <- global_com_subsector
-  if (grepl("OTHER", set_scalc)) { ### OTHER ----
+  if (grepl("PLUS", set_scalc)) { #### PLUS ----
+    # 服务业用电强度略有增加
+    com_nrgintst[[set_scalc]][[1]] <- 
+      func_interp_2(year = c(2019, 2025, 2030, 2060), 
+                    value = c(2958.967, 2958.967*1.05, 2958.967*0.93, 2958.967*0.9), 
+                    "electricity")
+    # 服务业燃气强度略有增加后减少，且逐渐为电气替代
+    com_nrgintst[[set_scalc]][[2]] <- 
+      func_interp_3(year = c(2019, 2025, 2030, 2060),
+                    scale = c(1, 1.1, 1.08, 0.8), 
+                    base = func_lastone(com_nrgintst[["BY"]][[2]]$lpg), 
+                    "lpg")
+    com_nrgintst[[set_scalc]][[2]]$gas <- 
+      func_interp_3(year = c(2019, 2025, 2030, 2060),
+                    scale = c(1, 1.15, 1.08, 0.8), 
+                    base = func_lastone(com_nrgintst[["BY"]][[2]]$gas), 
+                    "gas")$gas
+  } else if (grepl("SLC", set_scalc)) { #### SLC ----
     # 服务业用电强度略有增加
     com_nrgintst[[set_scalc]][[1]] <- 
       func_interp_2(year = c(2019, 2025, 2030, 2060), 
@@ -1738,8 +1768,8 @@ for (set_scalc in set_scalcs) {
                     "electricity")
     # 服务业燃气强度略有增加后减少，且逐渐为电气替代
     com_nrgintst[[set_scalc]][[2]] <- 
-      func_interp_3(year = c(2019, 2030, 2060),
-                    scale = c(1, 1.2, 0.9), 
+      func_interp_3(year = c(2019, 2025, 2030, 2060),
+                    scale = c(1, 1.1, 1.2, 0.9), 
                     base = func_lastone(com_nrgintst[["BY"]][[2]]$lpg), 
                     "lpg")
     com_nrgintst[[set_scalc]][[2]]$gas <- 
@@ -1747,7 +1777,7 @@ for (set_scalc in set_scalcs) {
                     scale = c(1, 1.15, 1.2, 0.9), 
                     base = func_lastone(com_nrgintst[["BY"]][[2]]$gas), 
                     "gas")$gas
-  } else { ### BAU ----
+  } else { #### BAU ----
     # 效率较低，推迟年份
     com_nrgintst[[set_scalc]][[1]] <- 
       func_interp_2(year = c(2019, 2035, 2060), 
@@ -1774,8 +1804,8 @@ for (set_scalc in set_scalcs) {
       namenrgsubs = list("electricity", "electricity"), 
       yearsubs = list(c(2019, 2025, 2030, 2050, 2060), 
                       c(2019, 2025, 2030, 2050, 2060)), 
-      propsubs = list(c(0, 0.3, 0.7, 1, 1), 
-                      c(0, 0.3, 0.7, 1, 1)), 
+      propsubs = list(c(0, 0.3, 0.75, 1, 1), 
+                      c(0, 0.3, 0.75, 1, 1)), 
       alterscales = list(0.8, 0.7))
   } else if (grepl("SLC", set_scalc)) { #### SLC ----
     # 燃气的电气化较早
@@ -1856,7 +1886,7 @@ for (set_scalc in set_scalcs) {
   if (grepl("PLUS", set_scalc)) { #### PLUS ----
     hh_nrgintst[[set_scalc]][[1]] <- func_interp_3(
       year = c(2019, 2025, 2030, 2035, 2060), 
-      scale = c(1, 1.05, 1.15, 1.25, 1.35), 
+      scale = c(1, 1.05, 1.06, 1.20, 1.30), 
       base = func_lastone(hh_nrgintst[["BY"]][["household"]][, "electricity"]))
   } else if (grepl("SLC", set_scalc)) { #### SLC ----
     hh_nrgintst[[set_scalc]][[1]] <- func_interp_3(
@@ -1879,7 +1909,7 @@ for (set_scalc in set_scalcs) {
   if (grepl("PLUS", set_scalc)) { #### PLUS ----
     hh_nrgintst[[set_scalc]][[2]] <- 
       func_interp_3(year = c(2019, 2025, 2030, 2035, 2060), 
-                    scale = c(1, 0.97, 0.93, 0.90, 0.6), 
+                    scale = c(1, 0.97, 0.88, 0.88, 0.6), 
                     base = func_lastone(hh_nrgintst[["BY"]][["lpg"]]$lpg), 
                     "lpg")
   } else if (grepl("SLC", set_scalc)) { #### SLC ----
@@ -1900,13 +1930,13 @@ for (set_scalc in set_scalcs) {
   # 生活天然气
   if (grepl("PLUS", set_scalc)) { #### PLUS ----
     hh_nrgintst[[set_scalc]][[3]] <- 
-      func_interp_3(year = c(2019, 2030, 2035, 2060), 
-                    scale = c(1, 0.9, 0.8, 0.4), 
+      func_interp_3(year = c(2019, 2025, 2035, 2060), 
+                    scale = c(1, 1.1, 0.66, 0.4), 
                     base = func_lastone(hh_nrgintst[["BY"]][["gas"]]$gas), 
                     "gas")
   } else if (grepl("SLC", set_scalc)) { #### SLC ----
     hh_nrgintst[[set_scalc]][[3]] <- 
-      func_interp_3(year = c(2019, 2030, 2035, 2060), 
+      func_interp_3(year = c(2019, 2025, 2035, 2060), 
                     scale = c(1, 1.1, 0.9, 0.5), 
                     base = func_lastone(hh_nrgintst[["BY"]][["gas"]]$gas), 
                     "gas")
