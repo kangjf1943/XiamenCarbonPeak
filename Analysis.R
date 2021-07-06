@@ -2362,6 +2362,27 @@ if (set_resultout == TRUE) {
   # 输出为Excel文件
   func_dataexp("各情景下能耗结构2赵老师", mydata = idx_nrgaggfuel_str_long)
   
+  # 输出主要结论报告所需表格
+  # 表2：减煤情景下厦门市能源与碳排放预测
+  report_tab2 <- 
+    idx_output_long[c("scenario", "year", "碳排放量", "能耗量", 
+                      "单位GDP碳排放五年下降率", "单位GDP能耗五年下降率" )]
+  report_tab2 <- rbind(
+    report_tab2[which(report_tab2$year == 2020), ],
+    report_tab2[which(report_tab2$scenario == "BAU_SLC_26COAL1/4_OTHER"), ]
+  )
+  report_tab2 <- cbind(names(report_tab2), as.data.frame(t(report_tab2)))
+  rownames(report_tab2) <- NULL
+  names(report_tab2) <- as.character(report_tab2[2, ])
+  names(report_tab2)[1] <- "item"
+  report_tab2 <- report_tab2[which(
+    report_tab2$item %in% c("scenario", "year") == FALSE), ]
+  report_tab2[2:5] <- sapply(report_tab2[2:5], as.numeric)
+  report_tab2[1:2, 2:5] <- round(report_tab2[1:2, 2:5], digits = 0)
+  report_tab2[3:4, 2:5] <- round(report_tab2[3:4, 2:5], digits = 1)
+  report_tab2[3:4, 2:3] <- "--"
+  func_dataexp("主要结论报告表2", mydata = report_tab2)
+  
   ## EmisPropAggFuel ----
   idx_emisfuel_ls <- vector("list", length(set_scalcs))
   names(idx_emisfuel_ls) <- set_scalcs
