@@ -1512,13 +1512,13 @@ for (set_scalc in set_scalcs) {
   ### BR.CarNum ----
   # 私家车：先预测全部私家车变化趋势再分成常规和纯电动私家车
   # 全部私家车按照初始增长率增长，至2033-2035年饱和
-  if (grepl("PLUS", set_scalc)) { #### PLUS ----
+  if (grepl("SLC", set_scalc)) { #### SLC ----
     trans_act[[set_scalc]][, "私家车"] <- 
       func_curve_1(
         baseyear = 2019, 
         basevalue = func_lastone(trans_act[["BY"]][, "公路其他汽油"]), 
         maxyear = 2035, endyear = 2060, init_rate = 0.03)$value
-  } else { #### NO PLUS ----
+  } else { #### NO SLC ----
     trans_act[[set_scalc]][, "私家车"] <- 
       func_curve_1(
         baseyear = 2019, 
@@ -2194,7 +2194,6 @@ for (set_scalc in set_scalcs) {
 }
 # 查看运行时间
 Sys.time() - global_starttime
-
 
 if (set_resultout == TRUE) {
   # Output ----
