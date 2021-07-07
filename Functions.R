@@ -1265,7 +1265,11 @@ func_resultcalc <- function(name_scenario) {
   
   # 各类能源排放
   # 除电力外其他能源排放量
-  tot_emisfuel <- func_emissum(tot_nrgfuel, prj_emisfac_df, agg = FALSE)
+  if (name_scenario == "BY") {
+    tot_emisfuel <- func_emissum(tot_nrgfuel, global_emisfac_df, agg = FALSE)
+  } else {
+    tot_emisfuel <- func_emissum(tot_nrgfuel, prj_emisfac_df, agg = FALSE)
+  }
   # 加上外调电力排放量
   tot_emisfuel[, "electricity"] <- res_diremissum[[name_scenario]]$co2
   # 聚合成煤油气电
