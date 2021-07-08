@@ -2,7 +2,7 @@
 # 计算内容或口径相关设置
 # 设置要计算的情景
 set_scalcs <- 
-  c("BAU", "BAU_WLC_OTHER", "BAU_SLCPLUS_OTHER", "BAU_SLC_26COAL1/4_OTHER")
+  c("BAU", "BAU_WLC_OTHER", "BAU_SLCPLUS_OTHER", "BAU_SLC_DECOAL_OTHER")
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 set_lowdev <- FALSE #是否采用经济低发展情景
 
@@ -2075,7 +2075,7 @@ for (set_scalc in set_scalcs) {
   names(tfres_act[[set_scalc]]) <- c("year", "elecuse")
   ### BR.LowerCoal ----
   # 本地发电量
-  if  (grepl("26COAL1/4", set_scalc)) { #### 26COAL1/4 ----
+  if  (grepl("DECOAL", set_scalc)) { #### DECOAL ----
     # 2026年开始减煤，两年内减为原来的3/4
     tfres_act[[set_scalc]] <- 
       func_merge_2(list(
@@ -2084,34 +2084,6 @@ for (set_scalc in set_scalcs) {
           year = c(2019, 2025, 2028, 2050, 2060), 
           scale = c(1.0, 1.00, 0.75, 0.5, 0.5), 
           base = tfres_act[["BY"]]$elecgen_thrm[tfres_act[["BY"]]$year == 2019],
-          "elecgen_thrm")))
-  } else if (grepl("28COAL1/4", set_scalc)) { #### 28COAL1/4 ----
-    # 2028年开始减煤，两年内减为原来的3/4
-    tfres_act[[set_scalc]] <- 
-      func_merge_2(list(
-        tfres_act[[set_scalc]], 
-        func_interp_3(
-          year = c(2019, 2027, 2031, 2050, 2060), 
-          scale = c(1.0, 1.00, 0.75, 0.5, 0.5), 
-          base = tfres_act[["BY"]]$elecgen_thrm[tfres_act[["BY"]]$year == 2019],  
-          "elecgen_thrm")))
-  } else if (grepl("24COAL1/2", set_scalc)) { #### 24COAL1/2 ----
-    # 2024年开始减煤，两年内减为原来的一半
-    tfres_act[[set_scalc]] <- 
-      func_merge_2(list(
-        tfres_act[[set_scalc]], 
-        func_interp_3(
-          year = c(2019, 2023, 2025, 2050, 2060), scale = c(1, 1, 0.5, 0, 0), 
-          base = tfres_act[["BY"]]$elecgen_thrm[tfres_act[["BY"]]$year == 2019],  
-          "elecgen_thrm")))
-  } else if (grepl("26COAL1/2", set_scalc)) { #### 26COAL1/2 ----
-    # 2026年开始减煤，五年内减为原来的一半
-    tfres_act[[set_scalc]] <- 
-      func_merge_2(list(
-        tfres_act[[set_scalc]], 
-        func_interp_3(
-          year = c(2019, 2025, 2030, 2050, 2060), scale = c(1, 1, 0.5, 0, 0), 
-          base = tfres_act[["BY"]]$elecgen_thrm[tfres_act[["BY"]]$year == 2019], 
           "elecgen_thrm")))
   } else { #### BAU ----
     # 2030年开始减煤，十年内减为原来的一半，之后保持
@@ -2390,7 +2362,7 @@ if (set_resultout == TRUE) {
                       "单位GDP碳排放五年下降率", "单位GDP能耗五年下降率" )]
   report_tab2 <- rbind(
     report_tab2[which(report_tab2$year == 2020), ],
-    report_tab2[which(report_tab2$scenario == "BAU_SLC_26COAL1/4_OTHER"), ]
+    report_tab2[which(report_tab2$scenario == "BAU_SLC_DECOAL_OTHER"), ]
   )
   report_tab2 <- cbind(names(report_tab2), as.data.frame(t(report_tab2)))
   rownames(report_tab2) <- NULL
@@ -2464,7 +2436,7 @@ if (set_dataexport == TRUE) {
   
   ## Emissec of scenarios ----
   func_dataexp("减煤情景各部门排放量", 
-               mydata = tot_emissec$`BAU_SLC_26COAL1/4_OTHER`)
+               mydata = tot_emissec$`BAU_SLC_DECOAL_OTHER`)
   
   ## Five year change rate of emis ----
   exp_var <- 
