@@ -246,16 +246,16 @@ if (set_cache_globalvar == FALSE) {
   comment(prj_global_population$household) <- "万户"
 }
 
-if (set_cache_readdata == TRUE) {
+if (set_cache_readdata == FALSE) {
   # Read data ----
   # 读取并构建排放因子数据
-  global_emisfac_df <- func_read_data("8C8EDJVH")[global_nrg_class]
+  global_ori_emisfac_df <- func_read_data("8C8EDJVH")[global_nrg_class]
   global_emisfac_df <- rep(
-    as.numeric(global_emisfac_df), each = length(c(2000: 2019)))
+    as.numeric(global_ori_emisfac_df), each = length(c(2000: 2019)))
   global_emisfac_df <- matrix(
-    global_emisfac_df, ncol = ncol(global_emisfac_df))
+    global_emisfac_df, ncol = ncol(global_ori_emisfac_df))
   global_emisfac_df <- as.data.frame(global_emisfac_df)
-  names(global_emisfac_df) <- names(global_emisfac_df)
+  names(global_emisfac_df) <- names(global_ori_emisfac_df)
   global_emisfac_df <- cbind(year = c(2000: 2019), global_emisfac_df)
   # 预测排放因子变化：从2040年开始各类能耗开始脱碳，至2055年为0
   prj_emisfac_df <- cbind(
