@@ -251,36 +251,39 @@ func_merge_rate <- function(var_1, name_1, var_2, name_2, method,
 # 输入：两个时间序列数据框
 # 可选计算方式：“sum”，“product”，“rate”和“difference”，默认为“product”
 # 注意：该函数计算的时候顺序很重要！
-func_cross <- function(df1, df2, method = "product") {
+# 两种方法：“byorder”是按列名顺序进行运算，“byname”是按相同列名进行运算，后者暂未开发
+func_cross <- function(df1, df2, method = "product", order = "byorder") {
   # 判断是否包含“year”列
   if ("year" %in% names(df1) & "year" %in% names(df2) == FALSE) {
     print("warning: no year data in the dataframe.")
   } else {
     # 取出第一个数据框除了“year”外的列名作为输出列名
-    dfout_names <- names(df1)[names(df1) %in% "year" == FALSE]
+    dfout_names <- names(df1)
     # 先重命名输入的数据框以避免同名冲突
     df1_names <- paste0(1, c(1: (length(df1)-1)))
     df2_names <- paste0(2, c(1: (length(df2)-1)))
     names(df1) <- c("year", df1_names)
     names(df2) <- c("year", df2_names)
-    # 基于year列合并数据框，作为储存结果的数据框
+    # 基于year列合并数据框，作为运算储存结果的数据框
     dfout <- merge(df1, df2, by = "year")
-    for (i in c(1: length(dfout_names))) {
-      # 根据不同method参数选择不同计算方式
-      if (method == "sum") {
-        dfout[, dfout_names[i]] <- dfout[, df1_names[i]] + dfout[, df2_names[i]]
-      }
-      if (method == "difference") {
-        dfout[, dfout_names[i]] <- dfout[, df1_names[i]] - dfout[, df2_names[i]]
-      }
-      if (method == "product") {
-        dfout[, dfout_names[i]] <- dfout[, df1_names[i]] * dfout[, df2_names[i]]
-      }
-      if (method == "rate") {
-        dfout[, dfout_names[i]] <- dfout[, df1_names[i]] / dfout[, df2_names[i]]
-      }
-    }
-    dfout <- dfout[c("year", dfout_names)]
+    
+    # 将原数据框按列转化为向量
+    df1unlist <- unlist(df1[df1_names])
+    df2unlist <- unlist(df2[df2_names])
+    # 根据不同运算规则选择计算方式
+    switch(
+      method, 
+      sum = dfoutunlist <- df1unlist + df2unlist, 
+      difference = dfoutunlist <- df1unlist - df2unlist, 
+      product = dfoutunlist <- df1unlist * df2unlist, 
+      rate = dfoutunlist <- df1unlist /df2unlist
+    )
+    
+    # 重组数据框
+    dfout <- cbind(df1$year, matrix(dfoutunlist, nrow = nrow(df1), ncol = (ncol(df1) -1)))
+    dfout <- as.data.frame(dfout)
+    
+    names(dfout) <- names(df1)
     dfout
   }
 }
