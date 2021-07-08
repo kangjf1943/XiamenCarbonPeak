@@ -729,6 +729,8 @@ func_nrg_sum_ls <- function(ls_nrgintst, df_actlvl) {
 
 ## 基于两个数据框计算碳排放的函数
 # 本函数根据列名对应能耗总量和排放因子
+nrgsum_df <- ind_nrgfuel[["BY"]]
+emisfac_df <- global_emisfac_df
 func_emissum <- function(nrgsum_df, emisfac_df, agg = TRUE) {
   emissum_df <- data.frame(year = nrgsum_df[, "year"])
   # 只计算两个数据框共有的能耗类型
@@ -749,6 +751,7 @@ func_emissum <- function(nrgsum_df, emisfac_df, agg = TRUE) {
     if (agg == TRUE) {
       emissum_df_ori$temp <- 0
       emissum_df <- data.frame(year = emissum_df_ori$year)
+      emissum_df_ori[-1] <- sapply(emissum_df_ori[-1], as.numeric)
       emissum_df$co2 <- rowSums(emissum_df_ori[, -1])
     } else {
       emissum_df <- emissum_df_ori
