@@ -268,8 +268,8 @@ func_cross <- function(df1, df2, method = "product", order = "byorder") {
     dfout <- merge(df1, df2, by = "year")
     
     # 将原数据框按列转化为向量
-    df1unlist <- unlist(df1[df1_names])
-    df2unlist <- unlist(df2[df2_names])
+    df1unlist <- unlist(dfout[df1_names])
+    df2unlist <- unlist(dfout[df2_names])
     # 根据不同运算规则选择计算方式
     switch(
       method, 
