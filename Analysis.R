@@ -1704,7 +1704,8 @@ for (set_scalc in set_scalcs) {
       year = c(2019, 2025, 2030, 2060), scale = c(1, 0.97, 0.97, 0.80), 
       base = func_lastone(trans_nrgintst[["BY"]][["水路货运"]]$residual),
       "residual")$residual
-  } else if (grepl("WLC", set_scalc)) { #### WLC ----
+  } else if (grepl("WLC", set_scalc)) { 
+    #### WLC ----
     trans_nrgintst[[set_scalc]][["水路货运"]] <- func_interp_3(
       year = c(2019, 2025, 2030, 2060), scale = c(1, 1, 0.99, 0.9), 
       base = func_lastone(trans_nrgintst[["BY"]][["水路货运"]]$diesel),"diesel")
