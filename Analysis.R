@@ -14,8 +14,6 @@ set_cache_init <- FALSE # 是否已有初始化缓存
 
 # 结果相关设置
 set_plotstyle <- "base" # 设置作图风格
-set_resultout <- TRUE # 是否输出查看结果
-set_dataexport <- FALSE # 是否导出数据文件
 set_figureexport <- FALSE # 是否输出图片
 
 # Read data ----
@@ -2171,9 +2169,9 @@ for (set_scalc in set_scalcs) {
 # 查看运行时间
 Sys.time() - global_starttime
 
-if (set_resultout == TRUE) {
-  # Output ----
-  ## Peak time of nrg and emis ----
+# Output ----
+## Peak times ----
+{
   # 作图：各情景排放总量图
   print(
     ggarrange(plotlist = list(
@@ -2190,7 +2188,6 @@ if (set_resultout == TRUE) {
     func_peakyear(tot_emissum[[i]], "co2")})
   print(idx_peakyear)
   
-  ## Peak time of secs ----
   # 输出各情景各部门达峰时间
   idx_peakyearsec <- data.frame(scenarios = set_scalcs)
   for (i in set_scalcs) {
@@ -2210,8 +2207,10 @@ if (set_resultout == TRUE) {
       xlim(c(2019, 2035)) + facet_wrap(~scenarios, ncol = 1) + 
       theme_bw()
   )
-  
-  ## Key index ----
+}
+
+## Key index ----
+{
   # 各情景下服务业和生活部门电力消费量所占比例
   # 构建列表用于储存结果
   idx_all <- vector("list", length(set_scalcs))
@@ -2304,11 +2303,12 @@ if (set_resultout == TRUE) {
     ggplot(idx_output_long, aes(year, 单位GDP碳排放五年下降率)) + 
       geom_line(aes(color = scenario))), 
     nrow = 2, ncol = 4, common.legend = TRUE)
-  
-  # 输出为Excel文件
-  func_dataexp("各情景下关键指标", mydata = idx_output_long)
-  
-  ## Emis and nrg str ~ agg fuel ----
+}
+# 输出为Excel文件
+func_dataexp("各情景下关键指标", mydata = idx_output_long)
+
+## EmisNrgStr ~ aggfuel ----
+{
   # 生成各情景下煤油气电占比
   idx_nrgaggfuel_str_ls <- vector("list", length(set_scalcs))
   names(idx_nrgaggfuel_str_ls) <- set_scalcs
@@ -2325,9 +2325,9 @@ if (set_resultout == TRUE) {
     idx_nrgpropaggfuel[names(idx_nrgpropaggfuel) %in% 
                          c("year", "scenario") == FALSE]*100
   names(idx_nrgpropaggfuel)[names(idx_nrgpropaggfuel) %in% 
-                               c("year", "scenario") == FALSE] <- 
+                              c("year", "scenario") == FALSE] <- 
     paste(names(idx_nrgpropaggfuel)[names(idx_nrgpropaggfuel) %in% 
-                                       c("year", "scenario") == FALSE], 
+                                      c("year", "scenario") == FALSE], 
           "能源占比", sep = "")
   
   # 生成各情景下煤油气电排放占比
@@ -2341,9 +2341,9 @@ if (set_resultout == TRUE) {
   idx_emispropaggfuel <- 
     func_idxouput(idx_emispropaggfuel, baseyear = 2019, digits = 3)
   idx_emispropaggfuel[names(idx_emispropaggfuel) %in% 
-                       c("year", "scenario") == FALSE] <-
+                        c("year", "scenario") == FALSE] <-
     idx_emispropaggfuel[names(idx_emispropaggfuel) %in% 
-                         c("year", "scenario") == FALSE]*100
+                          c("year", "scenario") == FALSE]*100
   names(idx_emispropaggfuel)[names(idx_emispropaggfuel) %in% 
                                c("year", "scenario") == FALSE] <- 
     paste(names(idx_emispropaggfuel)[names(idx_emispropaggfuel) %in% 
@@ -2354,8 +2354,10 @@ if (set_resultout == TRUE) {
   # 合并能源结构和碳排放结构
   report_apptab6 <- cbind(idx_nrgpropaggfuel, idx_emispropaggfuel)
   func_dataexp("能源和碳排放结构", mydata = report_apptab6)
-  
-  ## For report ----
+}
+
+## For report ----
+{
   # 输出主要结论报告所需表格
   # 表2：减煤情景下厦门市能源与碳排放预测
   report_tab2 <- 
@@ -2413,86 +2415,18 @@ if (set_resultout == TRUE) {
   # 合并两个部分
   report_apptab7 <- cbind(report_apptab7_1, report_apptab7_2)
   report_apptab7 <- report_apptab7[c("scenario", "year", 
-    paste(rep(global_sectors[1:6], each = 2), c("nrg", "emis"), sep = "_"))]
+                                     paste(rep(global_sectors[1:6], each = 2), c("nrg", "emis"), sep = "_"))]
   func_dataexp("附表7_不同情景下分行业能源消费与碳排放量", 
                mydata = report_apptab7)
 }
 
-
-if (set_dataexport == TRUE) {
-  # Data export ----
-  ## Peak year of nrg and emis by scenarios ----
-  exp_var <- data.frame(scenario = set_scalcs, nrg_peak = NA, emis_peak = NA)
-  for (i in set_scalcs) {
-    exp_var[which(exp_var$scenario == i), "nrg_peak"] <- 
-      func_peakyear(tot_nrgsumce[[i]], "energyconsump")
-    exp_var[which(exp_var$scenario == i), "emis_peak"] <- 
-      func_peakyear(tot_emissum[[i]], "co2")
-  }
-  func_dataexp("各情景下能耗和排放达峰时间", mydata = exp_var)
-  
-  ## Tot emis of scenarios ----
+## Tot emis & Emissec ----
+{
   exp_var <- func_mrgcol(tot_emissum[set_scalcs], "co2", set_scalcs)
   func_dataexp("各情景总排放量", mydata = exp_var)
   
-  ## Emissec of scenarios ----
   func_dataexp("减煤情景各部门排放量", 
                mydata = tot_emissec$`BAU_SLC_DECOAL_OTHER`)
-  
-  ## Five year change rate of emis ----
-  exp_var <- 
-    prj_global_gdp[c("year", "GDP")][which(prj_global_gdp$year %in% c(2019, 2025, 2030, 2035)), ]
-  for (i in set_scalcs) {
-    # 能耗量相关指标
-    exp_var[, paste0(i, "_nrg (万吨标煤)")] <- 
-      tot_nrgsumce[[i]][which(
-        tot_nrgsumce[[i]]$year %in% c(2019, 2025, 2030, 2035)), ]$energyconsump/10000
-    exp_var[, paste0(i, " (吨标煤/万元GDP)")] <- 
-      exp_var[, paste0(i, "_nrg (万吨标煤)")]*10000 / exp_var[, "GDP"]
-    exp_var[, paste0(i, "_nrg变化率")] <- 
-      func_ratecalc(exp_var[, c("year", paste0(i, " (吨标煤/万元GDP)"))], 
-                    paste0(i, " (吨标煤/万元GDP)"))$rate*100
-    # 排放量相关指标
-    exp_var[, paste0(i, "_emis (万吨)")] <- 
-      tot_emissum[[i]][which(
-        tot_emissum[[i]]$year %in% c(2019, 2025, 2030, 2035)), ]$co2
-    exp_var[, paste0(i, " (吨/万元)")] <- 
-      exp_var[, paste0(i, "_emis (万吨)")]*10000 / exp_var[, "GDP"]
-    exp_var[, paste0(i, "_emis变化率")] <- 
-      func_ratecalc(exp_var[, c("year", paste0(i, " (吨/万元)"))], 
-                    paste0(i, " (吨/万元)"))$rate*100
-  }
-  if (set_nrgplng_scope == FALSE) {
-    func_dataexp("各情景五年GDP和能耗强度", mydata = exp_var)
-  } else {
-    func_dataexp("各情景五年GDP和能耗强度-能源规划口径",mydata = exp_var)
-  }
-  
-  ## Emis per GDP of scenarios ----
-  exp_var <- 
-    func_mrgcol(tot_emispergdp_ls[set_scalcs], "co2", set_scalcs)
-  # 将单位由“吨/元”转化为“吨/万元”
-  exp_var[names(exp_var) != "year"] <- 
-    exp_var[names(exp_var) != "year"]*10000
-  func_dataexp("各情景下单位GDP排放量", mydata = exp_var)
-  
-  ## Key index ----
-  # 输出各情景的关键指标
-  for (i in set_scalcs) {
-    func_dataexp(paste0("关键指标-", i), mydata = idx_output[[i]])
-  }
-  
-  ## For project ----
-  # 刘洋：惯性情景电动车预测
-  func_dataexp(
-    "惯性情景电动车预测2刘洋", 
-    mydata = trans_act_ls$BAU[which(
-      trans_act_ls$BAU$year %in% c(2020, 2025, 2030, 2035, 2050)), 
-      c("year", "纯电动私家车")])
-  
-  # 赵胜男：各情景煤油气电标准量
-  func_dataexp(
-    "各情景煤油气电标准量2赵老师", mydata = tot_nrgaggfuelce, mydata_type = "ls")
 }
 
 
