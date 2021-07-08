@@ -18,6 +18,22 @@ set_figureexport <- FALSE # 是否输出图片
 
 # Read data ----
 {
+  # 读取并构建排放因子数据
+  global_emisfac_df <- func_read_data("8C8EDJVH")[global_nrg_class]
+  global_emisfac_df <- rep(
+    as.numeric(global_ori_emisfac_df), each = length(c(2000: 2019)))
+  global_emisfac_df <- matrix(
+    global_emisfac_df, ncol = ncol(global_ori_emisfac_df))
+  global_emisfac_df <- as.data.frame(global_emisfac_df)
+  names(global_emisfac_df) <- names(global_ori_emisfac_df)
+  global_emisfac_df <- cbind(year = c(2000: 2019), global_emisfac_df)
+  # 预测排放因子变化：从2040年开始各类能耗开始脱碳，至2055年为0
+  prj_emisfac_df <- cbind(
+    data.frame(year = c(2019: 2060)), 
+    sapply(global_nrg_class, function(i) {func_interp_3(
+      year = c(2019, 2040, 2050, 2060), scale = c(1.0, 1.0, 0.7, 0.0), 
+      base = global_emisfac_df[which(global_emisfac_df$year == 2019), i])$value}))
+  
   # 读取规上工业各行业能耗分能耗类型-行业数据
   global_indscale_nrgls_bynrg <- 
     func_read_multitable("7TP7UDE6", 
@@ -302,20 +318,6 @@ if (set_cache_globalvar == FALSE) {
   # 生活子部门
   global_hh_subsector <- 
     c("hh_coal_elec", "hh_lpg", "hh_gas")
-  
-  ## Factors ----
-  # 构建排放因子列表
-  global_ori_emisfac_df <- func_read_data("8C8EDJVH")[global_nrg_class]
-  global_emisfac_df <- cbind(
-    data.frame(year = c(2000: 2019)), 
-    sapply(global_ori_emisfac_df, function(i) {rep(i, 20)}))
-  rm(global_ori_emisfac_df)
-  # 预测排放因子变化：从2040年开始各类能耗开始脱碳，至2055年为0
-  prj_emisfac_df <- cbind(
-    data.frame(year = c(2019: 2060)), 
-    sapply(global_nrg_class, function(i) {func_interp_3(
-      year = c(2019, 2040, 2050, 2060), scale = c(1.0, 1.0, 0.7, 0.0), 
-      base = global_emisfac_df[which(global_emisfac_df$year == 2019), i])$value}))
   
   ## GDP ----
   # 规上工业各行业GDP
