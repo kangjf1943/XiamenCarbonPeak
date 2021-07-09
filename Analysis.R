@@ -2,7 +2,7 @@
 # 计算内容或口径相关设置
 # 设置要计算的情景
 set_scalcs <- 
-  c("BAU", "BAU_WLC_OTHER", "BAU_SLCPLUS_OTHER", "BAU_SLC_DECOAL_OTHER")
+  c("BAU_SLC_DECOAL_OTHER")
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 set_lowdev <- FALSE #是否采用经济低发展情景
 
@@ -1354,7 +1354,7 @@ for (set_scalc in set_scalcs) {
         sapply(global_ind_nrgclass[1:6], function(j) {
           func_interp_3(
             year = c(2019, 2025, 2030, 2035, 2060), 
-            scale = c(1.0, 1.0, 1.00, 0.95, 0.7), 
+            scale = c(1.0, 1.0, 1.00, 1.00, 0.7), 
             base = func_lastone(ind_nrgintst[["BY"]][[i]][, j], 
                                 zero.rm =  FALSE))$value}))
     }
@@ -1400,8 +1400,8 @@ for (set_scalc in set_scalcs) {
     #### SLC ----
     for (i in global_ind_subsector) {
       ind_nrgintst[[set_scalc]][[i]][, "gas"] <- func_interp_3(
-        year = c(2019, 2025, 2030, 2035, 2060), 
-        scale = c(1.0, 1.0, 1.20, 1.20, 1.10), 
+        year = c(2019, 2025, 2028, 2030, 2035, 2060), 
+        scale = c(1.0, 0.99, 1.12, 1.25, 1.30, 1.10), 
         base = func_lastone(ind_nrgintst[["BY"]][[i]][, "gas"], 
                             zero.rm =  FALSE))$value
     }
@@ -1424,7 +1424,7 @@ for (set_scalc in set_scalcs) {
                             zero.rm =  FALSE))$value
     }
   }
-  ### RB.ElecIntst ----
+  ### BR.ElecIntst ----
   # 电力在短期内有所上升，但比天然气上升幅度小
   if (grepl("PLUS", set_scalc)) { #### PLUS ----
     for (i in global_ind_subsector) {
@@ -1437,8 +1437,8 @@ for (set_scalc in set_scalcs) {
   } else if (grepl("SLC", set_scalc)) { #### SLC ----
     for (i in global_ind_subsector) {
       ind_nrgintst[[set_scalc]][[i]][, "electricity"] <- func_interp_3(
-        year = c(2019, 2025, 2030, 2060), 
-        scale = c(1.0, 1.1, 1.2, 1.2), 
+        year = c(2019, 2025, 2028, 2030, 2035, 2060), 
+        scale = c(1.0, 1.08, 1.16, 1.25, 1.27, 1.2), 
         base = func_lastone(ind_nrgintst[["BY"]][[i]][, "electricity"], 
                             zero.rm =  FALSE))$value
     }
@@ -2316,6 +2316,8 @@ Sys.time() - global_starttime
       geom_line(aes(color = scenario))), 
     nrow = 2, ncol = 4, common.legend = TRUE)
 }
+# 查看五年能耗下降率指标
+View(idx_output_long[c("year", "scenario", "单位GDP能耗五年下降率")])
 # 输出为Excel文件
 func_dataexp("各情景下关键指标", mydata = idx_output_long)
 
