@@ -2079,7 +2079,8 @@ for (set_scalc in set_scalcs) {
   
   ### BR.LowerCoal ----
   # 本地发电量
-  if  (grepl("DECOAL", set_scalc)) { #### DECOAL ----
+  if  (grepl("DECOAL", set_scalc)) { 
+    #### DECOAL ----
     # 2026年开始减煤，两年内减为原来的3/4
     tfres_act[[set_scalc]] <- 
       func_merge_2(list(
@@ -2089,7 +2090,8 @@ for (set_scalc in set_scalcs) {
           scale = c(1.0, 1.00, 0.75, 0.5, 0.5), 
           base = tfres_act[["BY"]]$elecgen_thrm[tfres_act[["BY"]]$year == 2019],
           "elecgen_thrm")))
-  } else { #### BAU ----
+  } else { 
+    #### BAU ----
     # 2030年开始减煤，十年内减为原来的一半，之后保持
     tfres_act[[set_scalc]] <- 
       func_merge_2(list(
