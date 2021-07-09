@@ -11,7 +11,7 @@ set_cache_globalvar <- FALSE # 是否已有全局变量缓存
 set_cache_nrgbal <- FALSE # 是否已有能源平衡表缓存
 set_cache_hiscalc <- FALSE # 是否已有历史数据计算缓存
 set_cache_init <- FALSE # 是否已有初始化缓存
-set_cache_readdata <- FALSE # 是否已有数据读取缓存
+set_cache_readdata <- TRUE # 是否已有数据读取缓存
 
 # 结果相关设置
 set_plotstyle <- "base" # 设置作图风格
@@ -2342,7 +2342,7 @@ func_dataexp("各情景下关键指标", mydata = idx_output_long)
   
   # 生成各情景下煤油气电排放占比
   idx_emispropaggfuel <- vector("list", length(set_scalcs))
-  names(idx_emisfuel_ls) <- set_scalcs
+  names(idx_emispropaggfuel) <- set_scalcs
   for (i in set_scalcs) {
     idx_emispropaggfuel[[i]] <- func_nrg_intst(
       tot_emisaggfuel[[i]], tot_emissum[[i]], "co2")
