@@ -2296,7 +2296,18 @@ Sys.time() - global_starttime
   }
   # 整理为目标格式
   idx_output_long <- 
-    func_idxouput(idx_output, baseyear = 2019, digits = 1)
+    func_idxouput(idx_output, baseyear = 2020, digits = 1)
+  
+  # 增加指标计算并筛选出要用到的指标
+  # 问题：本地能源中非化石能源比例均假设为1
+  idx_output_long$清洁能源比例 <- 
+    idx_output_long$外调电力消费占比 * idx_output_long$外调电力清洁能源占比 + 1
+  idx_output_long <- idx_output_long[c(
+    "year", "scenario", 
+    "高能耗传统行业增加值比例", "低能耗传统行业增加值比例","新兴行业增加值比例",
+    "私家电动车比例", "人均生活能耗", "人均生活能耗五年变化率",
+    "碳排放量", "能耗量", "单位GDP碳排放", 
+    "单位GDP碳排放五年下降率", "单位GDP能耗五年下降率", "清洁能源比例")]
   
   # 作图查看各指标五年变化趋势
   ggarrange(plotlist = list(
@@ -2305,6 +2316,8 @@ Sys.time() - global_starttime
     ggplot(idx_output_long, aes(year, 低能耗传统行业增加值比例)) + 
       geom_line(aes(color = scenario)), 
     ggplot(idx_output_long, aes(year, 新兴行业增加值比例)) + 
+      geom_line(aes(color = scenario)), 
+    ggplot(idx_output_long, aes(year, 清洁能源比例)) + 
       geom_line(aes(color = scenario)), 
     ggplot(idx_output_long, aes(year, 能耗量)) + 
       geom_line(aes(color = scenario)), 
@@ -2316,8 +2329,6 @@ Sys.time() - global_starttime
       geom_line(aes(color = scenario))), 
     nrow = 2, ncol = 4, common.legend = TRUE)
 }
-# 查看五年能耗下降率指标
-View(idx_output_long[c("year", "scenario", "单位GDP能耗五年下降率")])
 # 输出为Excel文件
 func_dataexp("各情景下关键指标", mydata = idx_output_long)
 
