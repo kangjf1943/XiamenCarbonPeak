@@ -2,7 +2,8 @@
 # 计算内容或口径相关设置
 # 设置要计算的情景
 set_scalcs <- 
-  c("BAU_WLC_OTHER")
+  c("BAU", "BAU_WLC_OTHER", "BAU_SLCPLUS_OTHER",
+    "BAU_SLC_DECOAL_OTHER")
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 set_lowdev <- FALSE #是否采用经济低发展情景
 
@@ -1378,7 +1379,7 @@ for (set_scalc in set_scalcs) {
         sapply(global_ind_nrgclass[1:6], function(j) {
           func_interp_3(
             year = c(2019, 2025, 2030, 2040, 2060), 
-            scale = c(1.0, 1.20,  1.2,  1.0,  1.0), 
+            scale = c(1.0, 1.10, 1.23,  1.0,  1.0), 
             base = func_lastone(ind_nrgintst[["BY"]][[i]][, j], 
                                 zero.rm =  FALSE))$value}))
     }
@@ -1419,7 +1420,7 @@ for (set_scalc in set_scalcs) {
     for (i in global_ind_subsector) {
       ind_nrgintst[[set_scalc]][[i]][, "gas"] <- func_interp_3(
         year = c(2019, 2025, 2030, 2035, 2060), 
-        scale = c(1.0, 1.1, 1.4, 1.6, 1.2), 
+        scale = c(1.0, 1.05, 1.45, 1.6, 1.2), 
         base = func_lastone(ind_nrgintst[["BY"]][[i]][, "gas"], 
                             zero.rm =  FALSE))$value
     }
@@ -1453,8 +1454,8 @@ for (set_scalc in set_scalcs) {
   } else { #### BAU ----
     for (i in global_ind_subsector) {
       ind_nrgintst[[set_scalc]][[i]][, "electricity"] <- func_interp_3(
-        year = c(2019, 2030, 2035, 2060), 
-        scale = c(1.0, 1.3, 1.4, 1.3), 
+        year = c(2019, 2025, 2030, 2035, 2060), 
+        scale = c(1.0, 1.10, 1.33, 1.4, 1.3), 
         base = func_lastone(ind_nrgintst[["BY"]][[i]][, "electricity"], 
                             zero.rm =  FALSE))$value
     }
