@@ -2,8 +2,7 @@
 # 计算内容或口径相关设置
 # 设置要计算的情景
 set_scalcs <- 
-  c("BAU", "BAU_WLC_OTHER", "BAU_SLCPLUS_OTHER",
-    "BAU_SLC_DECOAL_OTHER")
+  c("BAU_WLC_OTHER")
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 set_lowdev <- FALSE #是否采用经济低发展情景
 
@@ -1666,11 +1665,11 @@ for (set_scalc in set_scalcs) {
   } else if (grepl("WLC", set_scalc)) { 
     #### WLC ----
     trans_nrgintst[[set_scalc]][["水路客运"]] <- func_interp_3(
-      year = c(2019, 2025, 2028, 2030, 2060), scale = c(1, 0.96, 0.95, 0.9, 0.9), 
+      year = c(2019, 2025, 2028, 2030, 2060), scale = c(1, 0.96, 0.96, 0.9, 0.9), 
       base = func_lastone(trans_nrgintst[["BY"]][["水路客运"]]$diesel), 
       "diesel")
     trans_nrgintst[[set_scalc]][["水路客运"]]$residual <- func_interp_3(
-      year = c(2019, 2025, 2028,2030, 2060), scale = c(1.0, 0.93,0.93,0.9, 0.9), 
+      year = c(2019, 2025, 2028,2030, 2060), scale = c(1.0, 0.93,0.94,0.9, 0.9), 
       base = func_lastone(trans_nrgintst[["BY"]][["水路客运"]]$residual),
       "residual")$residual
   } else { 
@@ -1710,10 +1709,10 @@ for (set_scalc in set_scalcs) {
   } else if (grepl("WLC", set_scalc)) { 
     #### WLC ----
     trans_nrgintst[[set_scalc]][["水路货运"]] <- func_interp_3(
-      year = c(2019, 2025, 2028,2030, 2060), scale = c(1, 0.96, 0.99,1.00, 0.9), 
+      year = c(2019, 2025, 2028,2030, 2060), scale = c(1, 0.96, 1.00,1.00, 0.9), 
       base = func_lastone(trans_nrgintst[["BY"]][["水路货运"]]$diesel),"diesel")
     trans_nrgintst[[set_scalc]][["水路货运"]]$residual <- func_interp_3(
-      year = c(2019, 2025, 2028,2030, 2060), scale = c(1, 0.98, 099,0.98, 0.9), 
+      year = c(2019, 2025, 2028,2030, 2060), scale = c(1, 0.98,1.00,0.98, 0.9), 
       base = func_lastone(trans_nrgintst[["BY"]][["水路货运"]]$residual),
       "residual")$residual
   } else { 
@@ -1791,14 +1790,14 @@ for (set_scalc in set_scalcs) {
   } else if (grepl("WLC", set_scalc)) { 
     #### WLC ----
     com_nrgintst[[set_scalc]][[1]] <- func_interp_3(
-      year = c(2019, 2025, 2028, 2030, 2060), scale = c(1, 1.05,1.05,1.04, 0.95), 
+      year = c(2019, 2025, 2028, 2030, 2060), scale = c(1, 1.05,1.07,1.03, 0.95), 
       base = func_lastone(com_nrgintst[["BY"]]$electricity$electricity), 
       "electricity")
     com_nrgintst[[set_scalc]][[2]] <- func_interp_3(
-      year = c(2019, 2025, 2028,2030, 2060), scale = c(1, 1.11,1.20, 1.23, 1.0), 
+      year = c(2019, 2025, 2028,2030, 2060), scale = c(1, 1.11,1.24, 1.21, 1.0), 
       base = func_lastone(com_nrgintst[["BY"]][[2]]$lpg), "lpg")
     com_nrgintst[[set_scalc]][[2]]$gas <- func_interp_3(
-      year = c(2019, 2025, 2028, 2030, 2060), scale = c(1, 1.16, 1.27,1.27, 1.0), 
+      year = c(2019, 2025, 2028, 2030, 2060), scale = c(1, 1.16, 1.27,1.26, 1.0), 
       base = func_lastone(com_nrgintst[["BY"]][[2]]$gas), "gas")$gas
   } else { 
     #### BAU ----
@@ -1919,7 +1918,7 @@ for (set_scalc in set_scalcs) {
     #### WLC ----
     hh_nrgintst[[set_scalc]][[1]] <- func_interp_3(
       year = c(2019, 2025, 2028, 2030, 2035, 2060), 
-      scale = c(1.0, 1.07, 1.16, 1.19, 1.38, 1.45), 
+      scale = c(1.0, 1.07, 1.19, 1.19, 1.38, 1.45), 
       base = func_lastone(hh_nrgintst[["BY"]][["household"]][, "electricity"]))
   } else { 
     #### BAU ----
@@ -1953,7 +1952,7 @@ for (set_scalc in set_scalcs) {
     #### WLC ----
     hh_nrgintst[[set_scalc]][[2]] <- func_interp_3(
       year = c(2019, 2025, 2028, 2030, 2035, 2060), 
-      scale = c(1.0, 1.02, 1.01, 0.98, 0.98, 0.65), 
+      scale = c(1.0, 1.02, 1.02, 0.95, 0.98, 0.65), 
       base = func_lastone(hh_nrgintst[["BY"]][["lpg"]]$lpg), "lpg")
   } else { 
     #### BAU ----
@@ -1978,7 +1977,7 @@ for (set_scalc in set_scalcs) {
   } else if (grepl("WLC", set_scalc)) { 
     #### WLC ----
     hh_nrgintst[[set_scalc]][[3]] <- func_interp_3(
-      year = c(2019, 2025, 2035, 2060), scale = c(1, 1.12, 0.9, 0.6), 
+      year = c(2019, 2025, 2028,2035, 2060), scale = c(1, 1.12,1.06,0.85, 0.6), 
       base = func_lastone(hh_nrgintst[["BY"]][["gas"]]$gas), "gas")
   } else { 
     #### BAU ----
