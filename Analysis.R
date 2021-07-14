@@ -1461,10 +1461,10 @@ for (set_scalc in set_scalcs) {
   }
   
   ## Energy and emission ----
-  ind_nrgfuel[[set_scalc]] <- 
+  ind_nrgsecfuel[[set_scalc]] <- 
     func_nrg_sum_ls(ind_nrgintst[[set_scalc]], ind_act[[set_scalc]])
   ind_nrgfuel[[set_scalc]] <- 
-    func_ls2df(ind_nrgfuel[[set_scalc]])
+    func_ls2df(ind_nrgsecfuel[[set_scalc]])
   ind_diremissum[[set_scalc]] <- 
     func_emissum(ind_nrgfuel[[set_scalc]], prj_emisfac_df)
   
@@ -1732,9 +1732,9 @@ for (set_scalc in set_scalcs) {
     base = func_lastone(trans_nrgintst[["BY"]][["航空"]]$kerosene), "kerosene")
   
   ## Energy and emission ----
-  trans_nrgfuel[[set_scalc]] <- 
+  trans_nrgsecfuel[[set_scalc]] <- 
     func_nrg_sum_ls(trans_nrgintst[[set_scalc]], trans_act[[set_scalc]])
-  trans_nrgfuel[[set_scalc]] <- func_ls2df(trans_nrgfuel[[set_scalc]])
+  trans_nrgfuel[[set_scalc]] <- func_ls2df(trans_nrgsecfuel[[set_scalc]])
   trans_diremissum[[set_scalc]] <- 
     func_emissum(trans_nrgfuel[[set_scalc]], prj_emisfac_df)
   
@@ -1861,9 +1861,9 @@ for (set_scalc in set_scalcs) {
   }
   
   ## Energy and emission ----
-  com_nrgfuel[[set_scalc]] <- 
+  com_nrgsecfuel[[set_scalc]] <- 
     func_nrg_sum_ls(com_nrgintst[[set_scalc]], com_act[[set_scalc]])
-  com_nrgfuel[[set_scalc]] <- func_ls2df(com_nrgfuel[[set_scalc]])
+  com_nrgfuel[[set_scalc]] <- func_ls2df(com_nrgsecfuel[[set_scalc]])
   com_diremissum[[set_scalc]] <- 
     func_emissum(com_nrgfuel[[set_scalc]], prj_emisfac_df)
   
@@ -2050,9 +2050,9 @@ for (set_scalc in set_scalcs) {
   
   
   ## Consumption and emission ----
-  hh_nrgfuel[[set_scalc]] <- 
+  hh_nrgsecfuel[[set_scalc]] <- 
     func_nrg_sum_ls(hh_nrgintst[[set_scalc]], hh_act[[set_scalc]])
-  hh_nrgfuel[[set_scalc]] <- func_ls2df(hh_nrgfuel[[set_scalc]])
+  hh_nrgfuel[[set_scalc]] <- func_ls2df(hh_nrgsecfuel[[set_scalc]])
   hh_diremissum[[set_scalc]] <- 
     func_emissum(hh_nrgfuel[[set_scalc]], prj_emisfac_df)
   
