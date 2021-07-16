@@ -17,7 +17,7 @@ set_cache_readdata <- TRUE # 是否已有数据读取缓存
 set_plotstyle <- "base" # 设置作图风格
 set_figureexport <- FALSE # 是否输出图片
 
-
+# 设置全局变量
 if (set_cache_globalvar == FALSE) {
   # GLOBAL VAR ----
   ## Classification ----
@@ -246,6 +246,8 @@ if (set_cache_globalvar == FALSE) {
   comment(prj_global_population$household) <- "万户"
 }
 
+# 读取数据
+# 在该模块集中读取原始数据
 if (set_cache_readdata == FALSE) {
   # Read data ----
   # 读取并构建排放因子数据
@@ -424,6 +426,8 @@ if (set_cache_readdata == FALSE) {
   names(global_importthrm_cefac) <- c("year", "nrg_input")
 }
 
+# 初始化
+# 在此模块构建情景和空的对象，以存放结果
 if (set_cache_init == FALSE) {
   # INIT ----
   # 情景包括：惯性，弱低碳，强低碳，提前退煤，退煤5个情景
@@ -462,7 +466,7 @@ if (set_cache_init == FALSE) {
   tot_emisaggfuel <- init_output_templatels
 }
 
-
+# 构建能源平衡表
 if (set_cache_nrgbal == FALSE) {
   # NRG BALANCE ----
   # 构建空能源平衡表
@@ -656,11 +660,11 @@ if (set_cache_nrgbal == FALSE) {
   }
 }
 
-
+# 计算历史能耗和排放量
 if (set_cache_hiscalc == FALSE) {
   # HISTORY ----
-  # Agri ----
-  ## Activity level ----
+  ## Agri ----
+  ### Activity level ----
   # 农业的播种面积
   # 读取《碳排放峰值模型参数选择检验》
   agri_act[["BY"]] <- func_read_trans("4NJ97NS9")
@@ -671,7 +675,7 @@ if (set_cache_hiscalc == FALSE) {
     agri_act[["BY"]]$agri/1500
   comment(agri_act[["BY"]]$agri) <- "平方公里"
   
-  ## Consumption and emission ----
+  ### Consumption and emission ----
   # 读取《碳排放峰值模型参数选择检验》
   by_agri_ori_diesel <- global_agri_diesel
   names(by_agri_ori_diesel)[2] <- "diesel"
@@ -685,13 +689,13 @@ if (set_cache_hiscalc == FALSE) {
   agri_diremissum[["BY"]] <- 
     func_emissum(agri_nrgfuel[["BY"]], global_emisfac_df)
   
-  ## Energy intensity ----
+  ### Energy intensity ----
   agri_nrgintst[["BY"]] <- 
     func_nrg_intst(agri_nrgfuel[["BY"]], agri_act[["BY"]], "agri")
   
   
-  # Industry ----
-  ## Activity level ----
+  ## Industry ----
+  ### Activity level ----
   # 问题：需要通过调研补全规上各行业GDP数据
   # 读取规上工业各行业GDP
   by_ind_ori_act_scale <- func_secagg(
@@ -713,7 +717,7 @@ if (set_cache_hiscalc == FALSE) {
     ind_act[["BY"]][global_ind_subsector]/100
   
   
-  ## Consumption and emission----
+  ### Consumption and emission----
   # 读取规上工业各行业各类能耗总量
   # 原本的数据是按能源分类的
   by_ind_ori_nrgsum_bynrg_ls <- global_indscale_nrgls_bynrg_secagg
@@ -747,31 +751,31 @@ if (set_cache_hiscalc == FALSE) {
   ind_diremissum[["BY"]] <- func_emissum(ind_nrgfuel[["BY"]], global_emisfac_df)
   
   
-  ## Energy intensity ---- 
+  ### Energy intensity ---- 
   ind_nrgintst[["BY"]] <- 
     func_nrg_intst_ls(ind_nrgsecfuel[["BY"]], ind_act[["BY"]])
   
   
-  # Construction ----
-  ## Activity level ----
+  ## Construction ----
+  ### Activity level ----
   const_act[["BY"]] <- global_gdp[, c("year", "constgdp")]
   names(const_act[["BY"]])[2] <- "const_gdp"
   
-  ## Consumption and emission ----
+  ### Consumption and emission ----
   # 读取《厦门市电力数据》
   const_nrgfuel[["BY"]] <- global_elecfinesec[, c("year", "建筑业")]
   names(const_nrgfuel[["BY"]]) <- c("year", "electricity")
   const_diremissum[["BY"]] <- 
     func_emissum(const_nrgfuel[["BY"]], global_emisfac_df)
   
-  ## Energy intensity ----
+  ### Energy intensity ----
   const_nrgintst[["BY"]] <- 
     func_nrg_intst(const_nrgfuel[["BY"]], const_act[["BY"]], "const_gdp")
   
   
-  # Transportation ----
+  ## Transportation ----
   # 问题：轨道交通能耗呢？
-  ## Activity level ----
+  ### Activity level ----
   # 营运车辆里程数
   # 需求：没有2018-2019年的营运车辆里程数数据
   by_trans_operation <- func_read_trans("IZM9FWIY", "里程数")
@@ -796,7 +800,8 @@ if (set_cache_hiscalc == FALSE) {
   names(by_trans_water) <- c("year", global_trans_subsector[8:9])
   
   # 航空客运周转量：非能源规划口径下设置为0
-  if (set_nrgplng_scope == TRUE) { ## Nrgplng scope ----
+  if (set_nrgplng_scope == TRUE) { 
+    #### Nrgplng scope ----
     by_trans_ori_avn <- global_avn_act[c("year", "avn_rpk")]
     names(by_trans_ori_avn) <- c("year", global_trans_subsector[10])
   } else {
@@ -819,7 +824,7 @@ if (set_cache_hiscalc == FALSE) {
     tail(func_linear(trans_act[["BY"]], "农村客车", 
                      startyear = 2015, endyear = 2019)[, "农村客车"], 5)
   
-  ## Consumption and emission ---- 
+  ### Consumption and emission ---- 
   # 定义存储数据框
   trans_nrgsecfuel[["BY"]] <- vector("list", length(global_trans_subsector))
   names(trans_nrgsecfuel[["BY"]]) <- global_trans_subsector
@@ -921,7 +926,7 @@ if (set_cache_hiscalc == FALSE) {
   trans_nrgfuel[["BY"]] <- func_ls2df(trans_nrgsecfuel[["BY"]])
   trans_diremissum[["BY"]] <- func_emissum(trans_nrgfuel[["BY"]], global_emisfac_df)
   
-  ## Energy intensity ----
+  ### Energy intensity ----
   trans_nrgintst[["BY"]] <- 
     func_nrg_intst_ls(trans_nrgsecfuel[["BY"]], trans_act[["BY"]])
   # 非能源规划口径下设置航空煤油强度为0
@@ -931,8 +936,8 @@ if (set_cache_hiscalc == FALSE) {
   }
   
   
-  # Service -----
-  ## Activity level ----
+  ## Service -----
+  ### Activity level ----
   # 服务业从业人口
   com_act[["BY"]] <- func_read_trans("2VHEE264", "从业人口")
   com_act[["BY"]] <- com_act[["BY"]][, c("year", "第三产业")]
@@ -949,7 +954,7 @@ if (set_cache_hiscalc == FALSE) {
     com_act[["BY"]], global_gdp[c("year", "comgdp")], by = "year")
   names(com_act[["BY"]])[3] <- "com_gdp"
   
-  ## Consumption and emission ----
+  ### Consumption and emission ----
   com_nrgsecfuel[["BY"]] <- vector("list", 2)
   names(com_nrgsecfuel[["BY"]]) <- global_com_subsector
   # 读取厦门市用电数据
@@ -971,13 +976,13 @@ if (set_cache_hiscalc == FALSE) {
   # 计算排放量
   com_diremissum[["BY"]] <- func_emissum(com_nrgfuel[["BY"]], global_emisfac_df)
   
-  ## Energy intensity ---- 
+  ### Energy intensity ---- 
   com_nrgintst[["BY"]] <- func_nrg_intst_ls(com_nrgsecfuel[["BY"]], com_act[["BY"]])
   names(com_nrgintst[["BY"]]) <- global_com_subsector
   
   
-  # Household ----
-  ## Activity level ----
+  ## Household ----
+  ### Activity level ----
   # 家庭户数
   by_ori_household<- global_population[c("year", "household")]
   # 用液化石油气的户数
@@ -1009,7 +1014,7 @@ if (set_cache_hiscalc == FALSE) {
     func_nrg_intst(hh_act[["BY"]][c("year", "lpg", "gas")], 
                    hh_act[["BY"]], "household")
   
-  ## Consumption and emission ----
+  ### Consumption and emission ----
   hh_nrgsecfuel[["BY"]] <- vector("list", length(global_hh_subsector))
   names(hh_nrgsecfuel[["BY"]]) <- global_hh_subsector
   # hh_coal_elec
@@ -1034,13 +1039,13 @@ if (set_cache_hiscalc == FALSE) {
   hh_diremissum[["BY"]] <- 
     func_emissum(hh_nrgfuel[["BY"]], global_emisfac_df)
   
-  ## Energy intensity ----
+  ### Energy intensity ----
   hh_nrgintst[["BY"]] <- 
     func_nrg_intst_ls(hh_nrgsecfuel[["BY"]], hh_act[["BY"]])
   
   
-  # Power generation ----
-  ## Activity level ----
+  ## Power generation ----
+  ### Activity level ----
   # 分成4部分计算：发电外用电，本地发电用电，本地发电，外调电量
   # 发电外用电量
   by_tfres_ori_elecuse <- 
@@ -1091,15 +1096,15 @@ if (set_cache_hiscalc == FALSE) {
   tfres_act[["BY"]] <- func_merge_2(list(tfres_act[["BY"]], by_tfres_ori_importelec))
   
   
-  ## Consumption and emission ----
+  ### Consumption and emission ----
   tf_nrgfuel[["BY"]] <- global_indscale_nrgaggsec$"电力、热力生产和供应业"
   tf_diremissum[["BY"]] <- func_emissum(tf_nrgfuel[["BY"]], global_emisfac_df)
   
-  ## Energy intensity ----
+  ### Energy intensity ----
   tf_nrgintst[["BY"]] <- func_nrg_intst(tf_nrgfuel[["BY"]], tfres_act[["BY"]], "elecgen_thrm")
   
-  # Imported elec ----
-  ## Energy intensity ----
+  ## Imported elec ----
+  ### Energy intensity ----
   # 读取省电网发电能耗量
   global_provelecgen_nrgsum <- 
     func_read_trans("S3CNPRZE")[c("year", "原煤", "柴油", "燃料油", "天然气")]
@@ -1110,13 +1115,13 @@ if (set_cache_hiscalc == FALSE) {
   res_nrgintst[["BY"]] <- 
     func_nrg_intst(global_provelecgen_nrgsum, global_provelecgen, "火电")
   
-  ## Consumption and emission ----
+  ### Consumption and emission ----
   res_nrgfuel[["BY"]] <- 
     func_nrg_sum(res_nrgintst[["BY"]], tfres_act[["BY"]], "importthrm")
   res_diremissum[["BY"]] <- func_emissum(res_nrgfuel[["BY"]], global_emisfac_df)
   
   
-  # Results ----
+  ## Results ----
   tot_results <- func_resultcalc("BY")
   # 将结果赋值到各个变量
   tot_nrgsumce[["BY"]] <- tot_results[[1]]
@@ -1130,8 +1135,8 @@ if (set_cache_hiscalc == FALSE) {
   tot_emisaggfuel[["BY"]] <- tot_results[[9]]
 }
 
-
 # SCENARIO ANLYS ----
+# 进行情景分析
 global_starttime <- Sys.time()
 for (set_scalc in set_scalcs) {
   # 在多于一个情景的计算中，从第二次开始将计算缓存设为真
@@ -1297,7 +1302,8 @@ for (set_scalc in set_scalcs) {
         ind_ori_act_prop[["BY"]]$"电子电气制造业"[
           ind_ori_act_prop$BY$year == 2019], 
         51.7, 53, 62))$value
-  } else { #### BAU ----
+  } else { 
+    #### BAU ----
     ind_ori_act_prop[[set_scalc]][, "化学工业"] <- func_interp_2(
       year = c(2019, 2030, 2045, 2060), value = c(
         ind_ori_act_prop[["BY"]]$"化学工业"[ind_ori_act_prop$BY$year == 2019], 
@@ -1426,7 +1432,8 @@ for (set_scalc in set_scalcs) {
   }
   ### BR.ElecIntst ----
   # 电力在短期内有所上升，但比天然气上升幅度小
-  if (grepl("PLUS", set_scalc)) { #### PLUS ----
+  if (grepl("PLUS", set_scalc)) { 
+    #### PLUS ----
     for (i in global_ind_subsector) {
       ind_nrgintst[[set_scalc]][[i]][, "electricity"] <- func_interp_3(
         year = c(2019, 2025, 2030, 2060), 
@@ -1434,7 +1441,8 @@ for (set_scalc in set_scalcs) {
         base = func_lastone(ind_nrgintst[["BY"]][[i]][, "electricity"], 
                             zero.rm =  FALSE))$value
     }
-  } else if (grepl("SLC", set_scalc)) { #### SLC ----
+  } else if (grepl("SLC", set_scalc)) { 
+    #### SLC ----
     for (i in global_ind_subsector) {
       ind_nrgintst[[set_scalc]][[i]][, "electricity"] <- func_interp_3(
         year = c(2019, 2025, 2028, 2030, 2035, 2060), 
@@ -1442,7 +1450,8 @@ for (set_scalc in set_scalcs) {
         base = func_lastone(ind_nrgintst[["BY"]][[i]][, "electricity"], 
                             zero.rm =  FALSE))$value
     }
-  } else if (grepl("WLC", set_scalc)) { #### WLC ----
+  } else if (grepl("WLC", set_scalc)) { 
+    #### WLC ----
     for (i in global_ind_subsector) {
       ind_nrgintst[[set_scalc]][[i]][, "electricity"] <- func_interp_3(
         year = c(2019, 2025, 2028, 2030, 2060), 
@@ -1450,7 +1459,8 @@ for (set_scalc in set_scalcs) {
         base = func_lastone(ind_nrgintst[["BY"]][[i]][, "electricity"], 
                             zero.rm =  FALSE))$value
     }
-  } else { #### BAU ----
+  } else { 
+    #### BAU ----
     for (i in global_ind_subsector) {
       ind_nrgintst[[set_scalc]][[i]][, "electricity"] <- func_interp_3(
         year = c(2019, 2025, 2030, 2035, 2060), 
@@ -2163,7 +2173,7 @@ for (set_scalc in set_scalcs) {
     func_emissum(res_nrgfuel[[set_scalc]], prj_emisfac_df)
   
   
-  # RESULT ----
+  # Result ----
   tot_results <- func_resultcalc(set_scalc)
   
   tot_nrgsumce[[set_scalc]] <- tot_results[[1]]
@@ -2180,7 +2190,9 @@ for (set_scalc in set_scalcs) {
 Sys.time() - global_starttime
 
 # Output ----
+# 该部分输出项目需要的结果
 ## Peak times ----
+# 输出各情景总量和各部门排放量达峰时间
 {
   # 作图：各情景排放总量图
   print(
@@ -2220,6 +2232,7 @@ Sys.time() - global_starttime
 }
 
 ## Key index ----
+# 输出关键指标
 {
   # 各情景下服务业和生活部门电力消费量所占比例
   # 构建列表用于储存结果
@@ -2455,7 +2468,8 @@ func_dataexp("各情景下关键指标", mydata = idx_output_long)
                mydata = tot_emissec$`BAU_SLC_DECOAL_OTHER`)
 }
 
-
+# 输出项目所需图像
+# 该模块已经很久没更新
 if (set_figureexport == TRUE) {
   # Figure export ----
   ## History GDP str plot ---- 
@@ -2553,10 +2567,7 @@ if (set_figureexport == TRUE) {
       name = "", 
       breaks = c("BAU", "BAU_WLC_OTHER", "BAU_SLC_OTHER", "BAU_26COAL1/2"), 
       labels = c("惯性情景", "减排情景", "强化减排", "退煤情景"), 
-      values = c("#800000", 
-                 "orange",  
-                 "#50C878", 
-                 "#007FFF"))
+      values = c("#800000", "orange", "#50C878", "#007FFF"))
   dev.off()
   
   ## Emissec of scenarios ----
@@ -2575,10 +2586,7 @@ if (set_figureexport == TRUE) {
       name = "", 
       breaks = global_sectors[1: 6], 
       labels = c("农业", "工业", "建筑业", "交通", "服务业", "生活"), 
-      values = c("green", 
-                 "orange",  
-                 "darkgrey", 
-                 "red", "blue", "purple"))
+      values = c("green", "orange", "darkgrey", "red", "blue", "purple"))
   dev.off()
 }
 
