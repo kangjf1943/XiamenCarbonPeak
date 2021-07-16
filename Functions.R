@@ -1,15 +1,21 @@
-## 载入包和设置
+# Load packages and settings ----
+# 用于读写Excel文件
 library(openxlsx)
+# 用于作图
 library(ggplot2)
 library(ggthemes)
-library(reshape2)
 library(ggpubr)
 library(RColorBrewer)
+# 用于整理数据
+library(reshape2)
+
+# 设置环境为中文
 Sys.setlocale("LC_ALL", "chinese")
 
 
-## 数据读取函数
-# 来自Zotero的普通Excel数据
+# Functions ----
+# 函数：读取来自Zotero的普通Excel数据
+# 说明：原始数据用Zotero管理，该函数读取原始数据并转化为所需格式
 func_read_data <- function(name_subdir, order_sht = 1) {
   data_dir <- "C:/Users/kangj/Documents/OneDrive/Zotero/storage/"
   data_name <- list.files(paste0(data_dir, "/", name_subdir, "/"))
@@ -18,8 +24,8 @@ func_read_data <- function(name_subdir, order_sht = 1) {
   data
 }
 
-# 读取并转化带4列文件头的Excel数据
-# 问题：如果Excel数据中“数据来源”有数据，而其他无数据，就会导致列明出现“NA”
+# 函数：读取并转化带4列文件头的Excel数据
+# 问题：如果Excel数据中“数据来源”有数据，而其他列无数据，就会导致列明出现“NA”
 func_read_trans <- function(name_subdir, order_sht = 1) {
   data_ori <- func_read_data(name_subdir, order_sht = order_sht)
   # 删去前两列，即数据来源和数据备注
@@ -42,7 +48,8 @@ func_read_trans <- function(name_subdir, order_sht = 1) {
   # 输出结果
   data_trans
 }
-# 读取特定单元格
+
+# 函数：读取特定单元格
 func_read <- function(name_subdir, name_sht, num_row, num_col) {
   data_dir <- "C:/Users/kangj/Documents/OneDrive/Zotero/storage/"
   data_name <- list.files(paste0(data_dir, "/", name_subdir, "/"))
@@ -52,8 +59,9 @@ func_read <- function(name_subdir, name_sht, num_row, num_col) {
                         colNames = FALSE)
   data_ori[1, 1]
 }
-# 读取多个工作表输出为列表
-# 输入变量：待读取的工作表名称
+
+# 函数：读取多个工作表并输出为列表
+# 输入：待读取的工作表名称
 func_read_multitable <- function(name_subdir, names_tbl, names_ls) {
   out_ls <- vector("list", length(names_tbl))
   for (i in c(1: length(names_tbl))) {
@@ -63,8 +71,7 @@ func_read_multitable <- function(name_subdir, names_tbl, names_ls) {
   out_ls
 }
 
-
-## 转化列表中所有数据为数字
+# 函数：转化列表中所有数据为数字
 func_ls_asnumber <- function(ls) {
   for (i in c(1: length(ls))) {
     ls[[i]] <- as.data.frame(lapply(ls[[i]], as.numeric))
@@ -72,10 +79,10 @@ func_ls_asnumber <- function(ls) {
   ls
 }
 
-## 构建列表分类方式转换的函数：类别1到类别2
-# 比如将按照能源类别分的各部门能耗列表转换为按照部门分的各类能耗列表
-# 前提：原列表的每个数据框都要命名 - 即类别1
-# 目标列表的各数据框名称来自原列表的各个数据框的列名 - 即类别2
+# 函数：面板数据不同维度的展现
+# 说明：例如，原列表是先按部门分类再按能源分类的，通过该函数可转化为先按能源分类再按部门分类。
+# 输入：原列表的每个数据框都要命名，在上述例子中，即部门名称
+# 输出：目标列表的各数据框名称来自原列表的各个数据框的列名
 func_ls_transition <- function(ls_ori) {
   # 提取类别2的名称
   class_trans <- character()
@@ -107,29 +114,33 @@ func_ls_transition <- function(ls_ori) {
   ls_trans
 }
 
-## 将计算结果统一到一个表头下的函数
+# 函数：将计算结果统一到一个表头下
+# 说明：例如一个数据框中仅包含柴油和电力两列，我们可以将其统一到一个包含各类能源类型的表头下，新增的列均填充为0，以方便后续计算
 func_supple_colnames <- function(var_output, account_names){
   # 对于原本没有的列，填充为0
-  supple_colnames <- account_names[account_names %in% names(var_output) == FALSE]
+  supple_colnames <- account_names[
+    account_names %in% names(var_output) == FALSE]
   for (i in supple_colnames) {
     var_output[, i] <- 0
   }
   # 重新排列
   var_output[, c(account_names, 
-                 names(var_output)[names(var_output) %in% account_names == FALSE])]
+                 names(var_output)[
+                   names(var_output) %in% account_names == FALSE])]
 }
 
-## 获得变量名称
+# 函数：获得对象名称
 func_varname <- function(variable) {
   deparse(substitute(variable))
 }
 
-## 判断峰值年份
+# 函数：判断峰值年份
 func_peakyear <- function(nrg_df, name_peak) {
-  nrg_df$year[which(nrg_df[, name_peak] == max(nrg_df[, name_peak], na.rm = TRUE))]
+  nrg_df$year[which(nrg_df[, name_peak] == 
+                      max(nrg_df[, name_peak], na.rm = TRUE))]
 }
 
-## 取一列数据最后一个有效数值
+# 函数：取一列数据最后一个有效数值
 func_lastone <- function(numbers, zero.rm = TRUE) {
   # 是否去除零值
   if (zero.rm) {
@@ -149,7 +160,7 @@ func_lastone <- function(numbers, zero.rm = TRUE) {
   numbers
 }
 
-## 给数据框添加备注信息
+# 函数：给数据框添加备注信息
 func_addnote <- function(data, note) {
   for (i in c(1: ncol(data))) {
     comment(data[, names(data)[i]]) <- note[i]
@@ -157,8 +168,8 @@ func_addnote <- function(data, note) {
   data
 }
 
-## 查看列名对应的批注
-# 数据框版
+# 函数：查看列名对应的批注
+# 分支：数据框版
 func_looknote <- function(data) {
   notes <- character(0)
   for (i in  c(1: ncol(data))) {
@@ -169,7 +180,7 @@ func_looknote <- function(data) {
   notes_df <- data.frame(colnames = names(data), note = notes)
   notes_df
 }
-# 列表版
+# 分支：列表版
 func_looknote_ls <- function(var_ls) {
   for (i in c(1: length(var_ls))) {
     print(names(var_ls[i]))
@@ -178,8 +189,9 @@ func_looknote_ls <- function(var_ls) {
   }
 }
 
-## 合并多个时间序列数据框
-# 该函数合并后输出为数据框，并跨越所有组成元素数据框的年份
+# 函数：合并多个时间序列数据框
+# 说明：相当于以“year”为ID合并各数据框
+# 问题：如果被合并数据框包含同名列怎么办？
 func_merge_2 <- function(ls_var) {
   # 如果输入列表为空则输出为NULL
   if (length(ls_var) == 0) {
@@ -198,7 +210,7 @@ func_merge_2 <- function(ls_var) {
   }
 }
 
-# 合并多个年份不同数据框同名列并重命名各列
+# 函数：合并多个年份不同数据框同名列并重命名各列
 func_mrgcol <- function(ls_var, namemrg, namesnew) {
   # 判断新名字和要合并的列数长度是否一致
   if (length(namesnew) != length(ls_var)) {
@@ -217,40 +229,11 @@ func_mrgcol <- function(ls_var, namemrg, namesnew) {
 }
 comment(func_mrgcol) <- "合并多个年份不同数据框同名列并重命名各列"
 
-## 计算两个系列的比率或乘积
-# 两列版本
-# method取值“rate”或者“product”
-func_merge_rate <- function(var_1, name_1, var_2, name_2, method, 
-                            startyear = 2005, endyear = 2050) {
-  total <- data.frame(year = c(startyear:endyear), 
-                      value = NA)
-  var_1 <- var_1[var_1$year %in% total$year, ]
-  var_2 <- var_2[var_2$year %in% total$year, ]
-  names(var_1)[which(names(var_1) == name_1)] <- "name_x"
-  names(var_2)[which(names(var_2) == name_2)] <- "name_y"
-  total <- merge(var_1, var_2, by = "year", all.x = TRUE)
-  if (method == "rate") {
-    outcome <- data.frame("year" = total$year, 
-                          "Rate" = total[, "name_x"]/total[, "name_y"])
-  } else {
-    outcome <- data.frame("year" = total$year, 
-                          "Rate" = total[, "name_x"] * total[, "name_y"])
-  }
-  unit_1 <- attributes(var_1[, "name_x"])[[1]]
-  unit_2 <- attributes(var_2[, "name_y"])[[1]]
-  if (method == "rate") {
-    name_new <- paste(name_1, unit_1, "/", name_2, unit_2)
-  } else {
-    name_new <- paste(name_1, unit_1, "*", name_2, unit_2)
-  }
-  plot(x = outcome$year, y = outcome$Rate, 
-       main = name_new)
-  outcome
-}
-# 升级版
+# 函数：两个数据框各列对应运算
 # 输入：两个时间序列数据框
-# 可选计算方式：“sum”，“product”，“rate”和“difference”，默认为“product”
+# 可选参数：计算方式可选为“sum”，“product”，“rate”和“difference”，默认为“product”
 # 注意：该函数计算的时候顺序很重要！
+# 问题：可增加一个可选参数，根据相同列名对应运算
 func_cross <- function(df1, df2, method = "product") {
   # 判断是否包含“year”列
   if ("year" %in% names(df1) & "year" %in% names(df2) == FALSE) {
@@ -268,16 +251,20 @@ func_cross <- function(df1, df2, method = "product") {
     for (i in c(1: length(dfout_names))) {
       # 根据不同method参数选择不同计算方式
       if (method == "sum") {
-        dfout[, dfout_names[i]] <- dfout[, df1_names[i]] + dfout[, df2_names[i]]
+        dfout[, dfout_names[i]] <- 
+          dfout[, df1_names[i]] + dfout[, df2_names[i]]
       }
       if (method == "difference") {
-        dfout[, dfout_names[i]] <- dfout[, df1_names[i]] - dfout[, df2_names[i]]
+        dfout[, dfout_names[i]] <- 
+          dfout[, df1_names[i]] - dfout[, df2_names[i]]
       }
       if (method == "product") {
-        dfout[, dfout_names[i]] <- dfout[, df1_names[i]] * dfout[, df2_names[i]]
+        dfout[, dfout_names[i]] <- 
+          dfout[, df1_names[i]] * dfout[, df2_names[i]]
       }
       if (method == "rate") {
-        dfout[, dfout_names[i]] <- dfout[, df1_names[i]] / dfout[, df2_names[i]]
+        dfout[, dfout_names[i]] <- 
+          dfout[, df1_names[i]] / dfout[, df2_names[i]]
       }
     }
     dfout <- dfout[c("year", dfout_names)]
@@ -287,8 +274,7 @@ func_cross <- function(df1, df2, method = "product") {
 comment(func_cross) <- 
   "可选计算方式：“sum”，“product”，“rate”和“difference”，默认为“product”"
 
-
-## 构建插值函数
+# 函数：构建插值函数
 func_interp_2 <- function(year, value, name_value = "value", showplot = TRUE) {
   total_df <- data.frame(year = c(year[1]: year[length(year)]))
   for (j in c(1:(length(year) - 1))) {
@@ -310,7 +296,7 @@ func_interp_2 <- function(year, value, name_value = "value", showplot = TRUE) {
   total_df
 }
 
-## 基于特定数值和比率插值
+# 函数：基于特定数值和比率插值
 func_interp_3 <- function(year, scale, base, name_value = "value") {
   total_df <- data.frame(year = c(year[1]: year[length(year)]))
   basevalue <- base
@@ -333,7 +319,7 @@ func_interp_3 <- function(year, scale, base, name_value = "value") {
   total_df
 }
 
-# 可指定初始增长率和最高值时间点
+# 函数：基于初始增长率和最高值时间点插值预测
 # 增速逐渐减慢直至饱和：抛物线加水平直线
 func_curve_1 <- function(baseyear, basevalue, maxyear, endyear,  init_rate) {
   # 将增长率转化成斜率
@@ -355,7 +341,8 @@ func_curve_1 <- function(baseyear, basevalue, maxyear, endyear,  init_rate) {
   out_df
 }
 
-## 平滑插值函数
+# 函数：平滑插值
+# 问题：仍在测试
 func_smooth <- function(year, value, name_value = "value") {
   # 步骤1：拆分成几段并计算每段斜率
   # 假设第一个斜率为0，方便后面比较
@@ -411,7 +398,7 @@ func_smooth <- function(year, value, name_value = "value") {
   df_out
 }
 
-# 阶梯式插值函数
+# 函数：阶梯式插值
 func_stage <- function(year, value, name_value = "value") {
   total_df <- data.frame(year = c(year[1]: year[length(year)]))
   for (i in c(1: length(year))) {
@@ -421,7 +408,7 @@ func_stage <- function(year, value, name_value = "value") {
   total_df
 }
 
-## 预测函数：基于增长率
+# 函数：基于增长率预测
 func_rate <- function(baseyear, basevalue, rate_df) {
   names(rate_df) <- c("year", "rate")
   # 先统一年度为基准年到增长率数据框的最后一年
@@ -438,7 +425,7 @@ func_rate <- function(baseyear, basevalue, rate_df) {
   proj_df
 }
 
-## 补足比例数据
+# 函数：补足比例数据
 # 输入：时间序列数据
 func_saturate <- function(in_df, name_new = "value") {
   in_df_noyear <- in_df[names(in_df) %in% "year" == FALSE]
@@ -451,7 +438,7 @@ func_saturate <- function(in_df, name_new = "value") {
   }
 }
 
-## 根据历史趋势线性外推未来趋势的函数
+# 函数：根据历史趋势线性外推
 func_linear <- function(df_history, col_dependent, startyear, endyear) {
   # 保留目标数据
   df_history <- df_history[c("year", col_dependent)]
@@ -471,7 +458,7 @@ func_linear <- function(df_history, col_dependent, startyear, endyear) {
   proj_df
 }
 
-# 计算可比价的函数
+# 函数：计算可比价
 # 方法：递归
 # 输入：一个含有年份、GDP当年价和GDP指数的数据框，以及基准年份
 func_compprice <- function(ori_df, name_gdpindex, baseyear) {
@@ -497,7 +484,7 @@ func_compprice <- function(ori_df, name_gdpindex, baseyear) {
   ori_df
 }
 
-## 转化能源类型
+# 函数：转化能源类型
 # 问题：原煤折标煤系数应该为0.7143，但为了和统计局标准量一致，改为0.61
 func_alter <- function(nrg_in, name_in, name_out) {
   # 输入折标煤系数
@@ -514,7 +501,7 @@ func_alter <- function(nrg_in, name_in, name_out) {
   nrg_out
 }
 
-## 计算电力等价值
+# 函数：计算电力等价值
 # 需要输入本地发电各类能耗物理量，外调电力对应发电投入量物理量，全社会电力使用量
 func_elecequalfac <- function(nrg_input, elecgen_df) {
   # 转化成标准量
@@ -529,7 +516,7 @@ func_elecequalfac <- function(nrg_input, elecgen_df) {
 }
 
 
-## 转化成标准煤
+# 函数：转化成标准煤
 # 输入能源数据框单位：吨/万立方米/百万千焦/万千瓦时
 # 输出单位：吨标准煤
 func_toce <- function(nrg_df, agg = FALSE) {
@@ -561,7 +548,7 @@ func_toce <- function(nrg_df, agg = FALSE) {
   out_df
 }
 
-# 能源替代
+# 函数：能源替代
 # 一半是对能耗强度数据框进行替代，当然对能耗总量进行替代亦可
 func_nrgsub <- 
   function(nrgori, namenrgoris, namenrgsubs, yearsubs, propsubs, alterscales) {
@@ -589,18 +576,7 @@ func_nrgsub <-
     out_df <- func_ls2df(out_df)
   }
 
-
-# # 计算除年份外的各行之和
-# func_rowsums <- function(df, namevalue = "value") {
-#   new_df <- data.frame(year = df$year)
-#   df <- df[names(df) %in% year == FALSE]
-#   new_df$value <- rowSums(df)
-#   names(new_df)[2] <- namevalue
-#   new_df
-# }
-
-
-# 计算生长率
+# 函数：计算增长率
 func_ratecalc <- function(in_df, name_value) {
   out_df <- data.frame(year = in_df$year)
   out_df$now <- in_df[, name_value]
@@ -612,7 +588,7 @@ func_ratecalc <- function(in_df, name_value) {
   out_df
 }
 
-# 计算和基准年相比的变化率
+# 函数：计算和基准年相比的变化率
 # 针对数字向量
 # 本质上是第二个到最后一个数字与第一个数字相比的变化率
 func_conservrate <- function(numbers) {
@@ -623,7 +599,7 @@ func_conservrate <- function(numbers) {
   new_numbers
 }
 
-# 生成方案组合名称的函数
+# 函数：生成方案组合名称的函数
 func_sgen <- function(basescenario, measures) {
   # 生成组合矩阵
   # 该代码来自网络
@@ -651,7 +627,7 @@ func_sgen <- function(basescenario, measures) {
   out_df$scenario
 }
 
-## 通过能源总量和活动水平计算活动强度
+# 函数：通过能源总量和活动水平计算活动强度
 # 数据框对某一列的版本
 func_nrg_intst <- function(df_nrg_sum, df_actlvl, name) {
   # 先将年份转换为数字类型
@@ -660,8 +636,10 @@ func_nrg_intst <- function(df_nrg_sum, df_actlvl, name) {
   df_actlvl <- df_actlvl[, c("year", name)]
   # 统一年份：并集
   allyear <- union(df_nrg_sum$year, df_actlvl$year)
-  df_nrg_sum <- merge(data.frame(year = allyear), df_nrg_sum, by = "year", all = TRUE)
-  df_actlvl <- merge(data.frame(year = allyear), df_actlvl, by = "year", all = TRUE)
+  df_nrg_sum <- merge(data.frame(year = allyear), df_nrg_sum, 
+                      by = "year", all = TRUE)
+  df_actlvl <- merge(data.frame(year = allyear), df_actlvl, 
+                     by = "year", all = TRUE)
   # 构建输出数据框
   total_df <- df_nrg_sum
   for (i in names(total_df)[names(total_df) %in% "year" == FALSE]) {
@@ -684,7 +662,7 @@ func_nrg_intst_ls <- function(ls_nrgsum, df_actlvl) {
   ls_nrgintst
 }
 
-## 基于活动水平和能耗强度计算能耗总量
+# 函数：基于活动水平和能耗强度计算能耗总量
 # 数据框版本
 # 输入数据：
 # 目标行业各种能源强度数据框
@@ -724,10 +702,8 @@ func_nrg_sum_ls <- function(ls_nrgintst, df_actlvl) {
   ls_nrgsum
 }
 
-## 基于两个数据框计算碳排放的函数
+# 函数：基于两个数据框计算碳排放的函数
 # 本函数根据列名对应能耗总量和排放因子
-nrgsum_df <- ind_nrgfuel[["BY"]]
-emisfac_df <- global_emisfac_df
 func_emissum <- function(nrgsum_df, emisfac_df, agg = TRUE) {
   emissum_df <- data.frame(year = nrgsum_df[, "year"])
   # 只计算两个数据框共有的能耗类型
@@ -762,8 +738,7 @@ func_emissum <- function(nrgsum_df, emisfac_df, agg = TRUE) {
   emissum_df
 }
 
-
-## 对部门进行加和合并
+# 函数：对部门进行加和合并
 # 数据框版本
 func_secagg <- function(input_df, tbl_lookup) {
   new_df <- data.frame(year = input_df[, "year"])
@@ -786,37 +761,10 @@ func_secagg_ls <- function(input_ls, tbl_lookup) {
   new_ls
 }
 
-## 合并各部门能耗列表为数据框的函数
+# 函数：合并各部门能耗列表为数据框的函数
 # 输入的列表应满足：
 # 列表各元素有独特的名称
 # 列表各元素数据框列名排列相同
-func_nrgsum_ls_to_df <- function(nrgsum_ls) {
-  # 如果输入列表的各元素名称不全，则输出警告
-  if (length(unique(names(nrgsum_ls))) != length(nrgsum_ls)) {
-    print("warning: not enough list names.") 
-  } else {
-    # 取输出列名
-    names_nrgsum_df <- names(nrgsum_ls[[1]])[names(nrgsum_ls[[1]]) %in% "year" == FALSE]
-    # 给各个数据框添加部门名称和活动水平名称
-    for (i in names(nrgsum_ls)) {
-      
-      nrgsum_ls[[i]] <- func_supple_colnames(nrgsum_ls[[i]], names_nrgsum_df)
-    }
-    # 将列表各元素数据框组成一个大数据框
-    nrgsum_df <- Reduce(rbind, nrgsum_ls)
-    # 将大数据框各列转换为数字类型
-    nrgsum_df[, c("year", names_nrgsum_df)] <- 
-      lapply(nrgsum_df[, c("year", names_nrgsum_df)], as.numeric)
-    # 根据年份进行加和
-    nrgsum_df <- aggregate(nrgsum_df[, names_nrgsum_df], by = list(nrgsum_df$year), 
-                           function(x) {sum(x, na.rm = TRUE)})
-    names(nrgsum_df)[1] <- "year"
-    # 对数据框各列重新排序
-    nrgsum_df <- nrgsum_df[c("year", names_nrgsum_df)]
-    nrgsum_df
-  }
-}
-# 升级版
 func_ls2df <- function(ls) {
   # 生成目标数据框的列名
   names_column <- character(0)
@@ -839,7 +787,7 @@ func_ls2df <- function(ls) {
   df
 }
 
-## 比较历史数据和预测数据
+# 函数：比较历史数据和预测数据
 # 比较数据框的两列版本
 # 提供两种作图风格：“base”为基础作图，“ggplot”为高级作图
 func_history_project <- 
@@ -856,8 +804,10 @@ func_history_project <-
   var_proj$Data <- "预测数据"
   var_proj$cex <- 1
   names(var_his)[names(var_his) == name_his] <- name_proj
-  total_df <- rbind(var_his[, c("year", name_proj, "attr", "color", "cex", "Data")], 
-                    var_proj[, c("year", name_proj, "attr", "color", "cex", "Data")])
+  total_df <- rbind(var_his[, c("year", name_proj, 
+                                "attr", "color", "cex", "Data")], 
+                    var_proj[, c("year", name_proj, 
+                                 "attr", "color", "cex", "Data")])
   total_df <- total_df[is.na(total_df[, name_proj]) == FALSE, ]
   # 将作图数据强制转化为整数，否则可能会出现坐标轴重叠
   total_df$year <- as.integer(total_df$year)
@@ -942,14 +892,14 @@ func_history_project_ls <- function(ls_his, ls_proj) {
   }
 }
 
-# 查看数据框中百分比的变化
+# 函数：查看数据框中百分比的变化
 func_propplot <- function(in_df) {
   in_df_long <- melt(in_df, id = "year")
   ggplot(in_df_long) + 
     geom_bar(aes(year, value, fill = variable), stat = "identity")
 }
 
-# 对比不同情景
+# 函数：对比不同情景
 func_scenarios <- 
   function(var_his, name_his, var_proj, name_proj, style = "ggplot", 
            xlab = "year", ylab = name_proj, main = NULL) {
@@ -964,8 +914,10 @@ func_scenarios <-
     var_proj$Data <- "规划情景"
     var_proj$cex <- 1
     names(var_his)[names(var_his) == name_his] <- name_proj
-    total_df <- rbind(var_his[, c("year", name_proj, "attr", "color", "cex", "Data")], 
-                      var_proj[, c("year", name_proj, "attr", "color", "cex", "Data")])
+    total_df <- rbind(var_his[, c("year", name_proj, 
+                                  "attr", "color", "cex", "Data")], 
+                      var_proj[, c("year", name_proj, 
+                                   "attr", "color", "cex", "Data")])
     total_df <- total_df[is.na(total_df[, name_proj]) == FALSE, ]
     # 将作图数据强制转化为整数，否则可能会出现坐标轴重叠
     total_df$year <- as.integer(total_df$year)
@@ -1008,7 +960,8 @@ func_scompplot <- function(ls_var, namecol, size = 1.5) {
   df_var_long <- 
     melt(df_var, id = "year")
   # 画图
-  ggplot(df_var_long) + geom_line(aes(year, value, color = variable), size = size)
+  ggplot(df_var_long) + 
+    geom_line(aes(year, value, color = variable), size = size)
 }
 
 # 模仿Excel的作图风格
@@ -1053,7 +1006,8 @@ func_show_trend <- function(var_df, commontitle = NULL) {
                               size = 2, alpha = 0.5) + 
       scale_color_brewer(palette = "Set1")
   }
-  plot <- ggarrange(plotlist = plot_ls, nrow = 2, ncol = 2, labels = commontitle)
+  plot <- ggarrange(plotlist = plot_ls, 
+                    nrow = 2, ncol = 2, labels = commontitle)
   plot
 }
 # 列表版本
@@ -1063,17 +1017,7 @@ func_show_trend_ls <- function(var_ls) {
   }
 }
 
-## 比较两组数据的函数
-func_datacomp <- function(var_1, name_source_1, var_2, name_source_2, name_comp) {
-  var_1[, c("Source")] <- name_source_1
-  var_2[, c("Source")] <- name_source_2
-  mrg_data <- rbind(var_1[, c("year", name_comp, "Source")], 
-                    var_2[, c("year", name_comp, "Source")])
-  ggplot(mrg_data) + 
-    geom_point(aes(year, mrg_data[, c(name_comp)], color = Source, alpha = 0.5))
-}
-
-# 导出结果数据的函数
+# 函数：导出结果数据
 # 输入；工作簿名，待导出数据及其类型，类型默认为数据框
 func_dataexp <- function(wbname, mydata, mydata_type = "df") {
   # 添加工作表后缀：导出时间戳和文件类型
@@ -1121,7 +1065,7 @@ func_idxouput <- function(var_ls, baseyear = 2019, ...) {
   var_ls_long
 }
 
-# 计算结果 ----
+# 函数：计算结果
 func_resultcalc <- function(name_scenario) {
   # 根据情景名称设置起止年份
   if (name_scenario == "BY") {
@@ -1130,7 +1074,7 @@ func_resultcalc <- function(name_scenario) {
     duration <- c(2019: 2060)
   }
   
-  ## Total energy ----
+  ## Total energy
   # 计算外调电力折标煤量
   # 问题：外调电力火电折标煤系数保持基准年数据不变
   importthrm_cefac <- data.frame(
@@ -1204,7 +1148,7 @@ func_resultcalc <- function(name_scenario) {
     year = tot_nrgsecce[[name_scenario]]$year, 
     energyconsump = rowSums(tot_nrgsecce[[name_scenario]][, -1]))
   
-  ### Energy by fuels ----
+  ### Energy by fuels
   # 计算分能源能耗
   # 除了电力外其他能耗物理量及标准煤
   tot_nrgfuel <- 
@@ -1234,7 +1178,7 @@ func_resultcalc <- function(name_scenario) {
     tot_nrgaggfuelce, tot_nrgsumce[[name_scenario]], "energyconsump" 
   )
   
-  ## Total emission ----
+  ## Total emission
   # 各部门用电量
   tot_elecsec <- 
     func_mrgcol(list(agri_nrgfuel[[name_scenario]], ind_nrgfuel[[name_scenario]], 
@@ -1278,7 +1222,7 @@ func_resultcalc <- function(name_scenario) {
   # 聚合成煤油气电
   tot_emisaggfuel <- func_secagg(tot_emisfuel, global_nrg_lookup)
   
-  ## Emis per GDP ----
+  ## Emis per GDP
   if (name_scenario == "BY") {
     tot_emispergdp <- 
       func_cross(tot_emissum[[name_scenario]], global_gdp[c("year", "GDP")], "rate")
@@ -1303,61 +1247,3 @@ func_resultcalc <- function(name_scenario) {
   )
 }
 
-# # 考虑废弃的函数
-# # 计算乘积：可能跟上面的函数重复了 - 废弃？
-# func_merge_product <- function(var_1, name_1, var_2, name_2) {
-#   total <- merge(var_1, var_2, by = "year")
-#   product <- data.frame("year" = total$year,
-#                         "Rate" = total[, name_1] * total[, name_2])
-#   plot(x = product$year, y = product$Rate)
-#   product
-# }
-# 
-# ## 合并2个数据框，并且保留所有观察 - 废弃？
-# # func_merge <- function(x, y) {
-# #   merge(x, y, by = "year", all = TRUE)
-# # }
-# 
-# ## 旧版插值函数 - 废弃？
-# func_interp <- function(mydata) {
-#   total_df <- data.frame(year = c(2005:2050))
-#   for (j in c(1:(nrow(mydata) - 1))) {
-#     start_year <- mydata$year[j]
-#     end_year <- mydata$year[j + 1]
-#     start_value <- mydata$value[which(mydata$year == start_year)]
-#     end_value <- mydata$value[which(mydata$year == end_year)]
-#     for (i in seq(from = start_year, to = end_year, by = 1)) {
-#       total_df$value[which(total_df$year == i)] <- 
-#         start_value + 
-#         (end_value - start_value) * (i - start_year) /
-#         (end_year - start_year)
-#     }
-#   }
-#   plot(total_df$year, total_df$value)
-#   total_df
-# }
-# 
-# ## 生成预测数据的函数-废弃？
-# func_proj <- function(input_ls, itemnames, startyear = 2005, endyear = 2050) {
-#   out_df <- data.frame(year = c(startyear: endyear))
-#   for (i in c(1:length(itemnames))) {
-#     out_df[, itemnames[i]] <- func_interp(input_ls[[i]])$value
-#   }
-#   out_df
-# }
-# 
-# ## 结果计算函数-废弃？
-# func_result <- function(var_aclevel, var_int) {
-#   total_df <- merge(var_aclevel, var_int, by = "year", all.x = TRUE)
-#   total_df$value <- total_df[, 1] * total_df[, 2]
-#   plot(total_df$value)
-#   total_df
-# }
-# 
-# ## 临时测试函数
-# func_test <- function(x, y) {
-#   print(x[1])
-#   print(x[1]/y > 0.8 & x[1]/y < 1.2)
-#   print(min(x)/y)
-#   print(max(x)/y)
-# }
