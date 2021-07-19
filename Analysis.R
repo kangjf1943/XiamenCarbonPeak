@@ -534,9 +534,15 @@ if (set_cache_nrgbal == FALSE) {
     by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "ind"), "electricity"] <- 
       global_elecaggsec[which(global_elecaggsec$year == i), "##第二产业"] - 
       global_elecfinesec[which(global_elecfinesec$year == i), "建筑业"]
+    # 交通用电量
+    by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "electricity"] <- 
+      global_trans_elecsec[which(global_trans_elecsec$year == i), "常规公交"] + 
+      global_trans_elecsec[which(global_trans_elecsec$year == i), "纯电动出租车"] + 
+      global_trans_elecsec[which(global_trans_elecsec$year == i), "地铁"]
     # 服务业用电
     by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "com"), "electricity"] <- 
-      global_elecaggsec[which(global_elecaggsec$year == i), "##第三产业"]
+      global_elecaggsec[which(global_elecaggsec$year == i), "##第三产业"] - 
+      by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "trans"), "electricity"]
     # 生活用电
     by_nrgbal_ls[[i]][which(by_nrgbal_ls[[i]]$iterm == "hh"), "electricity"] <- 
       global_elecaggsec[which(global_elecaggsec$year == i), "##第三产业"]
