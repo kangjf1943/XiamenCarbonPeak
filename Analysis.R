@@ -1398,7 +1398,7 @@ for (set_scalc in set_scalcs) {
         sapply(global_ind_nrgclass[1:6], function(j) {
           func_interp_3(
             year = c(2019, 2025, 2030, 2040, 2060), 
-            scale = c(1.0, 1.10, 1.23,  1.0,  1.0), 
+            scale = c(1.0, 1.10, 1.12,  1.0,  1.0), 
             base = func_lastone(ind_nrgintst[["BY"]][[i]][, j], 
                                 zero.rm =  FALSE))$value}))
     }
