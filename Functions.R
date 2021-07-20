@@ -627,6 +627,16 @@ func_sgen <- function(basescenario, measures) {
   out_df$scenario
 }
 
+# 函数：新建分支
+# 说明：生成指定年份和列名的空数据框
+func_branch <- function(sectors, years) {
+  actlvl <- matrix(0, ncol = length(sectors), nrow = length(years))
+  actlvl <- as.data.frame(actlvl)
+  names(actlvl) <- sectors
+  actlvl <- cbind(data.frame(year = years), actlvl)
+  actlvl
+}
+
 # 函数：通过能源总量和活动水平计算活动强度
 # 数据框对某一列的版本
 func_nrg_intst <- function(df_nrg_sum, df_actlvl, name) {
