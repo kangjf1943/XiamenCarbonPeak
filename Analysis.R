@@ -132,9 +132,10 @@ if (set_cache_globalvar == FALSE) {
   global_ind_nrgclass <- c("rawcoal", "coalproduct", 
                            "gasoline", "diesel", "residual", "lpg", 
                            "gas", "electricity")
-  global_trans_subsector <- c("常规公交", "快速公交", "出租车", "农村客车", 
-                              "公路其他汽油", "纯电动私家车", "公路其他柴油", 
-                              "水路客运", "水路货运", "航空")
+  global_trans_subsector <- 
+    c("常规公交", "快速公交", "出租车", "农村客车", "地铁", 
+      "公路其他汽油", "纯电动私家车", "公路其他柴油", 
+      "水路客运", "水路货运", "航空")
   
   # 服务业子部门
   global_com_subsector <- c("electricity", "lpg_and_gas")
@@ -782,28 +783,36 @@ if (set_cache_hiscalc == FALSE) {
   ## Transportation ----
   # 问题：轨道交通能耗呢？
   ### Activity level ----
+  trans_act$BY <- func_branch(global_trans_subsector, c(2005: 2019))
+  
   # 营运车辆里程数
-  # 需求：没有2018-2019年的营运车辆里程数数据
   by_trans_operation <- func_read_trans("IZM9FWIY", "里程数")
   by_trans_operation <- 
-    by_trans_operation[, c("year", "常规公交", "BRT", "出租车", "农村客车")]
-  names(by_trans_operation) <- c("year", global_trans_subsector[1: 4])
+    by_trans_operation[, c(
+      "year", "常规公交", "BRT", "出租车", "农村客车", "地铁")]
+  names(by_trans_operation) <- 
+    c("year", "常规公交", "快速公交", "出租车", "农村客车", "地铁")
+  trans_act$BY <- func_jigsaw(by_trans_operation, trans_act$BY)
   
   # 公路其他汽油：私家车保有量；纯电动私家车：保有量
   by_trans_nonoperation <- 
     func_read_trans("Y3PGVSR7")[c("year", "#常规私家车", "#纯电动私家车")]
-  names(by_trans_nonoperation)[2: 3] <- global_trans_subsector[5: 6]
+  names(by_trans_nonoperation) <- 
+    c("year", "公路其他汽油", "纯电动私家车")
   # 且假设纯电动私家车在2019年之前均为0
   by_trans_nonoperation[which(
     by_trans_nonoperation$year %in% c(2010: 2018)), "纯电动私家车"] <- 0
+  # 嵌入活动水平数据框中
+  trans_act$BY <- func_jigsaw(by_trans_nonoperation, trans_act$BY)
   
   # 公路其他柴油：货运周转量
-  by_trans_ori_turnover <- data.frame(
-    "year" = c(2017:2019), "公路其他柴油" = c(1919251, 2037836, 2216748))
+  trans_act$BY$公路其他柴油[trans_act$BY$year %in% c(2017:2019)] <- 
+    c(1919251, 2037836, 2216748)
   
   # 水路客运周转量和水路货运周转量
   by_trans_water <- global_water_act
-  names(by_trans_water) <- c("year", global_trans_subsector[8:9])
+  names(by_trans_water) <- c("year", "水路客运", "水路货运")
+  trans_act$BY <- func_jigsaw(by_trans_water, trans_act$BY)
   
   # 航空客运周转量：非能源规划口径下设置为0
   if (set_nrgplng_scope == TRUE) { 
@@ -813,18 +822,13 @@ if (set_cache_hiscalc == FALSE) {
   } else {
     by_trans_ori_avn <- data.frame(year = c(2005: 2019), 航空 = c(0))
   }
+  trans_act$BY <- func_jigsaw(by_trans_ori_avn, trans_act$BY)
   
-  # 合并为活动水平数据框
-  trans_act[["BY"]] <- func_merge_2(list(
-    by_trans_operation, by_trans_nonoperation, by_trans_ori_turnover, 
-    by_trans_water, by_trans_ori_avn))
-  
-  # 假设：营运车辆2018-2019年数据为历史数据线性外推
-  trans_act[["BY"]][which(trans_act[["BY"]]$year %in% c(2018:2019)), 
-               c("常规公交", "快速公交", "出租车")] <- 
-    sapply(c("常规公交", "快速公交", "出租车"), function(i) {
-      tail(func_linear(
-        trans_act[["BY"]], i, startyear=2018, endyear=2019)[, i], 2)})
+  # 假设：出租车2018-2019年数据和农村客车2015-2019年数据为历史数据线性外推
+  trans_act[["BY"]][which(
+    trans_act[["BY"]]$year %in% c(2018:2019)), "出租车"] <- 
+    tail(func_linear(trans_act[["BY"]], "出租车", 
+                     startyear = 2018, endyear = 2019)[, "出租车"], 2)
   trans_act[["BY"]][which(
     trans_act[["BY"]]$year %in% c(2015:2019)), "农村客车"] <- 
     tail(func_linear(trans_act[["BY"]], "农村客车", 
@@ -836,8 +840,8 @@ if (set_cache_hiscalc == FALSE) {
   names(trans_nrgsecfuel[["BY"]]) <- global_trans_subsector
   
   # 营运车辆能耗总量
-  by_trans_nrgfuel_ori <- vector("list", 3)
-  names(by_trans_nrgfuel_ori) <- c("gasoline", "diesel", "gas")
+  by_trans_nrgfuel_ori <- vector("list", 4)
+  names(by_trans_nrgfuel_ori) <- c("gasoline", "diesel", "gas", "electricity")
   # 汽油消费量
   by_trans_nrgfuel_ori[[1]] <- 
     func_read_trans("IZM9FWIY", "汽油消费量")[, c("year", "出租车合计")]
@@ -848,8 +852,12 @@ if (set_cache_hiscalc == FALSE) {
   # 天然气消费量
   by_trans_nrgfuel_ori[[3]] <- global_trans_gas[c("year", "公交合计", "出租车合计")]
   names(by_trans_nrgfuel_ori[[3]]) <- c("year", "常规公交", "出租车")
+  # 电力消费量
+  by_trans_nrgfuel_ori[[4]] <- 
+    global_trans_elecsec[c("year", "常规公交", "纯电动出租车", "地铁")]
+  names(by_trans_nrgfuel_ori[[4]]) <- c("year", "常规公交", "出租车", "地铁")
   # 转化为按车辆类型分的能耗量列表并整理各元素顺序
-  trans_nrgsecfuel[["BY"]][global_trans_subsector[1: 4]] <- 
+  trans_nrgsecfuel[["BY"]][global_trans_subsector[1: 5]] <- 
     func_ls_transition(by_trans_nrgfuel_ori)
   
   # 其他汽油 = 能源平衡表汽油总量扣除当前汽油之和
@@ -967,7 +975,7 @@ if (set_cache_hiscalc == FALSE) {
   # 从服务业中扣除交通电力消费量
   com_nrgsecfuel[["BY"]][[1]] <- 
     func_cross(global_elecaggsec[c("year", "##第三产业")], 
-               trans_nrgsecfuel[["BY"]]$"纯电动私家车", 
+               trans_nrgfuel$BY[c("year", "electricity")], 
                "difference")
   names(com_nrgsecfuel[["BY"]][[1]])[2] <- "electricity"
   # 读取厦门市服务业LPG消费
@@ -1545,6 +1553,11 @@ for (set_scalc in set_scalcs) {
       baseyear = 2019, basevalue = func_lastone(trans_act[["BY"]][,"农村客车"]), 
       maxyear = 2030, endyear = 2060, init_rate = 0.06)$value
     
+    # 地铁
+    trans_act[[set_scalc]][, "地铁"] <- func_curve_1(
+      baseyear = 2019, basevalue = func_lastone(trans_act[["BY"]][,"地铁"]), 
+      maxyear = 2030, endyear = 2060, init_rate = 0.04)$value
+    
     # 公路其他柴油
     # 按照初始增长率5%增长，至2030年饱和
     trans_act[[set_scalc]][, "公路其他柴油"] <- func_curve_1(
@@ -1627,7 +1640,7 @@ for (set_scalc in set_scalcs) {
   names(trans_nrgintst[[set_scalc]]) <- global_trans_subsector
   # 公路交通
   # 常规公交、快速公交、出租车、农村客车、公路其他柴油的能耗强度逐渐下降
-  for (j in c(1: 4, 7)) {
+  for (j in c(1: 4, 8)) {
     trans_nrgintst[[set_scalc]][[j]] <- cbind(
       data.frame(year = c(2019: 2060)), 
       sapply(names(trans_nrgintst[["BY"]][[j]])[
@@ -1637,6 +1650,12 @@ for (set_scalc in set_scalcs) {
             year = c(2019, 2060), scale = c(1, 0.8), 
             base = func_lastone(trans_nrgintst[["BY"]][[j]][, i]))$value}))
   }
+  
+  # 地铁
+  trans_nrgintst[[set_scalc]][["地铁"]] <- 
+    func_interp_3(year = c(2019, 2035, 2060), scale = c(1, 0.95, 0.9), 
+                  base = trans_nrgintst$BY$"地铁"$electricity[
+                    trans_nrgintst$BY$"地铁"$year == 2019], "electricity")
   
   # 公路汽油
   trans_nrgintst[[set_scalc]][["公路其他汽油"]] <- 
