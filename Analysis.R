@@ -1,7 +1,7 @@
 # SETTING ----
 # 计算内容或口径相关设置
 # 设置要计算的情景
-set_scalcs <- "BAU_SLC_DECOAL_OTHER"
+set_scalcs <- "BAU_SLCPLUS_OTHER"
   # c("BAU", "BAU_WLC_OTHER", "BAU_SLCPLUS_OTHER", "BAU_SLC_DECOAL_OTHER")
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 set_lowdev <- FALSE #是否采用经济低发展情景
@@ -1940,8 +1940,8 @@ for (set_scalc in set_scalcs) {
   if (grepl("PLUS", set_scalc)) { 
     #### PLUS ----
     hh_nrgintst[[set_scalc]][[1]] <- func_interp_3(
-      year = c(2019, 2025, 2030, 2035, 2060), 
-      scale = c(1, 1.05, 1.06, 1.20, 1.30), 
+      year = c(2019, 2025, 2028, 2030, 2035, 2060), 
+      scale = c(1.0, 1.06, 1.06, 1.09, 1.17, 1.30), 
       base = func_lastone(hh_nrgintst[["BY"]][["household"]][, "electricity"]))
   } else if (grepl("SLC", set_scalc)) { 
     #### SLC ----
