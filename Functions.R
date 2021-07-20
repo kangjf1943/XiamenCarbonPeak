@@ -630,10 +630,11 @@ func_sgen <- function(basescenario, measures) {
 # 函数：新建分支
 # 说明：生成指定年份和列名的空数据框
 func_branch <- function(sectors, years) {
-  actlvl <- matrix(0, ncol = length(sectors), nrow = length(years))
+  actlvl <- matrix(NA, ncol = length(sectors), nrow = length(years))
   actlvl <- as.data.frame(actlvl)
   names(actlvl) <- sectors
   actlvl <- cbind(data.frame(year = years), actlvl)
+  actlvl <- as.data.frame(sapply(actlvl, as.numeric))
   actlvl
 }
 
