@@ -2355,6 +2355,10 @@ Sys.time() - global_starttime
       geom_line(aes(color = scenario)), 
     ggplot(idx_output_long, aes(year, 新兴行业增加值比例)) + 
       geom_line(aes(color = scenario)), 
+    ggplot(idx_output_long, aes(year, 私家电动车比例)) + 
+      geom_line(aes(color = scenario)), 
+    ggplot(idx_output_long, aes(year, 人均生活能耗五年变化率)) + 
+      geom_line(aes(color = scenario)), 
     ggplot(idx_output_long, aes(year, 清洁能源比例)) + 
       geom_line(aes(color = scenario)), 
     ggplot(idx_output_long, aes(year, 能耗量)) + 
@@ -2365,7 +2369,7 @@ Sys.time() - global_starttime
       geom_line(aes(color = scenario)), 
     ggplot(idx_output_long, aes(year, 单位GDP碳排放五年下降率)) + 
       geom_line(aes(color = scenario))), 
-    nrow = 2, ncol = 4, common.legend = TRUE)
+    nrow = 2, ncol = 5, common.legend = TRUE)
 }
 # 输出为Excel文件
 func_dataexp("各情景下关键指标", mydata = idx_output_long)
