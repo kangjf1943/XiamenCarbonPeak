@@ -637,6 +637,20 @@ func_branch <- function(sectors, years) {
   actlvl
 }
 
+# 函数：在分支中嵌入数据
+# 说明：主要用于将读取的历史数据嵌入用来存储数据的标准空数据框中，例如读取了2000-2012年的活动水平数据，将其对应嵌入2005-2012年的活动水平数据框中，就像拼图一样
+func_jigsaw <- function(df.insertion, df.template) {
+  # 提取共有的年份和共有的列名
+  commondate <- intersect(df.insertion$year, df.template$year)
+  commoncol <- intersect(names(df.insertion)[names(df.insertion) != "year"], 
+                         names(df.template)[names(df.template) != "year"])
+  # 嵌入数据
+  id <- match(commondate, df.insertion$year)
+  df.template[which(df.template$year %in% commondate), commoncol] <- 
+    df.insertion[id, commoncol]
+  df.template
+}
+
 # 函数：通过能源总量和活动水平计算活动强度
 # 数据框对某一列的版本
 func_nrg_intst <- function(df_nrg_sum, df_actlvl, name) {
