@@ -322,7 +322,8 @@ func_interp_3 <- function(year, scale, base, name_value = "value",
 
 # 函数：基于初始增长率和最高值时间点插值预测
 # 增速逐渐减慢直至饱和：抛物线加水平直线
-func_curve_1 <- function(baseyear, basevalue, maxyear, endyear,  init_rate) {
+func_curve_1 <- function(baseyear, basevalue, maxyear, endyear,  init_rate, 
+                         showplot = TRUE) {
   # 将增长率转化成斜率
   initrate <- init_rate*basevalue
   # 生成方程各项系数
@@ -337,7 +338,9 @@ func_curve_1 <- function(baseyear, basevalue, maxyear, endyear,  init_rate) {
   out_df[which(out_df$year > maxyear), "value"] <- 
     0.5*a*maxyear^2+b*maxyear + c
   # 画图检验
-  plot(out_df$year, out_df$value)
+  if (showplot == TRUE) {
+    plot(out_df$year, out_df$value)
+  }
   # 输出结果
   out_df
 }
