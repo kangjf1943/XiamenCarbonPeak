@@ -205,9 +205,9 @@ if (set_cache_globalvar == FALSE) {
                             32, 26, 23, 15, 12), 
                   showplot = set_showplot)$value
   prj_global_gdp$comgdp_prop <- 
-    func_interp_2(year = c(2019, 2025, 2030, 2040, 2060), 
+    func_interp_2(year = c(2019, 2025, 2030, 2035, 2060), 
                   value = c(global_gdp$comgdp_prop[global_gdp$year == 2019], 
-                            67.7, 73.7, 76.8, 84.8, 87.8), 
+                            60.5, 61, 62, 72), 
                   showplot = set_showplot)$value
   prj_global_gdp$agrigdp_prop <- 
     func_saturate(prj_global_gdp[c("year", "secgdp_prop", "comgdp_prop")])$value
@@ -245,7 +245,7 @@ if (set_cache_globalvar == FALSE) {
   prj_global_population <- func_interp_2(
     year = c(2019, 2025, 2035, 2045, 2060), 
     value = c(global_population$"常住人口"[global_population$year == 2019], 
-              580, 730, 780, 800), "population", showplot = set_showplot)
+              600, 730, 780, 800), "population", showplot = set_showplot)
   
   prj_global_population$household <- 
     prj_global_population$population / 
