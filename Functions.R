@@ -562,7 +562,8 @@ func_nrgsub <-
       prop_df <- data.frame(year = nrgori$year)
       # 有多少比例原能源被新能源替代
       prop_df[, namenrgsubs[[i]]] <- 
-        func_interp_2(year = yearsubs[[i]], value = propsubs[[i]])$value
+        func_interp_2(year = yearsubs[[i]], value = propsubs[[i]], 
+                      showplot = FALSE)$value
       prop_df[, namenrgoris[[i]]] <- 1 - prop_df[, namenrgsubs[[i]]]
       # 调整下顺序使之和下面的计算需求一致
       prop_df <- prop_df[c("year", namenrgoris[[i]], namenrgsubs[[i]])]
