@@ -11,7 +11,7 @@ set_cache_globalvar <- FALSE # 是否已有全局变量缓存
 set_cache_nrgbal <- FALSE # 是否已有能源平衡表缓存
 set_cache_hiscalc <- FALSE # 是否已有历史数据计算缓存
 set_cache_init <- FALSE # 是否已有初始化缓存
-set_cache_readdata <- TRUE # 是否已有数据读取缓存
+set_cache_readdata <- FALSE # 是否已有数据读取缓存
 
 # 结果相关设置
 set_showplot <- FALSE # 参数设置时是否可视化
@@ -180,22 +180,14 @@ if (set_cache_globalvar == FALSE) {
   global_gdp$comgdp <- global_gdp$GDP * global_gdp$comgdp_prop/100
   
   # 预测GDP相关项目变化
-  # 预测GDP：分正常发展情景和低发展情景
-  if (set_lowdev == TRUE) {
-    prj_global_gdp <- func_rate(
-      baseyear = 2019, basevalue = global_gdp$GDP[global_gdp$year == 2019], 
-      rate_df = # 未来GDP增长率减缓
-        func_interp_2(year = c(2020, 2021, 2026, 2031, 2036, 2041, 2060),
-                      value = c(5.8, 6.00, 5.00, 4.00, 3.00, 2.00, 1.00), 
-                      showplot = set_showplot))
-  } else {
-    prj_global_gdp <- func_rate(
-      baseyear = 2019, basevalue = global_gdp$GDP[global_gdp$year == 2019], 
-      rate_df = # 未来GDP增长率减缓
-        func_interp_2(year = c(2020, 2021, 2025, 2030, 2035, 2040, 2060),
-                      value = c(5.8, 7.50, 7.00, 6.00, 5.00, 3.00, 2.00), 
-                      showplot = set_showplot))
-  }
+  prj_global_gdp <- func_read_trans("95VTHFEB")[1:16, ]
+  names(prj_global_gdp)[2] <- "value"
+  prj_global_gdp <- rbind(
+    prj_global_gdp, 
+    func_rate(baseyear = 2035, basevalue = 135063430, 
+              rate_df = func_interp_2(
+                year = c(2036, 2041, 2060),
+                value = c(5.00, 3.00, 2.00), showplot = set_showplot)))
   names(prj_global_gdp)[2] <- "GDP"
   comment(prj_global_gdp$GDP) <- "2015可比价万元"
   # 预测各产业所占比重
