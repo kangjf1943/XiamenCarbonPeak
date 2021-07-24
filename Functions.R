@@ -1,4 +1,4 @@
-# Load packages and settings ----
+# Packages and settings ----
 # 用于读写Excel文件
 library(openxlsx)
 # 用于作图
