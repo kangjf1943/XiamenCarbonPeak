@@ -1417,7 +1417,7 @@ for (set_scalc in set_scalcs) {
     for (i in global_ind_subsector) {
       ind_nrgintst[[set_scalc]][[i]][, "gas"] <- func_interp_3(
         year = c(2019, 2025, 2026, 2030, 2060), 
-        scale = c(1.0, 0.99, 0.99, 1.05, 1.00), 
+        scale = c(1.0, 1.04, 1.02, 1.05, 1.00), 
         base = func_lastone(ind_nrgintst[["BY"]][[i]][, "gas"], 
                             zero.rm =  FALSE), 
         showplot = set_showplot)$value
@@ -1428,7 +1428,7 @@ for (set_scalc in set_scalcs) {
     for (i in global_ind_subsector) {
       ind_nrgintst[[set_scalc]][[i]][, "gas"] <- func_interp_3(
         year = c(2019, 2025, 2028, 2030, 2035, 2060), 
-        scale = c(1.0, 0.99, 1.12, 1.25, 1.30, 1.10), 
+        scale = c(1.0, 1.04, 1.12, 1.25, 1.30, 1.10), 
         base = func_lastone(ind_nrgintst[["BY"]][[i]][, "gas"], 
                             zero.rm =  FALSE), 
         showplot = set_showplot)$value
@@ -1842,7 +1842,7 @@ for (set_scalc in set_scalcs) {
     #### PLUS ----
     com_nrgintst[[set_scalc]][[1]] <- func_interp_3(
       year = c(2019, 2025, 2028, 2030, 2035, 2060), 
-      scale = c(1.0, 1.03, 0.97, 0.99, 1.02, 0.9), 
+      scale = c(1.0, 1.04, 0.97, 0.99, 1.02, 0.9), 
       base = func_lastone(com_nrgintst[["BY"]]$electricity$electricity), 
       "electricity", showplot = set_showplot)
     com_nrgintst[[set_scalc]][[2]] <- func_interp_3(
@@ -1857,7 +1857,7 @@ for (set_scalc in set_scalcs) {
     #### SLC ----
     com_nrgintst[[set_scalc]][[1]] <- func_interp_3(
       year = c(2019, 2025, 2028, 2030, 2060), 
-      scale = c(1.0, 1.03, 1.03, 1.10, 0.9), 
+      scale = c(1.0, 1.04, 1.03, 1.11, 0.9), 
       base = func_lastone(com_nrgintst[["BY"]]$electricity$electricity), 
       "electricity", showplot = set_showplot)
     com_nrgintst[[set_scalc]][[2]] <- func_interp_3(
