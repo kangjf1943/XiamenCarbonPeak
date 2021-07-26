@@ -2514,7 +2514,7 @@ func_dataexp("各情景下关键指标", mydata = idx_output_long)
   report_tab2[2:5] <- sapply(report_tab2[2:5], as.numeric)
   report_tab2[1:2, 2:5] <- round(report_tab2[1:2, 2:5], digits = 0)
   report_tab2[3:4, 2:5] <- round(report_tab2[3:4, 2:5], digits = 1)
-  report_tab2[3:4, 2:3] <- "--"
+  report_tab2[3:4, 2] <- "--"
   func_dataexp("主要结论报告表2", mydata = report_tab2)
   
   # 附表4：LEAP模型情景描述
