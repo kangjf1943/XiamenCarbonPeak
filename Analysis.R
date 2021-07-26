@@ -1857,7 +1857,7 @@ for (set_scalc in set_scalcs) {
     #### SLC ----
     com_nrgintst[[set_scalc]][[1]] <- func_interp_3(
       year = c(2019, 2025, 2028, 2030, 2060), 
-      scale = c(1.0, 1.04, 1.03, 1.11, 0.9), 
+      scale = c(1.0, 1.04, 1.10, 1.11, 0.9), 
       base = func_lastone(com_nrgintst[["BY"]]$electricity$electricity), 
       "electricity", showplot = set_showplot)
     com_nrgintst[[set_scalc]][[2]] <- func_interp_3(
