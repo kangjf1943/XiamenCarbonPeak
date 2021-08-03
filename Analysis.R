@@ -1,10 +1,11 @@
 # SETTING ----
 # 计算内容或口径相关设置
 # 设置要计算的情景
-set_scalcs <- 
-  c("BAU", "BAU_WLC_OTHER", "BAU_SLCPLUS_OTHER", "BAU_SLC_DECOAL_OTHER")
+set_scalcs <- "BAU_SLC_DECOAL_OTHER_LOWELEC"
+  # c("BAU", "BAU_WLC_OTHER", "BAU_SLCPLUS_OTHER", "BAU_SLC_DECOAL_OTHER")
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 set_lowdev <- FALSE #是否采用经济低发展情景
+set_elecgensep <- TRUE # 是否将东亚电力从发电行业中独立
 
 # 缓存相关设置
 set_cache_globalvar <- FALSE # 是否已有全局变量缓存
@@ -1901,7 +1902,18 @@ for (set_scalc in set_scalcs) {
   }
   
   ### Br.Elec4GasLpg ----
-  if (grepl("PLUS", set_scalc)) { 
+  if (grepl("LOWELEC", set_scalc)) { 
+    #### LOWELEC ----
+    com_nrgintst[[set_scalc]][[2]] <- func_nrgsub(
+      nrgori = com_nrgintst[[set_scalc]][[2]], 
+      namenrgoris = list("lpg", "gas"), 
+      namenrgsubs = list("electricity", "electricity"), 
+      yearsubs = list(c(2019, 2025, 2030, 2050, 2060), 
+                      c(2019, 2025, 2030, 2050, 2060)), 
+      propsubs = list(c(0, 0.3, 0.5, 0.6, 0.6), 
+                      c(0, 0.3, 0.5, 0.6, 0.6)), 
+      alterscales = list(0.8, 0.8))
+  } else if (grepl("PLUS", set_scalc)) { 
     #### PLUS ----
     com_nrgintst[[set_scalc]][[2]] <- func_nrgsub(
       nrgori = com_nrgintst[[set_scalc]][[2]], 
@@ -2071,7 +2083,7 @@ for (set_scalc in set_scalcs) {
   } else if (grepl("SLC", set_scalc)) { 
     #### SLC ----
     hh_nrgintst[[set_scalc]][[3]] <- func_interp_3(
-      year = c(2019, 2025, 2035, 2060), scale = c(1, 1.1, 0.9, 0.5), 
+      year = c(2019, 2025, 2035, 2060), scale = c(1, 1.0, 0.9, 0.5), 
       base = func_lastone(hh_nrgintst[["BY"]][["gas"]]$gas), 
       "gas", showplot = set_showplot)
   } else if (grepl("WLC", set_scalc)) { 
@@ -2090,7 +2102,16 @@ for (set_scalc in set_scalcs) {
   
   ### BR.Elec4LPG ----
   # LPG电气化
-  if (grepl("SLC", set_scalc)) { 
+  if (grepl("LOWELEC", set_scalc)) { 
+    #### LOWELEC ----
+    hh_nrgintst[[set_scalc]][[2]] <- func_nrgsub(
+      nrgori = hh_nrgintst[[set_scalc]][[2]], 
+      namenrgoris = list("lpg"), 
+      namenrgsubs = list("electricity"), 
+      yearsubs = list(c(2019, 2030, 2050, 2060)), 
+      propsubs = list(c(0, 0.3, 0.8, 0.8)), 
+      alterscales = list(0.8))
+  } else if (grepl("SLC", set_scalc)) { 
     #### SLC ----
     hh_nrgintst[[set_scalc]][[2]] <- func_nrgsub(
       nrgori = hh_nrgintst[[set_scalc]][[2]], 
@@ -2121,7 +2142,16 @@ for (set_scalc in set_scalcs) {
   
   ### BR.Elec4Gas ----
   # 天然气电气化
-  if (grepl("SLC", set_scalc)) { 
+  if (grepl("LOWELEC", set_scalc)) { 
+    #### LOWELEC ----
+    hh_nrgintst[[set_scalc]][[3]] <- func_nrgsub(
+      nrgori = hh_nrgintst[[set_scalc]][[3]], 
+      namenrgoris = list("gas"), 
+      namenrgsubs = list("electricity"), 
+      yearsubs = list(c(2019, 2030, 2050, 2060)), 
+      propsubs = list(c(0.00, 0.3, 0.60, 0.62)), 
+      alterscales = list(0.8))
+  } else if (grepl("SLC", set_scalc)) { 
     #### SLC ----
     hh_nrgintst[[set_scalc]][[3]] <- func_nrgsub(
       nrgori = hh_nrgintst[[set_scalc]][[3]], 
@@ -2182,27 +2212,55 @@ for (set_scalc in set_scalcs) {
   
   ### BR.LowerCoal ----
   # 本地发电量
-  if  (grepl("DECOAL", set_scalc)) { 
-    #### DECOAL ----
-    # 2026年开始减煤，两年内减为原来的3/4
-    tfres_act[[set_scalc]] <- 
-      func_merge_2(list(
-        tfres_act[[set_scalc]], 
-        func_interp_3(
-          year = c(2019, 2025, 2028, 2050, 2060), 
-          scale = c(1.0, 1.00, 0.75, 0.5, 0.5), 
-          base = tfres_act[["BY"]]$elecgen_thrm[tfres_act[["BY"]]$year == 2019],
-          "elecgen_thrm", showplot = set_showplot)))
-  } else { 
-    #### BAU ----
-    # 2030年开始减煤，十年内减为原来的一半，之后保持
-    tfres_act[[set_scalc]] <- 
-      func_merge_2(list(
-        tfres_act[[set_scalc]], 
-        func_interp_3(
-          year = c(2019, 2030, 2040, 2060), scale = c(1, 1, 0.5, 0.5), 
-          base = tfres_act[["BY"]]$elecgen_thrm[tfres_act[["BY"]]$year == 2019],  
-          "elecgen_thrm", showplot = set_showplot)))
+  if (set_elecgensep == TRUE) {
+    if  (grepl("DECOAL", set_scalc)) { 
+      #### DECOAL ----
+      # 2026年开始减煤，两年内减为原来的3/4
+      tfres_act[[set_scalc]] <- 
+        func_merge_2(list(
+          tfres_act[[set_scalc]], 
+          func_interp_3(
+            year = c(2019, 2025, 2028, 2050, 2060), 
+            scale = c(1.0, 1.00, 0.75, 0.5, 0.5), 
+            base = tfres_act[["BY"]]$elecgen_thrm[tfres_act[["BY"]]$year == 2019],
+            "elecgen_thrm", showplot = set_showplot)))
+    } else { 
+      #### BAU ----
+      # 2030年开始减煤，十年内减为原来的一半，之后保持
+      tfres_act[[set_scalc]] <- 
+        func_merge_2(list(
+          tfres_act[[set_scalc]], 
+          func_interp_3(
+            year = c(2019, 2030, 2040, 2060), scale = c(1, 1, 0.5, 0.5), 
+            base = tfres_act[["BY"]]$elecgen_thrm[tfres_act[["BY"]]$year == 2019],  
+            "elecgen_thrm", showplot = set_showplot)))
+    }
+    # 假设未来天然气发电量保持不变
+    tfres_act[[set_scalc]]$elecgen_thrm <- 
+      tfres_act[[set_scalc]]$elecgen_thrm + 120000
+  } else {
+    if  (grepl("DECOAL", set_scalc)) { 
+      #### DECOAL ----
+      # 2026年开始减煤，两年内减为原来的3/4
+      tfres_act[[set_scalc]] <- 
+        func_merge_2(list(
+          tfres_act[[set_scalc]], 
+          func_interp_3(
+            year = c(2019, 2025, 2028, 2050, 2060), 
+            scale = c(1.0, 1.00, 0.75, 0.5, 0.5), 
+            base = tfres_act[["BY"]]$elecgen_thrm[tfres_act[["BY"]]$year == 2019],
+            "elecgen_thrm", showplot = set_showplot)))
+    } else { 
+      #### BAU ----
+      # 2030年开始减煤，十年内减为原来的一半，之后保持
+      tfres_act[[set_scalc]] <- 
+        func_merge_2(list(
+          tfres_act[[set_scalc]], 
+          func_interp_3(
+            year = c(2019, 2030, 2040, 2060), scale = c(1, 1, 0.5, 0.5), 
+            base = tfres_act[["BY"]]$elecgen_thrm[tfres_act[["BY"]]$year == 2019],  
+            "elecgen_thrm", showplot = set_showplot)))
+    }
   }
   
   # 本地清洁发电量
@@ -2251,6 +2309,10 @@ for (set_scalc in set_scalcs) {
   ## Consumption and emission ----
   tf_nrgfuel[[set_scalc]] <- 
     func_nrg_sum(tf_nrgintst[[set_scalc]],tfres_act[[set_scalc]],"elecgen_thrm")
+  # 不消减天然气发电量的话，则天然气使用量保持不变
+  if (set_elecgensep == TRUE) {
+    tf_nrgfuel[[set_scalc]]$gas <- 24678.00
+  }
   tf_diremissum[[set_scalc]] <- 
     func_emissum(tf_nrgfuel[[set_scalc]], prj_emisfac_df)
   
