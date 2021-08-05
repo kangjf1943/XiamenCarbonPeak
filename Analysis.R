@@ -2082,7 +2082,7 @@ for (set_scalc in set_scalcs) {
   } else if (grepl("SLC", set_scalc)) { 
     #### SLC ----
     hh_nrgintst[[set_scalc]][[3]] <- func_interp_3(
-      year = c(2019, 2025, 2035, 2060), scale = c(1, 1.0, 0.9, 0.5), 
+      year = c(2019, 2025, 2035, 2060), scale = c(1, 1.1, 0.9, 0.5), 
       base = func_lastone(hh_nrgintst[["BY"]][["gas"]]$gas), 
       "gas", showplot = set_showplot)
   } else if (grepl("WLC", set_scalc)) { 
