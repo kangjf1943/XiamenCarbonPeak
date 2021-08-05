@@ -818,7 +818,7 @@ if (set_cache_hiscalc == FALSE) {
   if (set_nrgplng_scope == TRUE) { 
     #### Nrgplng scope ----
     by_trans_ori_avn <- global_avn_act[c("year", "avn_rpk")]
-    names(by_trans_ori_avn) <- c("year", global_trans_subsector[10])
+    names(by_trans_ori_avn) <- c("year", "航空")
   } else {
     by_trans_ori_avn <- data.frame(year = c(2005: 2019), 航空 = c(0))
   }
