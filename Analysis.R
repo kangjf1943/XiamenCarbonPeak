@@ -1901,18 +1901,7 @@ for (set_scalc in set_scalcs) {
   }
   
   ### Br.Elec4GasLpg ----
-  if (grepl("LOWELEC", set_scalc)) { 
-    #### LOWELEC ----
-    com_nrgintst[[set_scalc]][[2]] <- func_nrgsub(
-      nrgori = com_nrgintst[[set_scalc]][[2]], 
-      namenrgoris = list("lpg", "gas"), 
-      namenrgsubs = list("electricity", "electricity"), 
-      yearsubs = list(c(2019, 2025, 2030, 2050, 2060), 
-                      c(2019, 2025, 2030, 2050, 2060)), 
-      propsubs = list(c(0, 0.3, 0.5, 0.6, 0.6), 
-                      c(0, 0.3, 0.5, 0.6, 0.6)), 
-      alterscales = list(0.8, 0.8))
-  } else if (grepl("PLUS", set_scalc)) { 
+  if (grepl("PLUS", set_scalc)) { 
     #### PLUS ----
     com_nrgintst[[set_scalc]][[2]] <- func_nrgsub(
       nrgori = com_nrgintst[[set_scalc]][[2]], 
@@ -2101,16 +2090,7 @@ for (set_scalc in set_scalcs) {
   
   ### BR.Elec4LPG ----
   # LPG电气化
-  if (grepl("LOWELEC", set_scalc)) { 
-    #### LOWELEC ----
-    hh_nrgintst[[set_scalc]][[2]] <- func_nrgsub(
-      nrgori = hh_nrgintst[[set_scalc]][[2]], 
-      namenrgoris = list("lpg"), 
-      namenrgsubs = list("electricity"), 
-      yearsubs = list(c(2019, 2030, 2050, 2060)), 
-      propsubs = list(c(0, 0.3, 0.8, 0.8)), 
-      alterscales = list(0.8))
-  } else if (grepl("SLC", set_scalc)) { 
+  if (grepl("SLC", set_scalc)) { 
     #### SLC ----
     hh_nrgintst[[set_scalc]][[2]] <- func_nrgsub(
       nrgori = hh_nrgintst[[set_scalc]][[2]], 
@@ -2141,16 +2121,7 @@ for (set_scalc in set_scalcs) {
   
   ### BR.Elec4Gas ----
   # 天然气电气化
-  if (grepl("LOWELEC", set_scalc)) { 
-    #### LOWELEC ----
-    hh_nrgintst[[set_scalc]][[3]] <- func_nrgsub(
-      nrgori = hh_nrgintst[[set_scalc]][[3]], 
-      namenrgoris = list("gas"), 
-      namenrgsubs = list("electricity"), 
-      yearsubs = list(c(2019, 2030, 2050, 2060)), 
-      propsubs = list(c(0.00, 0.3, 0.60, 0.62)), 
-      alterscales = list(0.8))
-  } else if (grepl("SLC", set_scalc)) { 
+  if (grepl("SLC", set_scalc)) { 
     #### SLC ----
     hh_nrgintst[[set_scalc]][[3]] <- func_nrgsub(
       nrgori = hh_nrgintst[[set_scalc]][[3]], 
