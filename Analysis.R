@@ -1,8 +1,8 @@
 # SETTING ----
 # 计算内容或口径相关设置
 # 设置要计算的情景
-set_scalcs <- 
-  c("BAU", "BAU_WLC_OTHER", "BAU_SLCPLUS_OTHER", "BAU_SLC_DECOAL_OTHER")
+set_scalcs <- "BAU_WLC_OTHER"
+  # c("BAU", "BAU_WLC_OTHER", "BAU_SLCPLUS_OTHER", "BAU_SLC_DECOAL_OTHER")
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 set_elecgensep <- TRUE # 是否将东亚电力从发电行业中独立
 
@@ -1872,7 +1872,7 @@ for (set_scalc in set_scalcs) {
     #### WLC ----
     com_nrgintst[[set_scalc]][[1]] <- func_interp_3(
       year = c(2019, 2025, 2028, 2029, 2030, 2035, 2060), 
-      scale = c(1.0, 1.05, 1.09, 1.07, 1.08, 1.12, 0.95), 
+      scale = c(1.0, 1.07, 1.13, 1.08, 1.115, 1.19, 0.95), 
       base = func_lastone(com_nrgintst[["BY"]]$electricity$electricity), 
       "electricity", showplot = set_showplot)
     com_nrgintst[[set_scalc]][[2]] <- func_interp_3(
@@ -2009,7 +2009,7 @@ for (set_scalc in set_scalcs) {
     #### WLC ----
     hh_nrgintst[[set_scalc]][[1]] <- func_interp_3(
       year = c(2019, 2025, 2028, 2030, 2035, 2060), 
-      scale = c(1.0, 1.16, 1.28, 1.33, 1.45, 1.50), 
+      scale = c(1.0, 1.17, 1.29, 1.35, 1.45, 1.50), 
       base = func_lastone(hh_nrgintst[["BY"]][["household"]][, "electricity"]), 
       showplot = set_showplot)
   } else { 
