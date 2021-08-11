@@ -2,7 +2,8 @@
 # 计算内容或口径相关设置
 # 设置要计算的情景
 set_scalcs <- 
-  c("BAU", "BAU_WLC_OTHER", "BAU_SLCPLUS_OTHER", "BAU_SLC_DECOAL_OTHER")
+  c("BAU", "BAU_WLC_OTHER", "BAU_SLCPLUS_OTHER", "BAU_SLC_DECOAL_OTHER",
+    "BAU_KEEPCOAL", "BAU_WLC_KEEPCOAL_OTHER")
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 set_elecgensep <- TRUE # 是否将东亚电力从发电行业中独立
 
@@ -2193,6 +2194,16 @@ for (set_scalc in set_scalcs) {
             year = c(2019, 2025, 2028, 2050, 2060), 
             scale = c(1.0, 1.00, 0.75, 0.5, 0.5), 
             base = tfres_act[["BY"]]$elecgen_thrm[tfres_act[["BY"]]$year == 2019],
+            "elecgen_thrm", showplot = set_showplot)))
+    } else if (grepl("KEEPCOAL", set_scalc)) { 
+      #### KEEPCOAL ----
+      # 不减煤
+      tfres_act[[set_scalc]] <- 
+        func_merge_2(list(
+          tfres_act[[set_scalc]], 
+          func_interp_3(
+            year = c(2019, 2030, 2040, 2060), scale = c(1, 1, 1, 1), 
+            base = tfres_act[["BY"]]$elecgen_thrm[tfres_act[["BY"]]$year == 2019],  
             "elecgen_thrm", showplot = set_showplot)))
     } else { 
       #### BAU ----
