@@ -185,7 +185,7 @@ if (set_cache_globalvar == FALSE) {
   names(prj_global_gdp)[2] <- "value"
   prj_global_gdp <- rbind(
     prj_global_gdp, 
-    func_rate(baseyear = 2035, basevalue = 135063430, 
+    func_rate(baseyear = 2035, basevalue = 142537227, 
               rate_df = func_interp_2(
                 year = c(2036, 2041, 2060),
                 value = c(5.00, 3.00, 2.00), showplot = set_showplot)))
