@@ -1,7 +1,7 @@
 # SETTING ----
 # 计算内容或口径相关设置
 # 设置要计算的情景
-set_scalcs <- "BAU_WLC_OTHER"
+set_scalcs <- "BAU"
   # c("BAU", "BAU_WLC_OTHER", "BAU_SLCPLUS_OTHER", "BAU_SLC_DECOAL_OTHER")
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 set_elecgensep <- TRUE # 是否将东亚电力从发电行业中独立
@@ -1912,17 +1912,17 @@ for (set_scalc in set_scalcs) {
     #### BAU ----
     com_nrgintst[[set_scalc]][[1]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2030, 2035, 2060), 
-      scale = c(1.0, 1.01, 1.06, 1.14, 1.2, 1), 
+      scale = c(1.0, 1.01, 1.09, 1.24, 1.45, 1.15), 
       base = func_lastone(com_nrgintst[["BY"]]$electricity$electricity), 
       "electricity", showplot = set_showplot)
     com_nrgintst[[set_scalc]][[2]] <- func_interp_3(
-      year = c(2019, 2020, 2030, 2060), 
-      scale = c(1.0, 1.05, 1.50, 1.0), 
+      year = c(2019, 2020, 2025, 2030, 2035, 2060), 
+      scale = c(1.0, 1.05, 1.09, 1.32, 1.45, 1.20), 
       base = func_lastone(com_nrgintst[["BY"]][[2]]$lpg), 
       "lpg", showplot = set_showplot)
     com_nrgintst[[set_scalc]][[2]]$gas <- func_interp_3(
-      year = c(2019, 2020, 2025, 2060), 
-      scale = c(1.0, 1.08, 1.50, 1.0), 
+      year = c(2019, 2020, 2025, 2030, 2035, 2060), 
+      scale = c(1.0, 1.08, 1.18, 1.38, 1.48, 1.20), 
       base = func_lastone(com_nrgintst[["BY"]][[2]]$gas), 
       "gas", showplot = set_showplot)$gas
   }
@@ -2043,7 +2043,7 @@ for (set_scalc in set_scalcs) {
     #### BAU ----
     hh_nrgintst[[set_scalc]][[1]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2030, 2035, 2060), 
-      scale = c(1.0, 1.01, 1.18, 1.35, 1.47, 1.65), 
+      scale = c(1.0, 1.01, 1.12, 1.36, 1.52, 1.65), 
       base = func_lastone(hh_nrgintst[["BY"]][["household"]][, "electricity"]), 
       showplot = set_showplot)
   }
@@ -2081,8 +2081,8 @@ for (set_scalc in set_scalcs) {
   } else { 
     #### BAU ----
     hh_nrgintst[[set_scalc]][[2]] <- func_interp_3(
-      year = c(2019, 2020, 2040, 2060), 
-      scale = c(1.0, 1.00, 1.30, 0.70), 
+      year = c(2019, 2020, 2025, 2030, 2035, 2060), 
+      scale = c(1.0, 1.00, 1.05, 1.12, 1.27, 0.90), 
       base = func_lastone(hh_nrgintst[["BY"]][["lpg"]]$lpg), 
       "lpg", showplot = set_showplot)
   }
@@ -2113,8 +2113,8 @@ for (set_scalc in set_scalcs) {
   } else { 
     #### BAU ----
     hh_nrgintst[[set_scalc]][[3]] <- func_interp_3(
-      year = c(2019, 2020, 2040, 2060), 
-      scale = c(1.0, 1.02, 1.30, 0.90), 
+      year = c(2019, 2020, 2025, 2030, 2035, 2060), 
+      scale = c(1.0, 1.02, 1.16, 1.09, 1.22, 0.90), 
       base = func_lastone(hh_nrgintst[["BY"]][["gas"]]$gas), 
       "gas", showplot = set_showplot)
   }
