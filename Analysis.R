@@ -1,7 +1,7 @@
 # SETTING ----
 # 计算内容或口径相关设置
 # 设置要计算的情景
-set_scalcs <- "BAU_SLCPLUS_OTHER"
+set_scalcs <- "BAU_WLC_OTHER"
   # c("BAU", "BAU_WLC_OTHER", "BAU_SLCPLUS_OTHER", "BAU_SLC_DECOAL_OTHER")
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 set_elecgensep <- TRUE # 是否将东亚电力从发电行业中独立
@@ -1895,17 +1895,17 @@ for (set_scalc in set_scalcs) {
     #### WLC ----
     com_nrgintst[[set_scalc]][[1]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2028, 2029, 2030, 2035, 2060), 
-      scale = c(1.0, 1.01, 1.07, 1.13, 1.08, 1.115, 1.19, 0.95), 
+      scale = c(1.0, 1.01, 1.08, 1.18, 1.17, 1.20, 1.30, 0.95), 
       base = func_lastone(com_nrgintst[["BY"]]$electricity$electricity), 
       "electricity", showplot = set_showplot)
     com_nrgintst[[set_scalc]][[2]] <- func_interp_3(
-      year = c(2019, 2020, 2025, 2028, 2030, 2060), 
-      scale = c(1.0, 1.05, 1.11, 1.24, 1.21, 1.00), 
+      year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
+      scale = c(1.0, 1.05, 1.08, 1.26, 1.24, 1.30, 1.00), 
       base = func_lastone(com_nrgintst[["BY"]][[2]]$lpg), 
       "lpg", showplot = set_showplot)
     com_nrgintst[[set_scalc]][[2]]$gas <- func_interp_3(
-      year = c(2019, 2020, 2025, 2028, 2030, 2060), 
-      scale = c(1.0, 1.08, 1.18, 1.29, 1.28, 1.00), 
+      year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
+      scale = c(1.0, 1.06, 1.15, 1.32, 1.30, 1.34, 1.00), 
       base = func_lastone(com_nrgintst[["BY"]][[2]]$gas), 
       "gas", showplot = set_showplot)$gas
   } else { 
@@ -2036,7 +2036,7 @@ for (set_scalc in set_scalcs) {
     #### WLC ----
     hh_nrgintst[[set_scalc]][[1]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
-      scale = c(1.0, 1.01, 1.17, 1.29, 1.35, 1.45, 1.50), 
+      scale = c(1.0, 1.01, 1.10, 1.26, 1.24, 1.50, 1.45), 
       base = func_lastone(hh_nrgintst[["BY"]][["household"]][, "electricity"]), 
       showplot = set_showplot)
   } else { 
@@ -2075,7 +2075,7 @@ for (set_scalc in set_scalcs) {
     #### WLC ----
     hh_nrgintst[[set_scalc]][[2]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
-      scale = c(1.0, 1.00, 1.07, 1.02, 0.95, 0.98, 0.65), 
+      scale = c(1.0, 1.00, 1.05, 1.05, 0.99, 0.99, 0.65), 
       base = func_lastone(hh_nrgintst[["BY"]][["lpg"]]$lpg), 
       "lpg", showplot = set_showplot)
   } else { 
@@ -2106,8 +2106,8 @@ for (set_scalc in set_scalcs) {
   } else if (grepl("WLC", set_scalc)) { 
     #### WLC ----
     hh_nrgintst[[set_scalc]][[3]] <- func_interp_3(
-      year = c(2019, 2020, 2025, 2028, 2035, 2060), 
-      scale = c(1.0, 1.02, 1.20, 1.11, 1.00, 0.80), 
+      year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
+      scale = c(1.0, 1.02, 1.15, 1.13, 1.03, 1.10, 0.80), 
       base = func_lastone(hh_nrgintst[["BY"]][["gas"]]$gas), 
       "gas", showplot = set_showplot)
   } else { 
