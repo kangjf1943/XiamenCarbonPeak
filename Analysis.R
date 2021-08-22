@@ -1,8 +1,8 @@
 # SETTING ----
 # 计算内容或口径相关设置
 # 设置要计算的情景
-set_scalcs <- 
-  c("BAU", "BAU_WLC_OTHER", "BAU_SLCPLUS_OTHER", "BAU_SLC_DECOAL_OTHER")
+set_scalcs <- "BAU_SLC_DECOAL_OTHER"
+  # c("BAU", "BAU_WLC_OTHER", "BAU_SLCPLUS_OTHER", "BAU_SLC_DECOAL_OTHER")
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 set_elecgensep <- TRUE # 是否将东亚电力从发电行业中独立
 
@@ -1877,18 +1877,18 @@ for (set_scalc in set_scalcs) {
   } else if (grepl("SLC", set_scalc)) { 
     #### SLC ----
     com_nrgintst[[set_scalc]][[1]] <- func_interp_3(
-      year = c(2019, 2020, 2025, 2028, 2030, 2060), 
-      scale = c(1.0, 1.01, 1.07, 1.13, 1.18, 1.02), 
+      year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
+      scale = c(1.0, 1.01, 1.05, 1.06, 1.12, 1.20, 0.90), 
       base = func_lastone(com_nrgintst[["BY"]]$electricity$electricity), 
       "electricity", showplot = set_showplot)
     com_nrgintst[[set_scalc]][[2]] <- func_interp_3(
-      year = c(2019, 2020, 2025, 2030, 2060), 
-      scale = c(1.0, 1.05, 1.10, 1.20, 0.90), 
+      year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
+      scale = c(1.0, 1.05, 1.11, 1.13, 1.20, 1.20, 0.90), 
       base = func_lastone(com_nrgintst[["BY"]][[2]]$lpg), 
       "lpg", showplot = set_showplot)
     com_nrgintst[[set_scalc]][[2]]$gas <- func_interp_3(
-      year = c(2019, 2020, 2025, 2030, 2060), 
-      scale = c(1.0, 1.08, 1.20, 1.30, 0.90), 
+      year = c(2019, 2020, 2025, 2030, 2035, 2060), 
+      scale = c(1.0, 1.08, 1.15, 1.20, 1.20, 0.90), 
       base = func_lastone(com_nrgintst[["BY"]][[2]]$gas), 
       "gas", showplot = set_showplot)$gas
   } else if (grepl("WLC", set_scalc)) { 
@@ -1947,8 +1947,8 @@ for (set_scalc in set_scalcs) {
       namenrgsubs = list("electricity", "electricity"), 
       yearsubs = list(c(2019, 2020, 2025, 2030, 2050, 2060), 
                       c(2019, 2020, 2025, 2030, 2050, 2060)), 
-      propsubs = list(c(0.00, 0.05, 0.30, 0.60, 1, 1), 
-                      c(0.00, 0.05, 0.30, 0.60, 1, 1)), 
+      propsubs = list(c(0.00, 0.05, 0.30, 0.70, 1, 1), 
+                      c(0.00, 0.05, 0.30, 0.70, 1, 1)), 
       alterscales = list(0.8, 0.8))
   } else if (grepl("WLC", set_scalc)) { 
     #### WLC ----
@@ -2029,7 +2029,7 @@ for (set_scalc in set_scalcs) {
     #### SLC ----
     hh_nrgintst[[set_scalc]][[1]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
-      scale = c(1.0, 1.01, 1.10, 1.10, 1.17, 1.33, 1.4), 
+      scale = c(1.0, 1.01, 1.04, 1.10, 1.18, 1.35, 1.4), 
       base = func_lastone(hh_nrgintst[["BY"]][["household"]][, "electricity"]), 
       showplot = set_showplot)
   } else if (grepl("WLC", set_scalc)) { 
@@ -2100,7 +2100,7 @@ for (set_scalc in set_scalcs) {
     #### SLC ----
     hh_nrgintst[[set_scalc]][[3]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2035, 2060), 
-      scale = c(1.0, 1.02, 1.30, 1.20, 0.70), 
+      scale = c(1.0, 1.02, 1.10, 1.07, 0.70), 
       base = func_lastone(hh_nrgintst[["BY"]][["gas"]]$gas), 
       "gas", showplot = set_showplot)
   } else if (grepl("WLC", set_scalc)) { 
@@ -2128,7 +2128,7 @@ for (set_scalc in set_scalcs) {
       namenrgoris = list("lpg"), 
       namenrgsubs = list("electricity"), 
       yearsubs = list(c(2019, 2020, 2030, 2050, 2060)), 
-      propsubs = list(c(0.00, 0.05, 0.60, 0.90, 0.90)), 
+      propsubs = list(c(0.00, 0.05, 0.70, 0.90, 0.90)), 
       alterscales = list(0.8))
   } else if (grepl("WLC", set_scalc)) { 
     #### WLC ----
