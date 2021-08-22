@@ -258,11 +258,12 @@ if (set_cache_readdata == FALSE) {
   global_emisfac_df <- as.data.frame(global_emisfac_df)
   names(global_emisfac_df) <- names(global_ori_emisfac_df)
   global_emisfac_df <- cbind(year = c(2000: 2019), global_emisfac_df)
-  # 预测排放因子变化：从2040年开始各类能耗开始脱碳，至2055年为0
+  # 预测排放因子变化：从2040年开始各类能耗开始脱碳，至2060年趋近0
   prj_emisfac_df <- cbind(
     data.frame(year = c(2019: 2060)), 
     sapply(global_nrg_class, function(i) {func_interp_3(
-      year = c(2019, 2040, 2050, 2060), scale = c(1.0, 1.0, 0.7, 0.0), 
+      year = c(2019, 2040, 2050, 2060), 
+      scale = c(1.0, 1.00, 0.70, 0.20), 
       base = global_emisfac_df[which(global_emisfac_df$year == 2019), i], 
       showplot = set_showplot)$value}))
   
