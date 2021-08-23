@@ -2222,7 +2222,7 @@ for (set_scalc in set_scalcs) {
         tfres_act[[set_scalc]], 
         func_interp_3(
           year = c(2019, 2025, 2028, 2050, 2060), 
-          scale = c(1.0, 1.00, 0.75, 0.50, 0.50), 
+          scale = c(1.0, 1.00, 0.70, 0.50, 0.50), 
           base = tfres_act[["BY"]]$elecgen_thrm[tfres_act[["BY"]]$year == 2019],
           "elecgen_thrm", showplot = set_showplot)))
   } else { 
