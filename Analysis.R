@@ -1245,7 +1245,7 @@ for (set_scalc in set_scalcs) {
         ind_ori_act_prop$BY$year == 2019], 
       2, 2.3), showplot = set_showplot)$value
   ind_ori_act_prop[[set_scalc]][, "石油及炼焦"] <- func_interp_2(
-    year = c(2019, 2030, 2060), value = c(
+    year = c(2019, 2020, 2021, 2030, 2060), value = c(
       ind_ori_act_prop[["BY"]]$"石油及炼焦"[ind_ori_act_prop$BY$year == 2019], 
       ind_ori_act_prop[["BY"]]$"石油及炼焦"[ind_ori_act_prop$BY$year == 2020], 
       ind_ori_act_prop[["BY"]]$"石油及炼焦"[ind_ori_act_prop$BY$year == 2018], 
