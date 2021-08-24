@@ -1,8 +1,16 @@
 # SETTING ----
 # 计算内容或口径相关设置
 # 设置要计算的情景
+# BAU_SLC_DECOAL = BAU_INDOPT_BLDCONV_TRANS_ELEC_SLC_DECOAL
 set_scalcs <- 
-  c("BAU", "BAU_WLC_OTHER", "BAU_SLCPLUS_OTHER", "BAU_SLC_DECOAL_OTHER")
+  c("BAU",
+    "BAU_INDOPT",
+    "BAU_INDOPT_BLDCONV",
+    "BAU_INDOPT_BLDCONV_TRANS",
+    "BAU_INDOPT_BLDCONV_TRANS_ELEC",
+    "BAU_INDOPT_BLDCONV_TRANS_ELEC_DECOAL",
+    "BAU_INDOPT_BLDCONV_TRANS_ELEC_DECOAL_SLC")
+  # c("BAU", "BAU_WLC_OTHER", "BAU_SLCPLUS_OTHER", "BAU_SLC_DECOAL_OTHER")
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 set_elecgensep <- TRUE # 是否将东亚电力从发电行业中独立
 
@@ -1292,8 +1300,8 @@ for (set_scalc in set_scalcs) {
         ind_ori_act_prop[["BY"]]$"电子电气制造业"[
           ind_ori_act_prop$BY$year == 2019], 
         48.97, 52, 57, 66), showplot = set_showplot)$value
-  } else if (grepl("SLC", set_scalc)) { 
-    #### SLC ----
+  } else if (grepl("INDOPT", set_scalc)) { 
+    #### INDOPT ----
     ind_ori_act_prop[[set_scalc]][, "化学工业"] <- func_interp_2(
       year = c(2019, 2020, 2025, 2030, 2045, 2060), value = c(
         ind_ori_act_prop[["BY"]]$"化学工业"[ind_ori_act_prop$BY$year == 2019], 
@@ -1611,8 +1619,8 @@ for (set_scalc in set_scalcs) {
   ### BR.CarNum ----
   # 私家车：先预测全部私家车变化趋势再分成常规和纯电动私家车
   # 全部私家车按照初始增长率增长，至2033-2035年饱和
-  if (grepl("SLC", set_scalc)) { 
-    #### SLC ----
+  if (grepl("TRANS", set_scalc)) { 
+    #### TRANS ----
     trans_act[[set_scalc]][, "私家车"] <- 
       c(func_lastone(trans_act[["BY"]][, "公路其他汽油"]), 
         func_curve_1(baseyear = 2020, basevalue = 1264236, 
@@ -1634,8 +1642,8 @@ for (set_scalc in set_scalcs) {
       year = c(2019, 2020, 2025, 2030, 2050, 2060), 
       value = c(0.022, 0.023, 0.05, 0.15, 0.65, 0.75), 
       showplot = set_showplot, "elec")
-  } else if (grepl("SLC", set_scalc)) { 
-    #### SLC ----
+  } else if (grepl("ELEC", set_scalc)) { 
+    #### ELEC ----
     trans_carprop_ls[[set_scalc]] <- func_interp_2(
       year = c(2019, 2020, 2025, 2030, 2050, 2060), 
       value = c(0.022, 0.023, 0.05, 0.10, 0.60, 0.70), 
@@ -1875,8 +1883,8 @@ for (set_scalc in set_scalcs) {
       scale = c(1.0, 1.08, 1.15, 1.12, 1.18, 0.80), 
       base = func_lastone(com_nrgintst[["BY"]][[2]]$gas), 
       "gas", showplot = set_showplot)$gas
-  } else if (grepl("SLC", set_scalc)) { 
-    #### SLC ----
+  } else if (grepl("BLDCONV", set_scalc)) { 
+    #### BLDCONV ----
     com_nrgintst[[set_scalc]][[1]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
       scale = c(1.0, 1.01, 1.05, 1.06, 1.12, 1.20, 0.90), 
@@ -1940,8 +1948,8 @@ for (set_scalc in set_scalcs) {
       propsubs = list(c(0.00, 0.05, 0.30, 0.75, 1, 1), 
                       c(0.00, 0.05, 0.30, 0.75, 1, 1)), 
       alterscales = list(0.8, 0.8))
-  } else if (grepl("SLC", set_scalc)) { 
-    #### SLC ----
+  } else if (grepl("ELEC", set_scalc)) { 
+    #### ELEC ----
     com_nrgintst[[set_scalc]][[2]] <- func_nrgsub(
       nrgori = com_nrgintst[[set_scalc]][[2]], 
       namenrgoris = list("lpg", "gas"), 
@@ -2026,8 +2034,8 @@ for (set_scalc in set_scalcs) {
       scale = c(1.0, 1.01, 1.04, 1.03, 1.10, 1.25, 1.30), 
       base = func_lastone(hh_nrgintst[["BY"]][["household"]][, "electricity"]), 
       showplot = set_showplot)
-  } else if (grepl("SLC", set_scalc)) { 
-    #### SLC ----
+  } else if (grepl("BLDCONV", set_scalc)) { 
+    #### BLDCONV ----
     hh_nrgintst[[set_scalc]][[1]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
       scale = c(1.0, 1.01, 1.04, 1.10, 1.18, 1.35, 1.4), 
@@ -2122,8 +2130,8 @@ for (set_scalc in set_scalcs) {
   
   ### BR.Elec4LPG ----
   # LPG电气化
-  if (grepl("SLC", set_scalc)) { 
-    #### SLC ----
+  if (grepl("ELEC", set_scalc)) { 
+    #### ELEC ----
     hh_nrgintst[[set_scalc]][[2]] <- func_nrgsub(
       nrgori = hh_nrgintst[[set_scalc]][[2]], 
       namenrgoris = list("lpg"), 
@@ -2153,8 +2161,8 @@ for (set_scalc in set_scalcs) {
   
   ### BR.Elec4Gas ----
   # 天然气电气化
-  if (grepl("SLC", set_scalc)) { 
-    #### SLC ----
+  if (grepl("ELEC", set_scalc)) { 
+    #### ELEC ----
     hh_nrgintst[[set_scalc]][[3]] <- func_nrgsub(
       nrgori = hh_nrgintst[[set_scalc]][[3]], 
       namenrgoris = list("gas"), 
