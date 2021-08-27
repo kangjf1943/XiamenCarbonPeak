@@ -2,7 +2,7 @@
 # 计算内容或口径相关设置
 # 设置要计算的情景
 set_scalcs <- 
-  c("BAU", "BAU_WLC_OTHER", "BAU_SLCPLUS_OTHER", "BAU_SLC_DECOAL_OTHER")
+  c("BAU", "BAU_WLC", "BAU_SLCPLUS", "BAU_SLC_DECOAL")
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 set_elecgensep <- TRUE # 是否将东亚电力从发电行业中独立
 
