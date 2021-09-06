@@ -1194,22 +1194,22 @@ for (set_scalc in set_scalcs) {
   if (grepl("SLC", set_scalc)) {
     #### SLC ----
     agri_nrgintst[[set_scalc]]$electricity <- func_interp_3(
-      year = c(2019, 2020, 2030, 2045, 2060),
-      scale = c(1.0, 1.03, 1.10, 1.15, 0.9), 
+      year = c(2019, 2020, 2025, 2030, 2035, 2045, 2060),
+      scale = c(1.0, 1.01, 1.05, 1.13, 1.14, 1.15, 0.90), 
       base = func_lastone(agri_nrgintst[["BY"]]$electricity), 
       "electricity", showplot = set_showplot)$electricity
   } else if (grepl("WLC", set_scalc)) { 
     #### WLC ----
     agri_nrgintst[[set_scalc]]$electricity <- func_interp_3(
-      year = c(2019, 2020, 2030, 2045, 2060),
-      scale = c(1.0, 1.03, 1.13, 1.13, 0.95), 
+      year = c(2019, 2020, 2025, 2030, 2035, 2045, 2060),
+      scale = c(1.0, 1.01, 1.06, 1.15, 1.15, 1.16, 0.95), 
       base = func_lastone(agri_nrgintst[["BY"]]$electricity), 
       "electricity", showplot = set_showplot)$electricity
   } else { 
     #### BAU ----
     agri_nrgintst[[set_scalc]]$electricity <- func_interp_3(
       year = c(2019, 2020, 2025, 2045, 2060),
-      scale = c(1.0, 1.03, 1.20, 1.20, 1.00), 
+      scale = c(1.0, 1.01, 1.10, 1.10, 1.00), 
       base = func_lastone(agri_nrgintst[["BY"]]$electricity), 
       "electricity", showplot = set_showplot)$electricity
   }
@@ -1282,26 +1282,31 @@ for (set_scalc in set_scalcs) {
     ind_ori_act_prop[[set_scalc]][, "化学工业"] <- func_interp_2(
       year = c(2019, 2020, 2025, 2030, 2045, 2060), value = c(
         ind_ori_act_prop[["BY"]]$"化学工业"[ind_ori_act_prop$BY$year == 2019], 
-        7.38, 6.3, 5, 0, 0), showplot = set_showplot)$value
+                     7.38, 6.30, 3.00, 0.00, 0.00), 
+      showplot = set_showplot)$value
     ind_ori_act_prop[[set_scalc]][, "设备制造业"] <- func_interp_2(
       year = c(2019, 2020, 2025, 2030, 2060), value = c(
         ind_ori_act_prop[["BY"]]$"设备制造业"[ind_ori_act_prop$BY$year == 2019], 
-        12.39, 13.8, 16, 20), showplot = set_showplot)$value
+                     12.39, 13.8, 17.0, 20.0), 
+      showplot = set_showplot)$value
     ind_ori_act_prop[[set_scalc]][, "电子电气制造业"] <- func_interp_2(
       year = c(2019, 2020, 2025, 2030, 2060), value = c(
         ind_ori_act_prop[["BY"]]$"电子电气制造业"[
           ind_ori_act_prop$BY$year == 2019], 
-        48.97, 52, 57, 66), showplot = set_showplot)$value
+                     48.97, 52.0, 58.0, 66), 
+      showplot = set_showplot)$value
   } else if (grepl("SLC", set_scalc)) { 
     #### SLC ----
     ind_ori_act_prop[[set_scalc]][, "化学工业"] <- func_interp_2(
       year = c(2019, 2020, 2025, 2030, 2045, 2060), value = c(
         ind_ori_act_prop[["BY"]]$"化学工业"[ind_ori_act_prop$BY$year == 2019], 
-        7.38, 6.3, 5.5, 1, 0), showplot = set_showplot)$value
+                     7.38, 6.30, 5.70, 1.00, 0.00), 
+      showplot = set_showplot)$value
     ind_ori_act_prop[[set_scalc]][, "设备制造业"] <- func_interp_2(
       year = c(2019, 2020, 2025, 2030, 2060), value = c(
         ind_ori_act_prop[["BY"]]$"设备制造业"[ind_ori_act_prop$BY$year == 2019], 
-        12.39, 13.8, 15, 19), showplot = set_showplot)$value
+                     12.39, 13.8, 14.5, 19.0), 
+      showplot = set_showplot)$value
     ind_ori_act_prop[[set_scalc]][, "电子电气制造业"] <- func_interp_2(
       year = c(2019, 2020, 2025, 2030, 2060), value = c(
         ind_ori_act_prop[["BY"]]$"电子电气制造业"[
@@ -1312,11 +1317,13 @@ for (set_scalc in set_scalcs) {
     ind_ori_act_prop[[set_scalc]][, "化学工业"] <- func_interp_2(
       year = c(2019, 2020, 2025, 2030, 2045, 2060), value = c(
         ind_ori_act_prop[["BY"]]$"化学工业"[ind_ori_act_prop$BY$year == 2019], 
-        7.38, 6.6, 6, 2, 0), showplot = set_showplot)$value
+                     7.38, 6.20, 6.00, 2.00, 0.00), 
+      showplot = set_showplot)$value
     ind_ori_act_prop[[set_scalc]][, "设备制造业"] <- func_interp_2(
       year = c(2019, 2020, 2025, 2030, 2060), value = c(
         ind_ori_act_prop[["BY"]]$"设备制造业"[ind_ori_act_prop$BY$year == 2019], 
-        12.39, 13.4, 14.5, 17.5), showplot = set_showplot)$value
+                     12.39, 13.8, 14.5, 17.5), 
+      showplot = set_showplot)$value
     ind_ori_act_prop[[set_scalc]][, "电子电气制造业"] <- func_interp_2(
       year = c(2019, 2020, 2025, 2030, 2060), value = c(
         ind_ori_act_prop[["BY"]]$"电子电气制造业"[
@@ -1367,8 +1374,8 @@ for (set_scalc in set_scalcs) {
         data.frame(year = c(2019: 2060)),
         sapply(global_ind_nrgclass[1:6], function(j) {
           func_interp_3(
-            year = c(2019, 2020, 2025, 2026, 2030, 2035, 2060), 
-            scale = c(1.0, 1.00, 1.00, 1.00, 1.03, 0.95, 0.6), 
+            year = c(2019, 2020, 2025, 2030, 2035, 2060), 
+            scale = c(1.0, 1.00, 1.00, 0.90, 0.89, 0.60), 
             base = func_lastone(ind_nrgintst[["BY"]][[i]][, j], 
                                 zero.rm =  FALSE), 
             showplot = set_showplot)$value}))
@@ -1393,8 +1400,8 @@ for (set_scalc in set_scalcs) {
         data.frame(year = c(2019: 2060)),
         sapply(global_ind_nrgclass[1:6], function(j) {
           func_interp_3(
-            year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
-            scale = c(1.0, 1.0, 0.99, 1.05, 1.01, 1.00,  0.8), 
+            year = c(2019, 2020, 2025, 2030, 2035, 2060), 
+            scale = c(1.0, 1.00, 1.00, 1.00, 1.00, 0.80), 
             base = func_lastone(ind_nrgintst[["BY"]][[i]][, j], 
                                 zero.rm =  FALSE), 
             showplot = set_showplot)$value}))
@@ -1406,8 +1413,8 @@ for (set_scalc in set_scalcs) {
         data.frame(year = c(2019: 2060)),
         sapply(global_ind_nrgclass[1:6], function(j) {
           func_interp_3(
-            year = c(2019, 2020, 2025, 2030, 2040, 2060), 
-            scale = c(1.0, 1.00, 1.01, 1.05,  1.0,  1.0), 
+            year = c(2019, 2020, 2025, 2030, 2035, 2060), 
+            scale = c(1.0, 1.00, 1.00, 1.00, 1.00, 1.00), 
             base = func_lastone(ind_nrgintst[["BY"]][[i]][, j], 
                                 zero.rm =  FALSE), 
             showplot = set_showplot)$value}))
@@ -1420,8 +1427,8 @@ for (set_scalc in set_scalcs) {
     #### PLUS ----
     for (i in global_ind_subsector) {
       ind_nrgintst[[set_scalc]][[i]][, "gas"] <- func_interp_3(
-        year = c(2019, 2020, 2025, 2026, 2030, 2060), 
-        scale = c(1.0, 1.01, 1.04, 1.02, 1.05, 1.00), 
+        year = c(2019, 2020, 2025, 2030, 2035, 2060), 
+        scale = c(1.0, 1.01, 1.03, 1.04, 1.05, 1.00), 
         base = func_lastone(ind_nrgintst[["BY"]][[i]][, "gas"], 
                             zero.rm =  FALSE), 
         showplot = set_showplot)$value
@@ -1431,8 +1438,8 @@ for (set_scalc in set_scalcs) {
     #### SLC ----
     for (i in global_ind_subsector) {
       ind_nrgintst[[set_scalc]][[i]][, "gas"] <- func_interp_3(
-        year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
-        scale = c(1.0, 1.01, 1.04, 1.12, 1.25, 1.30, 1.10), 
+        year = c(2019, 2020, 2025, 2030, 2035, 2060), 
+        scale = c(1.0, 1.01, 1.03, 1.27, 1.30, 1.10), 
         base = func_lastone(ind_nrgintst[["BY"]][[i]][, "gas"], 
                             zero.rm =  FALSE), 
         showplot = set_showplot)$value
@@ -1441,8 +1448,8 @@ for (set_scalc in set_scalcs) {
     #### WLC ----
     for (i in global_ind_subsector) {
       ind_nrgintst[[set_scalc]][[i]][, "gas"] <- func_interp_3(
-        year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
-        scale = c(1.0, 1.01, 0.99, 1.16, 1.22, 1.35, 1.15), 
+        year = c(2019, 2020, 2025, 2028, 2029, 2030, 2035, 2060), 
+        scale = c(1.0, 1.01, 1.03, 1.25, 1.24, 1.25, 1.40, 1.15), 
         base = func_lastone(ind_nrgintst[["BY"]][[i]][, "gas"], 
                             zero.rm =  FALSE), 
         showplot = set_showplot)$value
@@ -1452,7 +1459,7 @@ for (set_scalc in set_scalcs) {
     for (i in global_ind_subsector) {
       ind_nrgintst[[set_scalc]][[i]][, "gas"] <- func_interp_3(
         year = c(2019, 2020, 2025, 2030, 2035, 2060), 
-        scale = c(1.0, 1.01, 1.05, 1.45, 1.6, 1.2), 
+        scale = c(1.0, 1.01, 1.04, 1.37, 1.48, 1.20), 
         base = func_lastone(ind_nrgintst[["BY"]][[i]][, "gas"], 
                             zero.rm =  FALSE), 
         showplot = set_showplot)$value
@@ -1464,8 +1471,8 @@ for (set_scalc in set_scalcs) {
     #### PLUS ----
     for (i in global_ind_subsector) {
       ind_nrgintst[[set_scalc]][[i]][, "electricity"] <- func_interp_3(
-        year = c(2019, 2020, 2025, 2030, 2060), 
-        scale = c(1.0, 1.02, 1.08, 1.1, 1.2), 
+        year = c(2019, 2020, 2025, 2026, 2030, 2060), 
+        scale = c(1, 1.0150, 1.04, 1.04, 1.06, 1.20), 
         base = func_lastone(ind_nrgintst[["BY"]][[i]][, "electricity"], 
                             zero.rm =  FALSE), 
         showplot = set_showplot)$value
@@ -1474,8 +1481,8 @@ for (set_scalc in set_scalcs) {
     #### SLC ----
     for (i in global_ind_subsector) {
       ind_nrgintst[[set_scalc]][[i]][, "electricity"] <- func_interp_3(
-        year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
-        scale = c(1.0, 1.02, 1.08, 1.16, 1.25, 1.27, 1.2), 
+        year = c(2019, 2020, 2025, 2030, 2035, 2060), 
+        scale = c(1, 1.0150, 1.04, 1.25, 1.27, 1.2), 
         base = func_lastone(ind_nrgintst[["BY"]][[i]][, "electricity"], 
                             zero.rm =  FALSE), 
         showplot = set_showplot)$value
@@ -1484,8 +1491,8 @@ for (set_scalc in set_scalcs) {
     #### WLC ----
     for (i in global_ind_subsector) {
       ind_nrgintst[[set_scalc]][[i]][, "electricity"] <- func_interp_3(
-        year = c(2019, 2020, 2025, 2028, 2030, 2060), 
-        scale = c(1.0, 1.02, 1.05, 1.17, 1.25, 1.25), 
+        year = c(2019, 2020, 2025, 2028, 2029, 2030, 2035, 2060), 
+        scale = c(1, 1.0150, 1.04, 1.26, 1.25, 1.26, 1.30, 1.25), 
         base = func_lastone(ind_nrgintst[["BY"]][[i]][, "electricity"], 
                             zero.rm =  FALSE), 
         showplot = set_showplot)$value
@@ -1495,7 +1502,7 @@ for (set_scalc in set_scalcs) {
     for (i in global_ind_subsector) {
       ind_nrgintst[[set_scalc]][[i]][, "electricity"] <- func_interp_3(
         year = c(2019, 2020, 2025, 2030, 2035, 2060), 
-        scale = c(1.0, 1.02, 1.10, 1.33, 1.4, 1.3), 
+        scale = c(1, 1.0150, 1.08, 1.35, 1.48, 1.3), 
         base = func_lastone(ind_nrgintst[["BY"]][[i]][, "electricity"], 
                             zero.rm =  FALSE), 
         showplot = set_showplot)$value
@@ -1526,22 +1533,22 @@ for (set_scalc in set_scalcs) {
   if (grepl("SLC", set_scalc)) {
     #### SLC ----
     const_nrgintst[[set_scalc]] <- func_interp_3(
-      year = c(2019, 2020, 2023, 2040, 2060), 
-      scale = c(1.0, 1.00, 0.80, 0.40, 0.25), 
+      year = c(2019, 2020, 2025, 2030, 2040, 2060), 
+      scale = c(1.0, 1.00, 0.75, 0.64, 0.40, 0.25), 
       base = func_lastone(const_nrgintst[["BY"]]$electricity), 
       showplot = set_showplot, "electricity")
   } else if (grepl("WLC", set_scalc)) {
     #### WLC ----
     const_nrgintst[[set_scalc]] <- func_interp_3(
-      year = c(2019, 2020, 2023, 2040, 2060), 
-      scale = c(1.0, 1.00, 0.80, 0.50, 0.40), 
+      year = c(2019, 2020, 2025, 2030, 2040, 2060), 
+      scale = c(1.0, 1.00, 0.75, 0.65, 0.50, 0.40), 
       base = func_lastone(const_nrgintst[["BY"]]$electricity), 
       showplot = set_showplot, "electricity")
   } else { 
     #### BAU ----
     const_nrgintst[[set_scalc]] <- func_interp_3(
-      year = c(2019, 2020, 2023, 2040, 2060), 
-      scale = c(1.0, 1.00, 0.81, 0.56, 0.50), 
+      year = c(2019, 2020, 2025, 2040, 2060), 
+      scale = c(1.0, 1.00, 0.70, 0.56, 0.50), 
       base = func_lastone(const_nrgintst[["BY"]]$electricity), 
       showplot = set_showplot, "electricity")
   }
@@ -1632,7 +1639,7 @@ for (set_scalc in set_scalcs) {
     #### PLUS ----
     trans_carprop_ls[[set_scalc]] <- func_interp_2(
       year = c(2019, 2020, 2025, 2030, 2050, 2060), 
-      value = c(0.022, 0.023, 0.05, 0.15, 0.65, 0.75), 
+      value = c(0.022, 0.023, 0.05, 0.16, 0.65, 0.75), 
       showplot = set_showplot, "elec")
   } else if (grepl("SLC", set_scalc)) { 
     #### SLC ----
@@ -1684,14 +1691,16 @@ for (set_scalc in set_scalcs) {
         names(trans_nrgintst[["BY"]][[j]]) %in% "year" == FALSE], 
         function(i) {
           func_interp_3(
-            year = c(2019, 2060), scale = c(1, 0.8), 
+            year = c(2019, 2025, 2030, 2060), 
+            scale = c(1.0, 0.99, 0.96, 0.80), 
             base = func_lastone(trans_nrgintst[["BY"]][[j]][, i]), 
             showplot = set_showplot)$value}))
   }
   
   # 地铁
   trans_nrgintst[[set_scalc]][["地铁"]] <- 
-    func_interp_3(year = c(2019, 2035, 2060), scale = c(1, 0.95, 0.9), 
+    func_interp_3(year = c(2019, 2025, 2035, 2060), 
+                  scale = c(1.0, 0.97, 0.95, 0.90), 
                   base = trans_nrgintst$BY$"地铁"$electricity[
                     trans_nrgintst$BY$"地铁"$year == 2019], 
                   showplot = set_showplot, "electricity")
@@ -1700,8 +1709,8 @@ for (set_scalc in set_scalcs) {
   trans_nrgintst[[set_scalc]][["公路其他汽油"]] <- 
     data.frame(year = c(2019: 2060))
   trans_nrgintst[[set_scalc]][["公路其他汽油"]][, "gasoline"] <- func_interp_3(
-    year = c(2019, 2030, 2040, 2060), 
-    scale = c(1, 1.05, 0.8, 0.7), 
+    year = c(2019, 2020, 2025, 2030, 2035, 2060), 
+    scale = c(1.0, 1.00, 1.03, 1.06, 1.06, 0.7), 
     base = func_lastone(trans_nrgintst[["BY"]][["公路其他汽油"]]$gasoline), 
     showplot = set_showplot)$value
   
@@ -1710,7 +1719,8 @@ for (set_scalc in set_scalcs) {
     data.frame(year = c(2019: 2060))
   trans_nrgintst[[set_scalc]][["纯电动私家车"]][, "electricity"] <- 
     func_interp_3(
-      year = c(2019, 2030, 2040, 2060), scale = c(1, 1.05, 0.8, 0.7), 
+      year = c(2019, 2020, 2025, 2030, 2040, 2060), 
+      scale = c(1.0, 1.00, 1.02, 1.03, 0.8, 0.7), 
       base = func_lastone(
         trans_nrgintst[["BY"]][["纯电动私家车"]]$electricity), 
       showplot = set_showplot)$value
@@ -1721,45 +1731,45 @@ for (set_scalc in set_scalcs) {
   if (grepl("PLUS", set_scalc)) { 
     #### PLUS ----
     trans_nrgintst[[set_scalc]][["水路客运"]] <- func_interp_3(
-      year = c(2019, 2020, 2025, 2030, 2060), 
-      scale = c(1.0, 1.00, 0.95, 0.76, 0.7), 
+      year = c(2019, 2020, 2025, 2030, 2035, 2060), 
+      scale = c(1.0, 1.00, 0.90, 0.68, 0.68, 0.65), 
       base = func_lastone(trans_nrgintst[["BY"]][["水路客运"]]$diesel), 
       showplot = set_showplot, "diesel")
     trans_nrgintst[[set_scalc]][["水路客运"]]$residual <- func_interp_3(
-      year = c(2019, 2020, 2025, 2030, 2060), 
-      scale = c(1.0, 1.00, 0.92, 0.75, 0.7), 
+      year = c(2019, 2020, 2025, 2030, 2035, 2060), 
+      scale = c(1.0, 1.00, 0.92, 0.68, 0.68, 0.65), 
       base = func_lastone(trans_nrgintst[["BY"]][["水路客运"]]$residual), 
       "residual", showplot = set_showplot)$residual
   } else if (grepl("SLC", set_scalc)) { 
     #### SLC ----
     trans_nrgintst[[set_scalc]][["水路客运"]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2030, 2060), 
-      scale = c(1.0, 1.00, 0.95, 1.00, 0.8), 
+      scale = c(1.0, 1.00, 0.90, 0.89, 0.80), 
       base = func_lastone(trans_nrgintst[["BY"]][["水路客运"]]$diesel), 
       showplot = set_showplot, "diesel")              
     trans_nrgintst[[set_scalc]][["水路客运"]]$residual <- func_interp_3(
       year = c(2019, 2020, 2025, 2030, 2060), 
-      scale = c(1.0, 1.00, 0.92, 0.85, 0.80), 
+      scale = c(1.0, 1.00, 0.92, 0.90, 0.80), 
       base = func_lastone(trans_nrgintst[["BY"]][["水路客运"]]$residual), 
       showplot = set_showplot, "residual"
     )$residual
   } else if (grepl("WLC", set_scalc)) { 
     #### WLC ----
     trans_nrgintst[[set_scalc]][["水路客运"]] <- func_interp_3(
-      year = c(2019, 2020, 2025, 2028, 2030, 2060), 
-      scale = c(1.0, 1.00, 0.96, 0.96, 0.9, 0.9), 
+      year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
+      scale = c(1.0, 1.00, 0.90, 0.95, 0.92, 0.92, 0.90), 
       base = func_lastone(trans_nrgintst[["BY"]][["水路客运"]]$diesel), 
       showplot = set_showplot, "diesel")
     trans_nrgintst[[set_scalc]][["水路客运"]]$residual <- func_interp_3(
       year = c(2019, 2020, 2025, 2028, 2030, 2060), 
-      scale = c(1.0, 1.00, 0.93, 0.94, 0.90, 0.90), 
+      scale = c(1.0, 1.00, 0.92, 0.94, 0.90, 0.90), 
       base = func_lastone(trans_nrgintst[["BY"]][["水路客运"]]$residual), 
       showplot = set_showplot, "residual")$residual
   } else { 
     #### BAU ----
     trans_nrgintst[[set_scalc]][["水路客运"]] <- func_interp_3(
-      year = c(2019, 2045, 2060), 
-      scale = c(1.0, 1.00, 1.00), 
+      year = c(2019, 2060), 
+      scale = c(1.0, 1.00), 
       base = func_lastone(trans_nrgintst[["BY"]][["水路客运"]]$diesel), 
       showplot = set_showplot, "diesel")
     trans_nrgintst[[set_scalc]][["水路客运"]]$residual <- func_interp_3(
@@ -1774,20 +1784,20 @@ for (set_scalc in set_scalcs) {
   if (grepl("PLUS", set_scalc)) { 
     #### PLUS ----
     trans_nrgintst[[set_scalc]][["水路货运"]] <- func_interp_3(
-      year = c(2019, 2020, 2025, 2030, 2060), 
-      scale = c(1.0, 1.00, 0.95, 0.85, 0.75), 
+      year = c(2019, 2020, 2025, 2030, 2035, 2060), 
+      scale = c(1.0, 1.00, 0.95, 0.80, 0.79, 0.70), 
       base = func_lastone(trans_nrgintst[["BY"]][["水路货运"]]$diesel), 
       showplot = set_showplot,"diesel")
     trans_nrgintst[[set_scalc]][["水路货运"]]$residual <- func_interp_3(
-      year = c(2019, 2020, 2025, 2030, 2060), 
-      scale = c(1.0, 1.00, 0.97, 0.85, 0.75), 
+      year = c(2019, 2020, 2025, 2030, 2035, 2060), 
+      scale = c(1.0, 1.00, 0.97, 0.80, 0.79, 0.70), 
       base = func_lastone(trans_nrgintst[["BY"]][["水路货运"]]$residual),
       "residual", showplot = set_showplot)$residual
   } else if (grepl("SLC", set_scalc)) { 
     #### SLC ----
     trans_nrgintst[[set_scalc]][["水路货运"]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2030, 2060), 
-      scale = c(1.0, 1.00, 0.95, 0.90, 0.80), 
+      scale = c(1.0, 1.00, 0.95, 0.93, 0.80), 
       base = func_lastone(trans_nrgintst[["BY"]][["水路货运"]]$diesel),
       "diesel", showplot = set_showplot)
     # 燃料油：基于历史数据和比率
@@ -1799,23 +1809,23 @@ for (set_scalc in set_scalcs) {
   } else if (grepl("WLC", set_scalc)) { 
     #### WLC ----
     trans_nrgintst[[set_scalc]][["水路货运"]] <- func_interp_3(
-      year = c(2019, 2020, 2025, 2028,2030, 2060), 
-      scale = c(1.0, 1.00, 0.96, 1.00,1.00, 0.9), 
+      year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
+      scale = c(1.0, 1.00, 0.95, 1.00, 1.00, 1.00, 0.9), 
       base = func_lastone(trans_nrgintst[["BY"]][["水路货运"]]$diesel),
       "diesel", showplot = set_showplot)
     trans_nrgintst[[set_scalc]][["水路货运"]]$residual <- func_interp_3(
-      year = c(2019, 2020, 2025, 2028, 2030, 2060), 
-      scale = c(1.0, 1.00, 0.98, 1.00, 0.98, 0.90), 
+      year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
+      scale = c(1.0, 1.00, 0.97, 1.00, 1.00, 1.00, 0.90), 
       base = func_lastone(trans_nrgintst[["BY"]][["水路货运"]]$residual),
       "residual", showplot = set_showplot)$residual
   } else { 
     #### BAU ----
     trans_nrgintst[[set_scalc]][["水路货运"]] <- func_interp_3(
-      year = c(2019, 2040, 2060), scale = c(1, 1, 1), 
+      year = c(2019, 2060), scale = c(1, 1), 
       base = func_lastone(trans_nrgintst[["BY"]][["水路货运"]]$diesel),
       "diesel", showplot = set_showplot)
     trans_nrgintst[[set_scalc]][["水路货运"]]$residual <- func_interp_3(
-      year = c(2019, 2040, 2060), scale = c(1, 1, 1), 
+      year = c(2019, 2060), scale = c(1, 1), 
       base = func_lastone(trans_nrgintst[["BY"]][["水路货运"]]$residual),
       "residual", showplot = set_showplot)$residual
   }
@@ -1854,76 +1864,101 @@ for (set_scalc in set_scalcs) {
   
   ## Energy intensity ----
   com_nrgintst[[set_scalc]] <- vector("list", 2)
-  ### BR.ComNrgintst ----
+  ### Br.Elec ----
   names(com_nrgintst[[set_scalc]]) <- global_com_subsector
   # 服务业用电强度略有增加
-  # 服务业燃气强度略有增加后减少，且逐渐为电气替代
   if (grepl("PLUS", set_scalc)) { 
     #### PLUS ----
     com_nrgintst[[set_scalc]][[1]] <- func_interp_3(
-      year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
-      scale = c(1.0, 1.01, 1.05, 1.00, 1.03, 1.15, 0.90), 
+      year = c(2019, 2020, 2025, 2030, 2035, 2060), 
+      scale = c(1.0, 1.01, 1.02, 1.03, 1.06, 0.80), 
       base = func_lastone(com_nrgintst[["BY"]]$electricity$electricity), 
       "electricity", showplot = set_showplot)
-    com_nrgintst[[set_scalc]][[2]] <- func_interp_3(
-      year = c(2019, 2020, 2025, 2030, 2035, 2060), 
-      scale = c(1.0, 1.05, 1.11, 1.12, 1.18, 0.80), 
-      base = func_lastone(com_nrgintst[["BY"]][[2]]$lpg), 
-      "lpg", showplot = set_showplot)
-    com_nrgintst[[set_scalc]][[2]]$gas <- func_interp_3(
-      year = c(2019, 2020, 2025, 2030, 2035, 2060), 
-      scale = c(1.0, 1.08, 1.15, 1.12, 1.18, 0.80), 
-      base = func_lastone(com_nrgintst[["BY"]][[2]]$gas), 
-      "gas", showplot = set_showplot)$gas
   } else if (grepl("SLC", set_scalc)) { 
     #### SLC ----
     com_nrgintst[[set_scalc]][[1]] <- func_interp_3(
-      year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
-      scale = c(1.0, 1.01, 1.05, 1.06, 1.12, 1.20, 0.90), 
+      year = c(2019, 2020, 2025, 2026, 2030, 2035, 2060), 
+      scale = c(1.0, 1.01, 1.02, 1.02, 1.07, 1.08, 0.90), 
       base = func_lastone(com_nrgintst[["BY"]]$electricity$electricity), 
       "electricity", showplot = set_showplot)
-    com_nrgintst[[set_scalc]][[2]] <- func_interp_3(
-      year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
-      scale = c(1.0, 1.05, 1.11, 1.13, 1.20, 1.20, 0.90), 
-      base = func_lastone(com_nrgintst[["BY"]][[2]]$lpg), 
-      "lpg", showplot = set_showplot)
-    com_nrgintst[[set_scalc]][[2]]$gas <- func_interp_3(
-      year = c(2019, 2020, 2025, 2030, 2035, 2060), 
-      scale = c(1.0, 1.08, 1.15, 1.20, 1.20, 0.90), 
-      base = func_lastone(com_nrgintst[["BY"]][[2]]$gas), 
-      "gas", showplot = set_showplot)$gas
   } else if (grepl("WLC", set_scalc)) { 
     #### WLC ----
     com_nrgintst[[set_scalc]][[1]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2028, 2029, 2030, 2035, 2060), 
-      scale = c(1.0, 1.01, 1.08, 1.18, 1.17, 1.20, 1.30, 0.95), 
+      scale = c(1.0, 1.01, 1.02, 1.09, 1.08, 1.09, 1.10, 0.95), 
       base = func_lastone(com_nrgintst[["BY"]]$electricity$electricity), 
       "electricity", showplot = set_showplot)
-    com_nrgintst[[set_scalc]][[2]] <- func_interp_3(
-      year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
-      scale = c(1.0, 1.05, 1.08, 1.26, 1.24, 1.30, 1.00), 
-      base = func_lastone(com_nrgintst[["BY"]][[2]]$lpg), 
-      "lpg", showplot = set_showplot)
-    com_nrgintst[[set_scalc]][[2]]$gas <- func_interp_3(
-      year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
-      scale = c(1.0, 1.06, 1.15, 1.32, 1.30, 1.34, 1.00), 
-      base = func_lastone(com_nrgintst[["BY"]][[2]]$gas), 
-      "gas", showplot = set_showplot)$gas
   } else { 
     #### BAU ----
     com_nrgintst[[set_scalc]][[1]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2030, 2035, 2060), 
-      scale = c(1.0, 1.01, 1.09, 1.24, 1.45, 1.15), 
+      scale = c(1.0, 1.01, 1.05, 1.17, 1.18, 1.15), 
       base = func_lastone(com_nrgintst[["BY"]]$electricity$electricity), 
       "electricity", showplot = set_showplot)
+  }
+  
+  ### BR.LPG ----
+  names(com_nrgintst[[set_scalc]]) <- global_com_subsector
+  # 服务业燃气强度略有增加后减少，且逐渐为电气替代
+  if (grepl("PLUS", set_scalc)) { 
+    #### PLUS ----
     com_nrgintst[[set_scalc]][[2]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2030, 2035, 2060), 
-      scale = c(1.0, 1.05, 1.09, 1.32, 1.45, 1.20), 
+      scale = c(1.0, 1.03, 1.11, 1.10, 1.10, 0.80), 
       base = func_lastone(com_nrgintst[["BY"]][[2]]$lpg), 
       "lpg", showplot = set_showplot)
+  } else if (grepl("SLC", set_scalc)) { 
+    #### SLC ----
+    com_nrgintst[[set_scalc]][[2]] <- func_interp_3(
+      year = c(2019, 2020, 2025, 2030, 2035, 2060), 
+      scale = c(1.0, 1.03, 1.11, 1.15, 1.15, 0.90), 
+      base = func_lastone(com_nrgintst[["BY"]][[2]]$lpg), 
+      "lpg", showplot = set_showplot)
+  } else if (grepl("WLC", set_scalc)) { 
+    #### WLC ----
+    com_nrgintst[[set_scalc]][[2]] <- func_interp_3(
+      year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
+      scale = c(1.0, 1.03, 1.12, 1.25, 1.24, 1.30, 1.00), 
+      base = func_lastone(com_nrgintst[["BY"]][[2]]$lpg), 
+      "lpg", showplot = set_showplot)
+  } else { 
+    #### BAU ----
+    com_nrgintst[[set_scalc]][[2]] <- func_interp_3(
+      year = c(2019, 2020, 2025, 2030, 2035, 2060), 
+      scale = c(1.0, 1.03, 1.13, 1.36, 1.44, 1.20), 
+      base = func_lastone(com_nrgintst[["BY"]][[2]]$lpg), 
+      "lpg", showplot = set_showplot)
+  }
+  
+  ### BR.Gas ----
+  names(com_nrgintst[[set_scalc]]) <- global_com_subsector
+  # 服务业燃气强度略有增加后减少，且逐渐为电气替代
+  if (grepl("PLUS", set_scalc)) { 
+    #### PLUS ----
     com_nrgintst[[set_scalc]][[2]]$gas <- func_interp_3(
       year = c(2019, 2020, 2025, 2030, 2035, 2060), 
-      scale = c(1.0, 1.08, 1.18, 1.38, 1.48, 1.20), 
+      scale = c(1.0, 1.08, 1.14, 1.15, 1.19, 0.80), 
+      base = func_lastone(com_nrgintst[["BY"]][[2]]$gas), 
+      "gas", showplot = set_showplot)$gas
+  } else if (grepl("SLC", set_scalc)) { 
+    #### SLC ----
+    com_nrgintst[[set_scalc]][[2]]$gas <- func_interp_3(
+      year = c(2019, 2020, 2025, 2026, 2030, 2035, 2060), 
+      scale = c(1.0, 1.08, 1.14, 1.14, 1.20, 1.22, 0.90), 
+      base = func_lastone(com_nrgintst[["BY"]][[2]]$gas), 
+      "gas", showplot = set_showplot)$gas
+  } else if (grepl("WLC", set_scalc)) { 
+    #### WLC ----
+    com_nrgintst[[set_scalc]][[2]]$gas <- func_interp_3(
+      year = c(2019, 2020, 2025, 2029, 2030, 2035, 2060), 
+      scale = c(1.0, 1.06, 1.15, 1.33, 1.33, 1.36, 1.00), 
+      base = func_lastone(com_nrgintst[["BY"]][[2]]$gas), 
+      "gas", showplot = set_showplot)$gas
+  } else { 
+    #### BAU ----
+    com_nrgintst[[set_scalc]][[2]]$gas <- func_interp_3(
+      year = c(2019, 2020, 2025, 2030, 2035, 2060), 
+      scale = c(1.0, 1.08, 1.17, 1.40, 1.47, 1.20), 
       base = func_lastone(com_nrgintst[["BY"]][[2]]$gas), 
       "gas", showplot = set_showplot)$gas
   }
@@ -2022,29 +2057,29 @@ for (set_scalc in set_scalcs) {
   if (grepl("PLUS", set_scalc)) { 
     #### PLUS ----
     hh_nrgintst[[set_scalc]][[1]] <- func_interp_3(
-      year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
-      scale = c(1.0, 1.01, 1.04, 1.03, 1.10, 1.25, 1.30), 
+      year = c(2019, 2020, 2025, 2030, 2035, 2060), 
+      scale = c(1.0, 1.01, 1.11, 1.19, 1.33, 1.40), 
       base = func_lastone(hh_nrgintst[["BY"]][["household"]][, "electricity"]), 
       showplot = set_showplot)
   } else if (grepl("SLC", set_scalc)) { 
     #### SLC ----
     hh_nrgintst[[set_scalc]][[1]] <- func_interp_3(
-      year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
-      scale = c(1.0, 1.01, 1.04, 1.10, 1.18, 1.35, 1.4), 
+      year = c(2019, 2020, 2025, 2026, 2030, 2035, 2060), 
+      scale = c(1.0, 1.01, 1.11, 1.11, 1.21, 1.38, 1.45), 
       base = func_lastone(hh_nrgintst[["BY"]][["household"]][, "electricity"]), 
       showplot = set_showplot)
   } else if (grepl("WLC", set_scalc)) { 
     #### WLC ----
     hh_nrgintst[[set_scalc]][[1]] <- func_interp_3(
-      year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
-      scale = c(1.0, 1.01, 1.10, 1.26, 1.24, 1.50, 1.45), 
+      year = c(2019, 2020, 2025, 2029, 2030, 2035, 2060), 
+      scale = c(1.0, 1.01, 1.14, 1.26, 1.26, 1.43, 1.50), 
       base = func_lastone(hh_nrgintst[["BY"]][["household"]][, "electricity"]), 
       showplot = set_showplot)
   } else { 
     #### BAU ----
     hh_nrgintst[[set_scalc]][[1]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2030, 2035, 2060), 
-      scale = c(1.0, 1.01, 1.12, 1.36, 1.52, 1.65), 
+      scale = c(1.0, 1.01, 1.15, 1.29, 1.48, 1.60), 
       base = func_lastone(hh_nrgintst[["BY"]][["household"]][, "electricity"]), 
       showplot = set_showplot)
   }
@@ -2062,28 +2097,28 @@ for (set_scalc in set_scalcs) {
     #### PLUS ----
     hh_nrgintst[[set_scalc]][[2]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2030, 2035, 2060), 
-      scale = c(1.0, 1.00, 0.97, 0.85, 0.86, 0.6), 
+      scale = c(1.0, 1.00, 1.07, 1.06, 1.02, 0.70), 
       base = func_lastone(hh_nrgintst[["BY"]][["lpg"]]$lpg), 
       "lpg", showplot = set_showplot)
   } else if (grepl("SLC", set_scalc)) { 
     #### SLC ----
     hh_nrgintst[[set_scalc]][[2]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2030, 2035, 2060), 
-      scale = c(1.0, 1.00, 0.97, 0.97, 0.97, 0.6), 
+      scale = c(1.0, 1.00, 1.07, 1.07, 1.04, 0.80), 
       base = func_lastone(hh_nrgintst[["BY"]][["lpg"]]$lpg), 
       "lpg", showplot = set_showplot)
   } else if (grepl("WLC", set_scalc)) { 
     #### WLC ----
     hh_nrgintst[[set_scalc]][[2]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
-      scale = c(1.0, 1.00, 1.05, 1.05, 0.99, 0.99, 0.65), 
+      scale = c(1.0, 1.00, 1.09, 1.11, 1.11, 1.06, 0.90), 
       base = func_lastone(hh_nrgintst[["BY"]][["lpg"]]$lpg), 
       "lpg", showplot = set_showplot)
   } else { 
     #### BAU ----
     hh_nrgintst[[set_scalc]][[2]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2030, 2035, 2060), 
-      scale = c(1.0, 1.00, 1.05, 1.12, 1.27, 0.90), 
+      scale = c(1.0, 1.00, 1.10, 1.14, 1.10, 1.00), 
       base = func_lastone(hh_nrgintst[["BY"]][["lpg"]]$lpg), 
       "lpg", showplot = set_showplot)
   }
@@ -2093,29 +2128,29 @@ for (set_scalc in set_scalcs) {
   if (grepl("PLUS", set_scalc)) { 
     #### PLUS ----
     hh_nrgintst[[set_scalc]][[3]] <- func_interp_3(
-      year = c(2019, 2020, 2025, 2035, 2060), 
-      scale = c(1.0, 1.02, 1.10, 1.06, 0.50), 
+      year = c(2019, 2020, 2025, 2030, 2035, 2060), 
+      scale = c(1.0, 1.01, 1.16, 1.15, 1.13, 0.60), 
       base = func_lastone(hh_nrgintst[["BY"]][["gas"]]$gas), 
       "gas", showplot = set_showplot)
   } else if (grepl("SLC", set_scalc)) { 
     #### SLC ----
     hh_nrgintst[[set_scalc]][[3]] <- func_interp_3(
-      year = c(2019, 2020, 2025, 2035, 2060), 
-      scale = c(1.0, 1.02, 1.10, 1.07, 0.70), 
+      year = c(2019, 2020, 2025, 2030, 2035, 2060), 
+      scale = c(1.0, 1.01, 1.16, 1.16, 1.14, 0.70), 
       base = func_lastone(hh_nrgintst[["BY"]][["gas"]]$gas), 
       "gas", showplot = set_showplot)
   } else if (grepl("WLC", set_scalc)) { 
     #### WLC ----
     hh_nrgintst[[set_scalc]][[3]] <- func_interp_3(
-      year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
-      scale = c(1.0, 1.02, 1.15, 1.13, 1.03, 1.10, 0.80), 
+      year = c(2019, 2020, 2025, 2029, 2030, 2035, 2060), 
+      scale = c(1.0, 1.01, 1.16, 1.18, 1.18, 1.14, 0.80), 
       base = func_lastone(hh_nrgintst[["BY"]][["gas"]]$gas), 
       "gas", showplot = set_showplot)
   } else { 
     #### BAU ----
     hh_nrgintst[[set_scalc]][[3]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2030, 2035, 2060), 
-      scale = c(1.0, 1.02, 1.16, 1.09, 1.22, 0.90), 
+      scale = c(1.0, 1.01, 1.17, 1.20, 1.18, 0.90), 
       base = func_lastone(hh_nrgintst[["BY"]][["gas"]]$gas), 
       "gas", showplot = set_showplot)
   }
@@ -2197,9 +2232,11 @@ for (set_scalc in set_scalcs) {
   tf_nrgintst[[set_scalc]] <- cbind(
     data.frame(year = c(2019: 2060)), 
     sapply(
-      names(tf_nrgintst[["BY"]])[names(tf_nrgintst[["BY"]]) %in% "year" == FALSE], 
+      names(tf_nrgintst[["BY"]])[names(tf_nrgintst[["BY"]]) %in% 
+                                   "year" == FALSE], 
       function(i) {
-        func_interp_3(year = c(2019, 2025, 2030, 2060), scale = c(1, 1, 1, 0.9), 
+        func_interp_3(year = c(2019, 2025, 2030, 2060), 
+                      scale = c(1.0, 1.00, 1.00, 0.90), 
                       base = func_lastone(tf_nrgintst[["BY"]][, i]), 
                       showplot = set_showplot)$value}))
   
