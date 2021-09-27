@@ -2582,7 +2582,7 @@ func_dataexp("各情景下关键指标", mydata = idx_output_long)
                       "单位GDP碳排放五年下降率", "单位GDP能耗五年下降率" )]
   report_tab2 <- rbind(
     report_tab2[which(report_tab2$year == 2020), ],
-    report_tab2[which(report_tab2$scenario == "BAU_SLC_DECOAL_OTHER"), ]
+    report_tab2[which(report_tab2$scenario == "BAU_SLC_DECOAL"), ]
   )
   report_tab2 <- cbind(names(report_tab2), as.data.frame(t(report_tab2)))
   rownames(report_tab2) <- NULL
@@ -2594,7 +2594,7 @@ func_dataexp("各情景下关键指标", mydata = idx_output_long)
   report_tab2[1:2, 2:5] <- round(report_tab2[1:2, 2:5], digits = 0)
   report_tab2[3:4, 2:5] <- round(report_tab2[3:4, 2:5], digits = 1)
   report_tab2[3:4, 2] <- "--"
-  func_dataexp("主要结论报告表2", mydata = report_tab2)
+  func_dataexp("主要结论报告表2数据", mydata = report_tab2)
   
   # 附表4：LEAP模型情景描述
   data.frame(
@@ -2644,6 +2644,9 @@ func_dataexp("各情景下关键指标", mydata = idx_output_long)
   func_dataexp("各情景总排放量", mydata = exp_var)
   
   func_dataexp("减煤情景各部门排放量", 
-               mydata = tot_emissec$`BAU_SLC_DECOAL_OTHER`)
+               mydata = tot_emissec$`BAU_SLC_DECOAL`)
+  
+  func_dataexp("惯性情景各部门排放量", 
+               mydata = tot_emissec$BAU)
 }
 
