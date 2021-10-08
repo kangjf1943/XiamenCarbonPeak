@@ -2406,6 +2406,56 @@ Sys.time() - global_starttime
   )
 }
 
+## EmisNrgStr ~ aggfuel ----
+{
+  # 生成各情景下煤油气电占比
+  idx_nrgaggfuel_str_ls <- vector("list", length(set_scalcs))
+  names(idx_nrgaggfuel_str_ls) <- set_scalcs
+  for (i in set_scalcs) {
+    idx_nrgaggfuel_str_ls[[i]] <- func_nrg_intst(
+      tot_nrgaggfuelce[[i]], tot_nrgsumce[[i]], "energyconsump")
+    idx_nrgaggfuel_str_ls[[i]]$scenario <- i
+  }
+  # 整理数据为所需格式和内容
+  idx_nrgpropaggfuel <- 
+    func_idxouput(idx_nrgaggfuel_str_ls, baseyear = 2019, digits = 3)
+  idx_nrgpropaggfuel[names(idx_nrgpropaggfuel) %in% 
+                       c("year", "scenario") == FALSE] <-
+    idx_nrgpropaggfuel[names(idx_nrgpropaggfuel) %in% 
+                         c("year", "scenario") == FALSE]*100
+  names(idx_nrgpropaggfuel)[names(idx_nrgpropaggfuel) %in% 
+                              c("year", "scenario") == FALSE] <- 
+    paste(names(idx_nrgpropaggfuel)[names(idx_nrgpropaggfuel) %in% 
+                                      c("year", "scenario") == FALSE], 
+          "能源占比", sep = "")
+  
+  # 生成各情景下煤油气电排放占比
+  idx_emispropaggfuel <- vector("list", length(set_scalcs))
+  names(idx_emispropaggfuel) <- set_scalcs
+  for (i in set_scalcs) {
+    idx_emispropaggfuel[[i]] <- func_nrg_intst(
+      tot_emisaggfuel[[i]], tot_emissum[[i]], "co2")
+    idx_emispropaggfuel[[i]]$scenario <- i
+  }
+  idx_emispropaggfuel <- 
+    func_idxouput(idx_emispropaggfuel, baseyear = 2019, digits = 3)
+  idx_emispropaggfuel[names(idx_emispropaggfuel) %in% 
+                        c("year", "scenario") == FALSE] <-
+    idx_emispropaggfuel[names(idx_emispropaggfuel) %in% 
+                          c("year", "scenario") == FALSE]*100
+  names(idx_emispropaggfuel)[names(idx_emispropaggfuel) %in% 
+                               c("year", "scenario") == FALSE] <- 
+    paste(names(idx_emispropaggfuel)[names(idx_emispropaggfuel) %in% 
+                                       c("year", "scenario") == FALSE], 
+          "碳排放占比", sep = "")
+  
+  
+  # 合并能源结构和碳排放结构
+  report_apptab6 <- cbind(idx_nrgpropaggfuel, idx_emispropaggfuel)
+}
+# 输出为Excel文件
+func_dataexp("能源和碳排放结构", mydata = report_apptab6)
+
 ## Key index ----
 # 输出关键指标
 {
@@ -2489,7 +2539,8 @@ Sys.time() - global_starttime
   # 增加指标计算并筛选出要用到的指标
   # 问题：本地能源中非化石能源比例均假设为1
   idx_output_long$清洁能源比例 <- 
-    idx_output_long$外调电力消费占比 * idx_output_long$外调电力清洁能源占比 + 1
+    idx_output_long$外调电力消费占比 * idx_output_long$外调电力清洁能源占比 + 
+    report_apptab6$非化石能源占比
   idx_output_long <- idx_output_long[c(
     "year", "scenario", 
     "高能耗传统行业增加值比例", "低能耗传统行业增加值比例","新兴行业增加值比例",
@@ -2523,55 +2574,6 @@ Sys.time() - global_starttime
 }
 # 输出为Excel文件
 func_dataexp("各情景下关键指标", mydata = idx_output_long)
-
-## EmisNrgStr ~ aggfuel ----
-{
-  # 生成各情景下煤油气电占比
-  idx_nrgaggfuel_str_ls <- vector("list", length(set_scalcs))
-  names(idx_nrgaggfuel_str_ls) <- set_scalcs
-  for (i in set_scalcs) {
-    idx_nrgaggfuel_str_ls[[i]] <- func_nrg_intst(
-      tot_nrgaggfuelce[[i]], tot_nrgsumce[[i]], "energyconsump")
-    idx_nrgaggfuel_str_ls[[i]]$scenario <- i
-  }
-  # 整理数据为所需格式和内容
-  idx_nrgpropaggfuel <- 
-    func_idxouput(idx_nrgaggfuel_str_ls, baseyear = 2019, digits = 3)
-  idx_nrgpropaggfuel[names(idx_nrgpropaggfuel) %in% 
-                       c("year", "scenario") == FALSE] <-
-    idx_nrgpropaggfuel[names(idx_nrgpropaggfuel) %in% 
-                         c("year", "scenario") == FALSE]*100
-  names(idx_nrgpropaggfuel)[names(idx_nrgpropaggfuel) %in% 
-                              c("year", "scenario") == FALSE] <- 
-    paste(names(idx_nrgpropaggfuel)[names(idx_nrgpropaggfuel) %in% 
-                                      c("year", "scenario") == FALSE], 
-          "能源占比", sep = "")
-  
-  # 生成各情景下煤油气电排放占比
-  idx_emispropaggfuel <- vector("list", length(set_scalcs))
-  names(idx_emispropaggfuel) <- set_scalcs
-  for (i in set_scalcs) {
-    idx_emispropaggfuel[[i]] <- func_nrg_intst(
-      tot_emisaggfuel[[i]], tot_emissum[[i]], "co2")
-    idx_emispropaggfuel[[i]]$scenario <- i
-  }
-  idx_emispropaggfuel <- 
-    func_idxouput(idx_emispropaggfuel, baseyear = 2019, digits = 3)
-  idx_emispropaggfuel[names(idx_emispropaggfuel) %in% 
-                        c("year", "scenario") == FALSE] <-
-    idx_emispropaggfuel[names(idx_emispropaggfuel) %in% 
-                          c("year", "scenario") == FALSE]*100
-  names(idx_emispropaggfuel)[names(idx_emispropaggfuel) %in% 
-                               c("year", "scenario") == FALSE] <- 
-    paste(names(idx_emispropaggfuel)[names(idx_emispropaggfuel) %in% 
-                                       c("year", "scenario") == FALSE], 
-          "碳排放占比", sep = "")
-  
-  
-  # 合并能源结构和碳排放结构
-  report_apptab6 <- cbind(idx_nrgpropaggfuel, idx_emispropaggfuel)
-  func_dataexp("能源和碳排放结构", mydata = report_apptab6)
-}
 
 ## For report ----
 {
