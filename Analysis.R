@@ -414,7 +414,7 @@ if (set_cache_readdata == FALSE) {
     func_addnote(global_roadnonoper_diesel[c("非营运客车", "货车")], 
                  rep("吨", 2))
   
-  # 读取刘洋太阳能发电预测
+  # 读取刘洋2021年10月5日更新的太阳能发电预测
   global_solarelecgen_fut <- func_read_trans("4R9XNW4Z")
   
   # 读取全省发电量
