@@ -1,0 +1,84 @@
+---
+title: "模型简报"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+Sys.setlocale(category = "LC_ALL", locale = "chinese")
+```
+
+# 结果
+各情景总排放和总能耗
+
+```{r}
+ggarrange(plotlist = list(
+      func_scompplot(tot_emissum[set_scalcs], "co2") + labs(y = "Emission"), 
+      func_scompplot(tot_nrgsumce[set_scalcs], "energyconsump") + 
+        labs(y = "Energy")), nrow = 1, common.legend = TRUE)
+```
+
+```{r}
+knitr::kable(idx_peakyear)
+```
+
+各情景各部门峰值年份火柴图：
+
+```{r}
+# 各情景各部门达峰年份火柴图
+ggplot(melt(idx_peakyearsec, id = "scenarios"), 
+           aes(x = value, y = variable)) + 
+      geom_point(aes(color = variable), size = 2) + 
+      geom_text(aes(label = value, hjust = -0.3), size = 3) + 
+      geom_segment(aes(yend = variable, color = variable), xend = 0, size = 1) +
+      xlim(c(2019, 2035)) + facet_wrap(~scenarios, ncol = 1) + 
+      theme_bw()
+```
+
+一些关键指标：
+
+```{r}
+# 作图查看各指标五年变化趋势
+  ggarrange(plotlist = list(
+    ggplot(idx_output_long, aes(year, 高能耗传统行业增加值比例)) + 
+      geom_line(aes(color = scenario)), 
+    ggplot(idx_output_long, aes(year, 低能耗传统行业增加值比例)) + 
+      geom_line(aes(color = scenario)), 
+    ggplot(idx_output_long, aes(year, 新兴行业增加值比例)) + 
+      geom_line(aes(color = scenario)), 
+    ggplot(idx_output_long, aes(year, 能耗量)) + 
+      geom_line(aes(color = scenario)), 
+    ggplot(idx_output_long, aes(year, 碳排放量)) + 
+      geom_line(aes(color = scenario)), 
+    ggplot(idx_output_long, aes(year, 单位GDP能耗五年下降率)) + 
+      geom_line(aes(color = scenario)), 
+    ggplot(idx_output_long, aes(year, 单位GDP碳排放五年下降率)) + 
+      geom_line(aes(color = scenario))), 
+    nrow = 2, ncol = 4, common.legend = TRUE)
+```
+
+# 过程
+
+之前讨论过的工业各行业占比参数，修改后的结果如下（显示历史数据和减煤情景的对比）。
+
+在大类下各行业占比变化：有些“异常”可结合新冠下2019-2020年的异常进行解释，例如传统低能耗行业占比在2021年降到一个很低的水平，故2021年有个突然的回升，但之后还是按趋势下降。详见小图。
+
+```{r}
+par(mfrow = c(1, 3))
+for (i in names(by_indpropaggsec)[2:4]) {
+  print(func_history_project(by_indpropaggsec, i, ind_propaggsec, i, style = "base"))
+}
+```
+
+在小类下：
+
+```{r}
+par(mfrow = c(3, 3))
+for (i in global_ind_subsector) {
+  func_history_project(ind_ori_act_prop[["BY"]], i, ind_ori_act_prop$`BAU_SLC_26COAL1/4_OTHER`, i, style = "base")
+}
+```
+
+
+
+
