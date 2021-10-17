@@ -17,7 +17,11 @@ Sys.setlocale("LC_ALL", "chinese")
 # 函数：读取来自Zotero的普通Excel数据
 # 说明：原始数据用Zotero管理，该函数读取原始数据并转化为所需格式
 func_read_data <- function(name_subdir, order_sht = 1) {
-  data_dir <- "C:/Users/kangj/Documents/OneDrive/Zotero/storage/"
+  if (.Platform$OS.type == "unix") {
+    data_dir <- "/Users/VickyWang/OneDrive/Zotero/storage"
+  } else {
+    data_dir <- "C:/Users/kangj/Documents/OneDrive/Zotero/storage/"
+  }
   data_name <- list.files(paste0(data_dir, "/", name_subdir, "/"))
   path <- paste0(data_dir, "/", name_subdir, "/", data_name)
   data <- read.xlsx(path, sheet = order_sht)
