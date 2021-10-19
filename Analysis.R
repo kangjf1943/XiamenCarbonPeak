@@ -1,8 +1,8 @@
 # SETTING ----
 # 计算内容或口径相关设置
 # 设置要计算的情景
-set_scalcs <- c("BAU_COAL","BAU_SLC_COAL")
-  # c("BAU", "BAU_WLC", "BAU_SLCPLUS", "BAU_SLC_DECOAL")
+set_scalcs <- 
+  c("BAU", "BAU_WLC", "BAU_SLCPLUS", "BAU_SLC_DECOAL")
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 set_elecgensep <- TRUE # 是否将东亚电力从发电行业中独立
 
@@ -2589,13 +2589,13 @@ func_dataexp("各情景下关键指标", mydata = idx_output_long)
 ## For report ----
 {
   # 输出主要结论报告所需表格
-  # 表2：减煤情景下厦门市能源与碳排放预测
+  # 表2：减排情景下厦门市能源与碳排放预测
   report_tab2 <- 
     idx_output_long[c("scenario", "year", "碳排放量", "能耗量", 
                       "单位GDP碳排放五年下降率", "单位GDP能耗五年下降率" )]
   report_tab2 <- rbind(
     report_tab2[which(report_tab2$year == 2020), ],
-    report_tab2[which(report_tab2$scenario == "BAU_SLC_DECOAL"), ]
+    report_tab2[which(report_tab2$scenario == "BAU_WLC"), ]
   )
   report_tab2 <- cbind(names(report_tab2), as.data.frame(t(report_tab2)))
   rownames(report_tab2) <- NULL
@@ -2656,8 +2656,8 @@ func_dataexp("各情景下关键指标", mydata = idx_output_long)
   exp_var <- func_mrgcol(tot_emissum[set_scalcs], "co2", set_scalcs)
   func_dataexp("各情景总排放量", mydata = exp_var)
   
-  func_dataexp("减煤情景各部门排放量", 
-               mydata = tot_emissec$`BAU_SLC_DECOAL`)
+  func_dataexp("减排情景各部门排放量", 
+               mydata = tot_emissec$`BAU_WLC`)
   
   func_dataexp("惯性情景各部门排放量", 
                mydata = tot_emissec$BAU)
