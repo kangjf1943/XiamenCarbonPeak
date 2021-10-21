@@ -1,7 +1,7 @@
 # SETTING ----
 # 计算内容或口径相关设置
 # 设置要计算的情景
-set_scalcs <- "BAU_SLCPLUS"
+set_scalcs <- "BAU_SLC_DECOAL"
   # c("BAU", "BAU_WLC", "BAU_SLCPLUS", "BAU_SLC_DECOAL")
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 set_elecgensep <- TRUE # 是否将东亚电力从发电行业中独立
@@ -2064,8 +2064,8 @@ for (set_scalc in set_scalcs) {
   } else if (grepl("SLC", set_scalc)) { 
     #### SLC ----
     hh_nrgintst[[set_scalc]][[1]] <- func_interp_3(
-      year = c(2019, 2020, 2025, 2026, 2030, 2035, 2060), 
-      scale = c(1.0, 1.01, 1.11, 1.11, 1.21, 1.38, 1.45), 
+      year = c(2019, 2020, 2025, 2030, 2035, 2060), 
+      scale = c(1.0, 1.01, 1.18, 1.24, 1.38, 1.45), 
       base = func_lastone(hh_nrgintst[["BY"]][["household"]][, "electricity"]), 
       showplot = set_showplot)
   } else if (grepl("WLC", set_scalc)) { 
@@ -2104,7 +2104,7 @@ for (set_scalc in set_scalcs) {
     #### SLC ----
     hh_nrgintst[[set_scalc]][[2]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2030, 2035, 2060), 
-      scale = c(1.0, 1.00, 1.07, 1.07, 1.04, 0.80), 
+      scale = c(1.0, 1.00, 1.12, 1.07, 1.04, 0.80), 
       base = func_lastone(hh_nrgintst[["BY"]][["lpg"]]$lpg), 
       "lpg", showplot = set_showplot)
   } else if (grepl("WLC", set_scalc)) { 
@@ -2136,7 +2136,7 @@ for (set_scalc in set_scalcs) {
     #### SLC ----
     hh_nrgintst[[set_scalc]][[3]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2030, 2035, 2060), 
-      scale = c(1.0, 1.01, 1.16, 1.16, 1.14, 0.70), 
+      scale = c(1.0, 1.01, 1.20, 1.16, 1.14, 0.70), 
       base = func_lastone(hh_nrgintst[["BY"]][["gas"]]$gas), 
       "gas", showplot = set_showplot)
   } else if (grepl("WLC", set_scalc)) { 
