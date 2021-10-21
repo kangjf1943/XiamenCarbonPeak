@@ -237,7 +237,7 @@ if (set_cache_globalvar == FALSE) {
   prj_global_population <- func_interp_2(
     year = c(2019, 2025, 2030, 2035, 2045, 2060), 
     value = c(global_population$"常住人口"[global_population$year == 2019], 
-              575, 665, 730, 780, 800), "population", showplot = set_showplot)
+              575, 650, 730, 780, 800), "population", showplot = set_showplot)
   
   prj_global_population$household <- 
     prj_global_population$population / 
