@@ -13,7 +13,7 @@ library(reshape2)
 # 设置环境为中文
 Sys.setlocale("LC_ALL", "chinese")
 # 为了MacOS上作图显示中文
-showtext.auto()
+showtext_auto()
 
 # Functions ----
 # 函数：读取来自Zotero的普通Excel数据
