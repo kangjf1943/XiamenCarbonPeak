@@ -100,7 +100,7 @@ ggarrange(plotlist = list(
 对应排放数据为：
 
 ```{r TotEmisData}
-func_mrgcol(tot_emissum, "co2", names(tot_emissum))
+knitr::kable(func_mrgcol(tot_emissum, "co2", names(tot_emissum)), digits = 2)
 ```
 
 ```{r TotEmisNrg}
