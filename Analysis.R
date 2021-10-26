@@ -2058,7 +2058,7 @@ for (set_scalc in set_scalcs) {
     #### PLUS ----
     hh_nrgintst[[set_scalc]][[1]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2030, 2035, 2060), 
-      scale = c(1.0, 1.01, 1.15, 1.21, 1.32, 1.40), 
+      scale = c(1.0, 1.01, 1.15, 1.23, 1.34, 1.40), 
       base = func_lastone(hh_nrgintst[["BY"]][["household"]][, "electricity"]), 
       showplot = set_showplot)
   } else if (grepl("SLC", set_scalc)) { 
@@ -2072,7 +2072,7 @@ for (set_scalc in set_scalcs) {
     #### WLC ----
     hh_nrgintst[[set_scalc]][[1]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2029, 2030, 2035, 2060), 
-      scale = c(1.0, 1.01, 1.17, 1.28, 1.29, 1.43, 1.50), 
+      scale = c(1.0, 1.01, 1.17, 1.28, 1.29, 1.44, 1.50), 
       base = func_lastone(hh_nrgintst[["BY"]][["household"]][, "electricity"]), 
       showplot = set_showplot)
   } else { 
@@ -2097,7 +2097,7 @@ for (set_scalc in set_scalcs) {
     #### PLUS ----
     hh_nrgintst[[set_scalc]][[2]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2030, 2035, 2060), 
-      scale = c(1.0, 1.00, 1.12, 1.07, 1.02, 0.70), 
+      scale = c(1.0, 1.00, 1.10, 1.07, 1.02, 0.70), 
       base = func_lastone(hh_nrgintst[["BY"]][["lpg"]]$lpg), 
       "lpg", showplot = set_showplot)
   } else if (grepl("SLC", set_scalc)) { 
@@ -2136,7 +2136,7 @@ for (set_scalc in set_scalcs) {
     #### SLC ----
     hh_nrgintst[[set_scalc]][[3]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2030, 2035, 2060), 
-      scale = c(1.0, 1.01, 1.18, 1.16, 1.14, 0.70), 
+      scale = c(1.0, 1.01, 1.20, 1.16, 1.14, 0.70), 
       base = func_lastone(hh_nrgintst[["BY"]][["gas"]]$gas), 
       "gas", showplot = set_showplot)
   } else if (grepl("WLC", set_scalc)) { 
