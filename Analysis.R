@@ -109,7 +109,8 @@ if (set_cache_globalvar == FALSE) {
                                     "造纸及印刷", "文体工美用品制造业", 
                                     "其他制造业")), 
              data.frame(ind_agg = c("新兴行业"), 
-                        ind_ori = c("医药制造业", "设备制造业", "电子电气制造业"))
+                        ind_ori = c("医药制造业", "设备制造业", 
+                                    "电子电气制造业"))
            )
     )
   
@@ -711,11 +712,13 @@ if (set_cache_hiscalc == FALSE) {
   ind_ori_act_prop[["BY"]] <- 
     by_ind_ori_act_scale[, -1]/rowSums(by_ind_ori_act_scale[, -1])*100
   ind_ori_act_prop[["BY"]]$year <- by_ind_ori_act_scale$year
-  ind_ori_act_prop[["BY"]] <- ind_ori_act_prop[["BY"]][c("year", global_ind_ori_subsector)]
+  ind_ori_act_prop[["BY"]] <- 
+    ind_ori_act_prop[["BY"]][c("year", global_ind_ori_subsector)]
   # 假设2018-2019年规上工业各行业比例同2017年
   ind_ori_act_prop[["BY"]][ind_ori_act_prop[["BY"]]$year %in% c(2018, 2019),
                            global_ind_ori_subsector] <- 
-    ind_ori_act_prop[["BY"]][ind_ori_act_prop[["BY"]]$year == 2017,][global_ind_ori_subsector]
+    ind_ori_act_prop[["BY"]][ind_ori_act_prop[["BY"]]$year == 
+                               2017,][global_ind_ori_subsector]
   # 作图：func_propplot(ind_ori_act_prop[["BY"]])
   # 活动强度为全市工业各行业GDP：剔除电力、热力生产和供应业
   ind_act[["BY"]] <- func_nrg_sum(ind_ori_act_prop[["BY"]],global_gdp,"indgdp")
@@ -1115,7 +1118,8 @@ if (set_cache_hiscalc == FALSE) {
   tf_diremissum[["BY"]] <- func_emissum(tf_nrgfuel[["BY"]], global_emisfac_df)
   
   ### Energy intensity ----
-  tf_nrgintst[["BY"]] <- func_nrg_intst(tf_nrgfuel[["BY"]], tfres_act[["BY"]], "elecgen_thrm")
+  tf_nrgintst[["BY"]] <- 
+    func_nrg_intst(tf_nrgfuel[["BY"]], tfres_act[["BY"]], "elecgen_thrm")
   
   ## Imported elec ----
   ### Energy intensity ----
