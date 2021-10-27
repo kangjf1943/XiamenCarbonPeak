@@ -2525,6 +2525,13 @@ func_dataexp("能源和碳排放结构", mydata = report_apptab6)
     )
   }
   
+  # 输出目标情景结果
+  idx_scalc <- 
+    data.frame(year = idx_all[["BAU_WLC"]]$year, 
+               "清洁能源比例" = idx_all[["BAU_WLC"]]$"外调电力消费占比" *
+                 idx_all[["BAU_WLC"]]$"外调电力清洁能源占比" + 
+                 idx_nrgaggfuel_str_ls[["BAU_WLC"]]$"非化石" * 100)
+  
   # 输出特定年份结果
   idx_output <- vector("list", length(set_scalcs))
   names(idx_output) <- set_scalcs
@@ -2589,6 +2596,7 @@ func_dataexp("能源和碳排放结构", mydata = report_apptab6)
 }
 # 输出为Excel文件
 func_dataexp("各情景下关键指标", mydata = idx_output_long)
+func_dataexp("刘洋_减排情景清洁能源占比", mydata = idx_scalc)
 
 ## For report ----
 {
