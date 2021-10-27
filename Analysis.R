@@ -2671,7 +2671,7 @@ func_dataexp("刘洋_减排情景清洁能源占比", mydata = idx_scalc)
   func_dataexp("减排情景各部门排放量", 
                mydata = tot_emissec$`BAU_WLC`)
   
-  func_dataexp("惯性情景各部门排放量", 
-               mydata = tot_emissec$BAU)
+  func_dataexp("刘洋_减排情景各年份能耗", 
+               mydata = tot_nrgsumce$BAU_WLC)
 }
 
