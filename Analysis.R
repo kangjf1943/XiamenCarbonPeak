@@ -1854,10 +1854,10 @@ for (set_scalc in set_scalcs) {
     ori_comemployee <- func_cross(
       prj_global_population[c("year", "population")], 
       func_interp_2(
-        year = c(2019, 2020, 2030, 2060),
+        year = c(2019, 2020, 2025, 2030, 2060),
         value = c(com_act[["BY"]]$com_employee[com_act[["BY"]]$year == 2019]/
                     global_population$"常住人口"[global_population$year == 2019], 
-                  0.567, 0.65, 0.75), showplot = set_showplot))
+                  0.567, 0.615, 0.655, 0.75), showplot = set_showplot))
     ori_comgdp <- prj_global_gdp[c("year", "comgdp")]
     com_act[[set_scalc]] <- func_merge_2(list(ori_comemployee, ori_comgdp))
     names(com_act[[set_scalc]]) <- c("year", "com_employee", "com_gdp")
@@ -2031,7 +2031,7 @@ for (set_scalc in set_scalcs) {
     hh_ori_lpguser <- 
       func_cross(prj_global_population[c("year", "household")], 
                  func_interp_3(year = c(2019, 2020, 2025, 2035, 2060), 
-                               scale = c(1.0, 0.98, 0.80, 0.75, 0.30), 
+                               scale = c(1.0, 0.98, 0.82, 0.75, 0.30), 
                                base = func_lastone(
                                  by_hh_ori_users_prop[c("year", "lpg")]), 
                                showplot = set_showplot))
@@ -2040,7 +2040,7 @@ for (set_scalc in set_scalcs) {
     hh_ori_gasuser <- 
       func_cross(prj_global_population[c("year", "household")], 
                  func_interp_3(year = c(2019, 2020, 2025, 2030, 2060), 
-                               scale = c(1.0, 1.05, 1.20, 1.80, 2.00), 
+                               scale = c(1.0, 1.05, 1.22, 1.80, 2.00), 
                                base = func_lastone(
                                  by_hh_ori_users_prop[c("year", "gas")]), 
                                showplot = set_showplot))
