@@ -4,3 +4,4 @@
 .Ruserdata
 *.xlsx
 *.html
+.DS_Store
