@@ -2421,7 +2421,7 @@ Sys.time() - global_starttime
   )
 }
 
-## EmisNrgStr ~ aggfuel ----
+## EmisStr and NrgStr by aggfuel ----
 {
   # 生成各情景下煤油气电占比
   idx_nrgaggfuel_str_ls <- vector("list", length(set_scalcs))
@@ -2433,7 +2433,7 @@ Sys.time() - global_starttime
   }
   # 整理数据为所需格式和内容
   idx_nrgpropaggfuel <- 
-    func_idxouput(idx_nrgaggfuel_str_ls, baseyear = 2019, digits = 3)
+    func_idxouput(idx_nrgaggfuel_str_ls, baseyear = 2019, digits = 6)
   idx_nrgpropaggfuel[names(idx_nrgpropaggfuel) %in% 
                        c("year", "scenario") == FALSE] <-
     idx_nrgpropaggfuel[names(idx_nrgpropaggfuel) %in% 
@@ -2453,7 +2453,7 @@ Sys.time() - global_starttime
     idx_emispropaggfuel[[i]]$scenario <- i
   }
   idx_emispropaggfuel <- 
-    func_idxouput(idx_emispropaggfuel, baseyear = 2019, digits = 3)
+    func_idxouput(idx_emispropaggfuel, baseyear = 2019, digits = 6)
   idx_emispropaggfuel[names(idx_emispropaggfuel) %in% 
                         c("year", "scenario") == FALSE] <-
     idx_emispropaggfuel[names(idx_emispropaggfuel) %in% 
@@ -2466,10 +2466,8 @@ Sys.time() - global_starttime
   
   
   # 合并能源结构和碳排放结构
-  report_apptab6 <- cbind(idx_nrgpropaggfuel, idx_emispropaggfuel)
+  report_apptab7 <- cbind(idx_nrgpropaggfuel, idx_emispropaggfuel)
 }
-# 输出为Excel文件
-func_dataexp("能源和碳排放结构", mydata = report_apptab6)
 
 ## Key index ----
 # 输出关键指标
@@ -2556,17 +2554,17 @@ func_dataexp("能源和碳排放结构", mydata = report_apptab6)
   }
   # 整理为目标格式
   idx_output_long <- 
-    func_idxouput(idx_output, baseyear = 2020, digits = 1)
+    func_idxouput(idx_output, baseyear = 2020, digits = 6)
   
   # 增加指标计算并筛选出要用到的指标
   # 问题：本地能源中非化石能源比例均假设为1
   idx_output_long$清洁能源比例 <- 
     idx_output_long$外调电力消费占比 * idx_output_long$外调电力清洁能源占比 + 
-    report_apptab6$非化石能源占比
+    report_apptab7$非化石能源占比
   idx_output_long <- idx_output_long[c(
     "year", "scenario", 
     "高能耗传统行业增加值比例", "低能耗传统行业增加值比例","新兴行业增加值比例",
-    "私家电动车比例", "人均生活能耗", "人均生活能耗五年变化率",
+    "私家电动车比例", "人均生活能耗五年变化率",
     "碳排放量", "能耗量", "单位GDP碳排放", 
     "单位GDP碳排放五年下降率", "单位GDP能耗五年下降率", "清洁能源比例")]
   
@@ -2594,9 +2592,6 @@ func_dataexp("能源和碳排放结构", mydata = report_apptab6)
       geom_line(aes(color = scenario))), 
     nrow = 2, ncol = 5, common.legend = TRUE)
 }
-# 输出为Excel文件
-func_dataexp("各情景下关键指标", mydata = idx_output_long)
-func_dataexp("刘洋_减排情景清洁能源占比", mydata = idx_scalc)
 
 ## For report ----
 {
@@ -2619,10 +2614,10 @@ func_dataexp("刘洋_减排情景清洁能源占比", mydata = idx_scalc)
   report_tab2[1:2, 2:5] <- round(report_tab2[1:2, 2:5], digits = 0)
   report_tab2[3:4, 2:5] <- round(report_tab2[3:4, 2:5], digits = 1)
   report_tab2[3:4, 2] <- "--"
-  func_dataexp("主要结论报告表2数据", mydata = report_tab2)
+  func_dataexp("表2_减排情景下厦门市能源与碳排放", mydata = report_tab2)
   
   # 附表4：LEAP模型情景描述
-  data.frame(
+  report_apptab5 <- data.frame(
     新型行业行业比例年均增长量 = sapply(idx_output, function(x) {
       round((tail(x$"新兴行业增加值比例", 1) - 
                head(x$"新兴行业增加值比例", 1))/(2035-2019), digit = 1)
@@ -2632,46 +2627,84 @@ func_dataexp("刘洋_减排情景清洁能源占比", mydata = idx_scalc)
                 head(x$"纯电动私家车", 1))^(1/(2035-2019)) -1)*100)
     })
   )
+  func_dataexp("附表5_模型情景描述", mydata = report_apptab5)
   
-  # 附表7：不同情景下分行业能源消费与碳排放量
+  # 附表6：主要参数设置
+  report_apptab6 <- idx_output_long[, c(
+    "year", "scenario", 
+    "高能耗传统行业增加值比例", "低能耗传统行业增加值比例","新兴行业增加值比例",
+    "私家电动车比例", "人均生活能耗五年变化率"
+  )]
+  report_apptab6 <- 
+    merge(report_apptab6, 
+          report_apptab7[, c("year", "scenario", "电力能源占比")], 
+          by = c("year", "scenario"))
+  report_apptab6$scenario <- 
+    factor(report_apptab6$scenario, levels = set_scalcs)
+  report_apptab6 <- 
+    report_apptab6[order(report_apptab6$scenario, report_apptab6$year), ]
+  func_dataexp("附表6_主要参数设置", mydata = report_apptab6)
+  
+  # 附表7：不同情景下能源消费与碳排放比例
+  func_dataexp("附表7_不同情景下能源消费与碳排放比例", mydata = report_apptab7)
+  
+  # 附表8：不同情景下分行业能源消费与碳排放量
   # 能源部分
-  report_apptab7_1 <- tot_nrgsecce[-1]
+  idx_nrgaggfuel <- tot_nrgsecce[-1]
   for (i in set_scalcs) {
-    report_apptab7_1[[i]]$scenario <- i
+    idx_nrgaggfuel[[i]]$scenario <- i
   }
-  report_apptab7_1 <- func_idxouput(report_apptab7_1, baseyear = 2020)
-  report_apptab7_1[global_sectors[1:6]] <- 
-    round(report_apptab7_1[global_sectors[1:6]]/10000)
-  names(report_apptab7_1)[names(report_apptab7_1) %in% global_sectors] <- 
+  idx_nrgaggfuel <- func_idxouput(idx_nrgaggfuel, baseyear = 2020)
+  idx_nrgaggfuel[global_sectors[1:6]] <- 
+    round(idx_nrgaggfuel[global_sectors[1:6]]/10000)
+  names(idx_nrgaggfuel)[names(idx_nrgaggfuel) %in% global_sectors] <- 
     paste(global_sectors[1:6], "nrg", sep = "_")
   
   # 碳排放部分
-  report_apptab7_2 <- tot_emissec[-1]
+  idx_emisaggfuel <- tot_emissec[-1]
   for (i in set_scalcs) {
-    report_apptab7_2[[i]]$scenario <- i
+    idx_emisaggfuel[[i]]$scenario <- i
   }
-  report_apptab7_2 <- func_idxouput(report_apptab7_2, baseyear = 2020)
-  names(report_apptab7_2)[names(report_apptab7_2) %in% global_sectors] <- 
+  idx_emisaggfuel <- func_idxouput(idx_emisaggfuel, baseyear = 2020)
+  names(idx_emisaggfuel)[names(idx_emisaggfuel) %in% global_sectors] <- 
     paste(global_sectors[1:6], "emis", sep = "_")
   
   # 合并两个部分
-  report_apptab7 <- cbind(report_apptab7_1, report_apptab7_2)
-  report_apptab7 <- report_apptab7[
+  report_apptab8 <- 
+    merge(idx_nrgaggfuel, idx_emisaggfuel, by = c("year", "scenario"))
+  report_apptab8 <- report_apptab8[
     c("scenario", "year", 
       paste(rep(global_sectors[1:6], each = 2), c("nrg", "emis"), sep = "_"))]
-  func_dataexp("附表7_不同情景下分行业能源消费与碳排放量", 
-               mydata = report_apptab7)
+  report_apptab8$scenario <- 
+    factor(report_apptab8$scenario, levels = set_scalcs)
+  report_apptab8 <- 
+    report_apptab8[order(report_apptab8$scenario, report_apptab8$year), ]
+  func_dataexp("附表8_不同情景下分行业能源消费与碳排放量", 
+               mydata = report_apptab8)
+  
+  # 附表9：不同情景下厦门市能源与碳排放预测结果
+  report_apptab9 <- idx_output_long[, c(
+    "year", "scenario", 
+    "碳排放量", "能耗量", 
+    "单位GDP碳排放五年下降率", "单位GDP能耗五年下降率", "清洁能源比例"
+  )]
+  report_apptab9$scenario <- 
+    factor(report_apptab9$scenario, levels = set_scalcs)
+  report_apptab9 <- 
+    report_apptab9[order(report_apptab9$scenario, report_apptab9$year), ]
+  func_dataexp("附表9_不同情景下厦门市能源与碳排放预测结果", 
+               mydata = report_apptab9)
 }
 
 ## Tot emis & Emissec ----
 {
-  exp_var <- func_mrgcol(tot_emissum[set_scalcs], "co2", set_scalcs)
-  func_dataexp("各情景总排放量", mydata = exp_var)
+  func_dataexp("作图_各情景总排放量", 
+               mydata = func_mrgcol(tot_emissum[set_scalcs], "co2", set_scalcs))
   
-  func_dataexp("减排情景各部门排放量", 
-               mydata = tot_emissec$`BAU_WLC`)
+  func_dataexp("作图_减排情景各部门排放量", mydata = tot_emissec$`BAU_WLC`)
   
-  func_dataexp("刘洋_减排情景各年份能耗", 
-               mydata = tot_nrgsumce$BAU_WLC)
+  func_dataexp("刘洋_减排情景各年份能耗", mydata = tot_nrgsumce$BAU_WLC)
+  
+  func_dataexp("刘洋_减排情景各年份清洁能源占比", mydata = idx_scalc)
 }
 
