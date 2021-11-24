@@ -1,8 +1,8 @@
 # SETTING ----
 # 计算内容或口径相关设置
 # 设置要计算的情景
-set_scalcs <- 
-  c("BAU", "BAU_WLC", "BAU_SLCPLUS", "BAU_SLC_DECOAL")
+set_scalcs <- "BAU_WLCMINUS"
+  # c("BAU", "BAU_WLC", "BAU_SLCPLUS", "BAU_SLC_DECOAL")
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 set_elecgensep <- TRUE # 是否将东亚电力从发电行业中独立
 
@@ -416,7 +416,7 @@ if (set_cache_readdata == FALSE) {
                  rep("吨", 2))
   
   # 读取刘洋2021年10月5日更新的太阳能发电预测
-  global_solarelecgen_fut <- func_read_trans("4R9XNW4Z")
+  global_solarelecgen_fut <- func_read_trans("JZS78EDU")
   
   # 读取全省发电量
   global_provelecgen <- func_read_trans("S3CNPRZE", "发电量")
@@ -1316,17 +1316,34 @@ for (set_scalc in set_scalcs) {
         ind_ori_act_prop[["BY"]]$"电子电气制造业"[
           ind_ori_act_prop$BY$year == 2019], 
         48.97, 52, 54.5, 65), showplot = set_showplot)$value
+  } else if (grepl("MINUS", set_scalc)) { 
+    #### WLCMINUS ----
+    ind_ori_act_prop[[set_scalc]][, "化学工业"] <- func_interp_2(
+      year = c(2019, 2020, 2025, 2030, 2045, 2060), value = c(
+        ind_ori_act_prop[["BY"]]$"化学工业"[ind_ori_act_prop$BY$year == 2019], 
+        7.38, 6.20, 6.30, 2.30, 0.00), 
+      showplot = set_showplot)$value
+    ind_ori_act_prop[[set_scalc]][, "设备制造业"] <- func_interp_2(
+      year = c(2019, 2020, 2025, 2030, 2060), value = c(
+        ind_ori_act_prop[["BY"]]$"设备制造业"[ind_ori_act_prop$BY$year == 2019], 
+        12.39, 13.8, 14.0, 17.0), 
+      showplot = set_showplot)$value
+    ind_ori_act_prop[[set_scalc]][, "电子电气制造业"] <- func_interp_2(
+      year = c(2019, 2020, 2025, 2030, 2060), value = c(
+        ind_ori_act_prop[["BY"]]$"电子电气制造业"[
+          ind_ori_act_prop$BY$year == 2019], 
+        48.97, 51.7, 52, 60), showplot = set_showplot)$value
   } else if (grepl("WLC", set_scalc)) { 
     #### WLC ----
     ind_ori_act_prop[[set_scalc]][, "化学工业"] <- func_interp_2(
       year = c(2019, 2020, 2025, 2030, 2045, 2060), value = c(
         ind_ori_act_prop[["BY"]]$"化学工业"[ind_ori_act_prop$BY$year == 2019], 
-                     7.38, 6.20, 6.00, 2.00, 0.00), 
+        7.38, 6.20, 6.00, 2.00, 0.00), 
       showplot = set_showplot)$value
     ind_ori_act_prop[[set_scalc]][, "设备制造业"] <- func_interp_2(
       year = c(2019, 2020, 2025, 2030, 2060), value = c(
         ind_ori_act_prop[["BY"]]$"设备制造业"[ind_ori_act_prop$BY$year == 2019], 
-                     12.39, 13.8, 14.5, 17.5), 
+        12.39, 13.8, 14.5, 17.5), 
       showplot = set_showplot)$value
     ind_ori_act_prop[[set_scalc]][, "电子电气制造业"] <- func_interp_2(
       year = c(2019, 2020, 2025, 2030, 2060), value = c(
@@ -1651,6 +1668,12 @@ for (set_scalc in set_scalcs) {
       year = c(2019, 2020, 2025, 2030, 2050, 2060), 
       value = c(0.022, 0.023, 0.05, 0.10, 0.60, 0.70), 
       showplot = set_showplot, "elec")
+  } else if (grepl("MINUS", set_scalc)) { 
+    #### WLCMINUS ----
+    trans_carprop_ls[[set_scalc]] <- func_interp_2(
+      year = c(2019, 2020, 2025, 2029, 2030, 2050, 2060), 
+      value = c(0.022, 0.023, 0.04, 0.07, 0.08, 0.50, 0.60), 
+      showplot = set_showplot, "elec")
   } else if (grepl("WLC", set_scalc)) { 
     #### WLC ----
     trans_carprop_ls[[set_scalc]] <- func_interp_2(
@@ -1885,6 +1908,13 @@ for (set_scalc in set_scalcs) {
       scale = c(1.0, 1.01, 1.04, 1.02, 1.07, 1.08, 0.90), 
       base = func_lastone(com_nrgintst[["BY"]]$electricity$electricity), 
       "electricity", showplot = set_showplot)
+  } else if (grepl("MINUS", set_scalc)) { 
+    #### WLCMINUS ----
+    com_nrgintst[[set_scalc]][[1]] <- func_interp_3(
+      year = c(2019, 2020, 2025, 2028, 2029, 2030, 2035, 2060), 
+      scale = c(1.0, 1.01, 1.05, 1.07, 1.08, 1.09, 1.10, 0.95), 
+      base = func_lastone(com_nrgintst[["BY"]]$electricity$electricity), 
+      "electricity", showplot = set_showplot)
   } else if (grepl("WLC", set_scalc)) { 
     #### WLC ----
     com_nrgintst[[set_scalc]][[1]] <- func_interp_3(
@@ -1916,6 +1946,13 @@ for (set_scalc in set_scalcs) {
     com_nrgintst[[set_scalc]][[2]] <- func_interp_3(
       year = c(2019, 2020, 2025, 2030, 2035, 2060), 
       scale = c(1.0, 1.03, 1.11, 1.15, 1.15, 0.90), 
+      base = func_lastone(com_nrgintst[["BY"]][[2]]$lpg), 
+      "lpg", showplot = set_showplot)
+  } else if (grepl("MINUS", set_scalc)) { 
+    #### WLCMINUS ----
+    com_nrgintst[[set_scalc]][[2]] <- func_interp_3(
+      year = c(2019, 2020, 2025, 2028, 2030, 2035, 2060), 
+      scale = c(1.0, 1.03, 1.12, 1.27, 1.24, 1.30, 1.00), 
       base = func_lastone(com_nrgintst[["BY"]][[2]]$lpg), 
       "lpg", showplot = set_showplot)
   } else if (grepl("WLC", set_scalc)) { 
