@@ -63,14 +63,14 @@ ggarrange(plotlist = list(
 ), ncol = 1, common.legend = TRUE)
 ```
 
-减煤情景电力和电力局预测推荐值对比：
+目标情景`r set_scalc`电力和电力局预测推荐值对比：
 
 ```{r ElecComp}
 md_elec_gov <- data.frame(
   year = c(2020:2026), 
   电力 = c(291.2, 315.0, 334.0, 353.0, 371.0, 388.0, 405.0), 
   src = "电力局")
-md_elec_model <- tot_nrgaggfuel$BAU_SLC_DECOAL[c("year", "电力")]
+md_elec_model <- tot_nrgaggfuel[[set_scalc]][c("year", "电力")]
 md_elec_model <- md_elec_model[md_elec_model$year %in% md_elec_gov$year, ]
 md_elec_model$电力 <- md_elec_model$电力/10000
 md_elec_model$src <- "模型"
@@ -81,9 +81,9 @@ ggplot(md_elec) + geom_point(aes(year, 电力, color = src), alpha = 0.5, size =
 未来近期内天然气是否持续增长：
 
 ```{r FutGas}
-ggplot(tot_nrgaggfuel$BAU_SLC_DECOAL) + 
+ggplot(tot_nrgaggfuel[[set_scalc]]) + 
   geom_line(aes(year, 天然气)) +
-  scale_y_continuous(limits = c(0, 70000))
+  scale_y_continuous(limits = c(0, max(tot_nrgaggfuel[[set_scalc]]$天然气*1.1)))
 ```
 
 # 结果
@@ -157,7 +157,8 @@ knitr::kable(idx_output_long[c("year", "scenario", "高能耗传统行业增加�
 ```
 
 ```{r TblOtherIndex}
-knitr::kable(idx_output_long[c("year", "scenario","私家电动车比例", "人均生活能耗", "人均生活能耗五年变化率")], digit = 2, caption = "其他行业关键指标") 
+knitr::kable(idx_output_long[c("year", "scenario","私家电动车比例",
+                               "人均生活能耗五年变化率")], digit = 2, caption = "其他行业关键指标") 
 ```
 
 # 参数
@@ -167,11 +168,11 @@ knitr::kable(idx_output_long[c("year", "scenario","私家电动车比例", "人�
 ```{r ActivityLevel}
 par(mfrow = c(3, 3))
 plot(1, main = "农业")
-func_history_project(agri_act[["BY"]], "agri", agri_act[["BAU_SLC_DECOAL"]], "area", style = "base")
+func_history_project(agri_act[["BY"]], "agri", agri_act[[set_scalc]], "area", style = "base")
 plot(1, main = "其他行业")
 for (i in list(ind_act, const_act, trans_act, com_act, hh_act)) {
   for (j in names(i[["BY"]])[names(i[["BY"]]) != "year"]) {
-    func_history_project(i[["BY"]], j, i[["BAU_SLC_DECOAL"]], j, style = "base")
+    func_history_project(i[["BY"]], j, i[[set_scalc]], j, style = "base")
   }
 }
 ```
@@ -185,7 +186,7 @@ for (i in list(ind_act, const_act, trans_act, com_act, hh_act)) {
 for (i in list(agri_nrgintst)) {
   par(mfrow = c(3, 3))
   for (j in names(i[["BY"]])[names(i[["BY"]]) != "year"]) {
-    func_history_project(i[["BY"]], j, i[["BAU_SLC_DECOAL"]], j, style = "base")
+    func_history_project(i[["BY"]], j, i[[set_scalc]], j, style = "base")
   }
 }
 ```
@@ -200,7 +201,7 @@ for (i in list(ind_nrgintst)) {
     plot(1, main = j)
     for (k in names(i[["BY"]][[j]])[names(i[["BY"]][[j]]) != "year"]) {
       plot(1, main = k)
-      func_history_project(i[["BY"]][[j]], k, i[["BAU_SLC_DECOAL"]][[j]], k, style = "base")
+      func_history_project(i[["BY"]][[j]], k, i[[set_scalc]][[j]], k, style = "base")
     }
   }
 }
@@ -213,7 +214,7 @@ for (i in list(ind_nrgintst)) {
 for (i in list(const_nrgintst)) {
   par(mfrow = c(3, 3))
   for (j in names(i[["BY"]])[names(i[["BY"]]) != "year"]) {
-    func_history_project(i[["BY"]], j, i[["BAU_SLC_DECOAL"]], j, style = "base")
+    func_history_project(i[["BY"]], j, i[[set_scalc]], j, style = "base")
   }
 }
 ```
@@ -227,7 +228,7 @@ for (i in list(com_nrgintst)) {
     par(mfrow = c(3, 3))
     for (k in names(i[["BY"]][[j]])[names(i[["BY"]][[j]]) != "year"]) {
       plot(1, main = k)
-      func_history_project(i[["BY"]][[j]], k, i[["BAU_SLC_DECOAL"]][[j]], k, style = "base")
+      func_history_project(i[["BY"]][[j]], k, i[[set_scalc]][[j]], k, style = "base")
     }
   }
 }
@@ -239,15 +240,15 @@ for (i in list(com_nrgintst)) {
 # 家庭
 par(mfrow = c(3, 3))
 plot(1, main = "electricity and coal")
-func_history_project(hh_nrgintst[["BY"]]$household, "electricity", hh_nrgintst[["BAU_SLC_DECOAL"]]$hh_coal_elec, "electricity", style = "base")
+func_history_project(hh_nrgintst[["BY"]]$household, "electricity", hh_nrgintst[[set_scalc]]$hh_coal_elec, "electricity", style = "base")
 plot(1, main = "lpg_users")
-func_history_project(hh_nrgintst[["BY"]]$household, "rawcoal", hh_nrgintst[["BAU_SLC_DECOAL"]]$hh_coal_elec, "rawcoal", style = "base")
+func_history_project(hh_nrgintst[["BY"]]$household, "rawcoal", hh_nrgintst[[set_scalc]]$hh_coal_elec, "rawcoal", style = "base")
 
 plot(1, main = "lpg_users")
-func_history_project(hh_nrgintst[["BY"]]$lpg, "lpg", hh_nrgintst[["BAU_SLC_DECOAL"]]$hh_lpg, "lpg", style = "base")
+func_history_project(hh_nrgintst[["BY"]]$lpg, "lpg", hh_nrgintst[[set_scalc]]$hh_lpg, "lpg", style = "base")
 
 plot(1, main = "gas_users")
-func_history_project(hh_nrgintst[["BY"]]$gas, "gas", hh_nrgintst[["BAU_SLC_DECOAL"]]$hh_gas, "gas", style = "base")
+func_history_project(hh_nrgintst[["BY"]]$gas, "gas", hh_nrgintst[[set_scalc]]$hh_gas, "gas", style = "base")
 ```
 
 
