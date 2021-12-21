@@ -40,7 +40,8 @@ func_read_trans <- function(name_subdir, order_sht = 1) {
   data_trans <- cbind(colnames(data_ori)[3:ncol(data_ori)], 
                       as.data.frame(t(data_ori[, -c(1,2)])))
   # 将所有数据转换成数字类型
-  data_trans <- as.data.frame(lapply(data_trans, as.numeric))
+  data_trans <- 
+    as.data.frame(lapply(data_trans, function(x) {as.numeric(as.character(x))}))
   # 设置列名，并删除列名中的空格
   colnames(data_trans) <- c("year", gsub(" ", "", data_ori[, 1]))
   # 传递备注单位信息
@@ -780,7 +781,7 @@ func_secagg <- function(input_df, tbl_lookup) {
   new_df <- data.frame(year = input_df[, "year"])
   ind_subsector <- unique(tbl_lookup$ind_agg)
   for (i in c(1:length(ind_subsector))) {
-    name_ind_agg <- ind_subsector[i]
+    name_ind_agg <- as.character(ind_subsector)[i]
     name_ind_ori <- tbl_lookup$ind_ori[tbl_lookup$ind_agg == name_ind_agg]
     new_df[, name_ind_agg] <- 
       rowSums(input_df[names(input_df) %in% name_ind_ori], na.rm = TRUE)
