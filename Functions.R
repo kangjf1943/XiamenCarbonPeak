@@ -692,6 +692,7 @@ func_nrg_intst <- function(df_nrg_sum, df_actlvl, name) {
 func_nrg_intst_ls <- function(ls_nrgsum, df_actlvl) {
   ls_nrgintst <- vector("list", length(ls_nrgsum))
   for (i in c(1: length(ls_nrgsum))) {
+    ls_nrgsum[[i]]$year <- as.numeric(as.character(ls_nrgsum[[i]]$year))
     ls_nrgintst[[i]] <- func_nrg_intst(ls_nrgsum[[i]], df_actlvl, 
                                        names(df_actlvl)[i + 1])
     names(ls_nrgintst)[i] <- names(df_actlvl)[i + 1]
