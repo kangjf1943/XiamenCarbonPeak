@@ -278,7 +278,8 @@ if (set_cache_readdata == FALSE) {
                  "gasoline", "diesel", "residual", "lpg","gas", "electricity"))
   for (i in names(global_indscale_nrgls_bynrg)) {
     global_indscale_nrgls_bynrg[[i]] <- 
-      global_indscale_nrgls_bynrg[[i]][c("year", global_ind_finesec)]
+      global_indscale_nrgls_bynrg[[i]][
+        c("year", as.character(global_ind_finesec))]
     global_indscale_nrgls_bynrg[[i]][is.na(global_indscale_nrgls_bynrg[[i]])] <-
       0
   }
