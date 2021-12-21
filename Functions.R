@@ -20,7 +20,7 @@ showtext_auto()
 # 说明：原始数据用Zotero管理，该函数读取原始数据并转化为所需格式
 func_read_data <- function(name_subdir, order_sht = 1) {
   if (.Platform$OS.type == "unix") {
-    data_dir <- "/Users/VickyWang/OneDrive/Zotero/storage"
+    data_dir <- "/Users/Kang/OneDrive/Zotero/storage"
   } else {
     data_dir <- "C:/Users/kangj/Documents/OneDrive/Zotero/storage/"
   }
