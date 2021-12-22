@@ -81,7 +81,7 @@ func_read_multitable <- function(name_subdir, names_tbl, names_ls) {
 # 函数：转化列表中所有数据为数字
 func_ls_asnumber <- function(ls) {
   for (i in c(1: length(ls))) {
-    ls[[i]] <- as.data.frame(lapply(ls[[i]], as.numeric))
+    ls[[i]] <- as.data.frame(lapply(ls[[i]], function(x){as.numeric(as.character(x))}))
   }
   ls
 }
@@ -453,7 +453,7 @@ func_saturate <- function(in_df, name_new = "value") {
 func_linear <- function(df_history, col_dependent, startyear, endyear) {
   # 保留目标数据
   df_history <- df_history[c("year", col_dependent)]
-  df_history[, "year"] <- as.numeric(df_history[, "year"])
+  df_history[, "year"] <- as.numeric(as.character(df_history[, "year"]))
   # 拟合：因变量中有NA也可以计算
   fit <- lm(df_history[, col_dependent] ~ df_history[, "year"])
   fit_result <- summary(fit)
@@ -646,7 +646,7 @@ func_branch <- function(sectors, years) {
   actlvl <- as.data.frame(actlvl)
   names(actlvl) <- sectors
   actlvl <- cbind(data.frame(year = years), actlvl)
-  actlvl <- as.data.frame(sapply(actlvl, as.numeric))
+  actlvl <- as.data.frame(sapply(actlvl, function(x){as.numeric(as.character(x))}))
   actlvl
 }
 
@@ -668,8 +668,8 @@ func_jigsaw <- function(df.insertion, df.template) {
 # 数据框对某一列的版本
 func_nrg_intst <- function(df_nrg_sum, df_actlvl, name) {
   # 先将年份转换为数字类型
-  df_nrg_sum$year <- as.numeric(df_nrg_sum$year)
-  df_actlvl$year <- as.numeric(df_actlvl$year)
+  df_nrg_sum$year <- as.numeric(as.character(df_nrg_sum$year))
+  df_actlvl$year <- as.numeric(as.character(df_actlvl$year))
   df_actlvl <- df_actlvl[, c("year", name)]
   # 统一年份：并集
   allyear <- union(df_nrg_sum$year, df_actlvl$year)
@@ -762,7 +762,7 @@ func_emissum <- function(nrgsum_df, emisfac_df, agg = TRUE) {
     if (agg == TRUE) {
       emissum_df_ori$temp <- 0
       emissum_df <- data.frame(year = emissum_df_ori$year)
-      emissum_df_ori[-1] <- sapply(emissum_df_ori[-1], as.numeric)
+      emissum_df_ori[-1] <- sapply(emissum_df_ori[-1], function(x){as.numeric(as.character(x))})
       emissum_df$co2 <- rowSums(emissum_df_ori[, -1])
     } else {
       emissum_df <- emissum_df_ori
@@ -818,7 +818,7 @@ func_ls2df <- function(ls) {
   # 合并列表各元素数据框
   df <- Reduce(rbind, ls)
   # 将各列转化为数字类型
-  df[names_column] <- lapply(df[names_column], as.numeric)
+  df[names_column] <- lapply(df[names_column], function(x){as.numeric(as.character(x))})
   # 按照年份合并
   df <- aggregate(df[, names_column], by = list(df$year), sum)
   names(df)[1] <- "year"
@@ -849,7 +849,7 @@ func_history_project <-
   total_df <- total_df[is.na(total_df[, name_proj]) == FALSE, ]
   # 将作图数据强制转化为整数，否则可能会出现坐标轴重叠
   total_df$year <- as.integer(total_df$year)
-  total_df[, name_proj] <- as.numeric(total_df[, name_proj])
+  total_df[, name_proj] <- as.numeric(as.character(total_df[, name_proj]))
   # 作图
   if (style == "base") {
     legend_df <- data.frame(attr = c("history", "project"), 
@@ -959,7 +959,7 @@ func_scenarios <-
     total_df <- total_df[is.na(total_df[, name_proj]) == FALSE, ]
     # 将作图数据强制转化为整数，否则可能会出现坐标轴重叠
     total_df$year <- as.integer(total_df$year)
-    total_df[, name_proj] <- as.numeric(total_df[, name_proj])
+    total_df[, name_proj] <- as.numeric(as.character(total_df[, name_proj]))
     # 作图
     if (style == "ggpoint") {
       plot_data <- ggplot(total_df) + 
