@@ -22,7 +22,7 @@ func_read_data <- function(name_subdir, order_sht = 1) {
   if (.Platform$OS.type == "unix") {
     data_dir <- "/Users/Kang/OneDrive/Zotero/storage"
   } else {
-    data_dir <- "C:/Users/kangj/Documents/OneDrive/Zotero/storage/"
+    data_dir <- "C:/Users/kangj/OneDrive/Zotero/storage/"
   }
   data_name <- list.files(paste0(data_dir, "/", name_subdir, "/"))
   path <- paste0(data_dir, "/", name_subdir, "/", data_name)
