@@ -1,9 +1,9 @@
 # SETTING ----
 # 计算内容或口径相关设置
 # 设置要计算的情景
-set_scalcs <- 
-  c("BAU", "BAU_WLCMINUS", "BAU_WLC", "BAU_SLCPLUS", "BAU_SLC_DECOAL")
-set_starget <- "BAU_WLCMINUS" # 规划的核心情景
+set_scalcs <- c(c("BAU_KEEPCOAL", "BAU", "BAU_WLCMINUS_C2G", "BAU_WLC_C2G"),
+  c("BAU_WLCMINUS", "BAU_WLC", "BAU_SLCPLUS", "BAU_SLC_DECOAL"))
+set_starget <- "BAU_WLCMINUS_C2G" # 规划的核心情景
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 set_elecgensep <- TRUE # 是否将东亚电力从发电行业中独立
 
@@ -2282,6 +2282,28 @@ for (set_scalc in set_scalcs) {
                       scale = c(1.0, 1.00, 1.00, 0.90), 
                       base = func_lastone(tf_nrgintst[["BY"]][, i]), 
                       showplot = set_showplot)$value}))
+  ### C2G ----
+  # 腾龙煤改气和嵩屿电厂等容量替换措施下，2025年开始煤耗强度减少，天然气强度增
+  # 加，详见建模笔记
+  if (grepl("C2G", set_scalc)) {
+    # 天然气增加
+    tf_nrgintst[[set_scalc]][which(
+      tf_nrgintst[[set_scalc]]$year >= 2025), ]$gas <- 
+      tf_nrgintst[[set_scalc]][which(
+        tf_nrgintst[[set_scalc]]$year >= 2025), ]$gas + 
+      tf_nrgintst[[set_scalc]][which(
+        tf_nrgintst[[set_scalc]]$year >= 2025), ]$rawcoal*0.1*100*0.190/282
+    # 煤炭被天然气部分替代
+    tf_nrgintst[[set_scalc]][which(
+      tf_nrgintst[[set_scalc]]$year >= 2025), ]$rawcoal <- 
+      tf_nrgintst[[set_scalc]][which(
+        tf_nrgintst[[set_scalc]]$year >= 2025), ]$rawcoal*0.9
+    # 嵩屿电厂等容量替换进一步降低煤耗
+    tf_nrgintst[[set_scalc]][which(
+      tf_nrgintst[[set_scalc]]$year >= 2025), ]$rawcoal <- 
+      tf_nrgintst[[set_scalc]][which(
+        tf_nrgintst[[set_scalc]]$year >= 2025), ]$rawcoal*0.95
+  }
   
   ## Activity level ----
   # 全社会用电量
@@ -2294,7 +2316,18 @@ for (set_scalc in set_scalcs) {
   
   ### BR.LowerCoal ----
   # 本地发电量
-  if  (grepl("DECOAL", set_scalc)) { 
+  if (grepl("KEEPCOAL", set_scalc)) {
+    #### KEEPCOAL ----
+    # 完全不减煤
+    tfres_act[[set_scalc]] <- 
+      func_merge_2(list(
+        tfres_act[[set_scalc]], 
+        func_interp_3(
+          year = c(2019, 2030, 2040, 2060), 
+          scale = c(1.0, 1.00, 1.00, 1.00), 
+          base = tfres_act[["BY"]]$elecgen_thrm[tfres_act[["BY"]]$year == 2019],  
+          "elecgen_thrm", showplot = set_showplot)))
+  } else if (grepl("DECOAL", set_scalc)) { 
     #### DECOAL ----
     # 2026年开始减煤，两年内减为原来的3/4
     tfres_act[[set_scalc]] <- 
@@ -2304,17 +2337,6 @@ for (set_scalc in set_scalcs) {
           year = c(2019, 2025, 2028, 2050, 2060), 
           scale = c(1.0, 1.00, 0.70, 0.50, 0.50), 
           base = tfres_act[["BY"]]$elecgen_thrm[tfres_act[["BY"]]$year == 2019],
-          "elecgen_thrm", showplot = set_showplot)))
-  } else if (grepl("COAL", set_scalc)) {
-    #### COAL ----
-    # 2040年开始减煤，至2060年减少30%
-    tfres_act[[set_scalc]] <- 
-      func_merge_2(list(
-        tfres_act[[set_scalc]], 
-        func_interp_3(
-          year = c(2019, 2030, 2040, 2060), 
-          scale = c(1.0, 1.00, 1.00, 0.70), 
-          base = tfres_act[["BY"]]$elecgen_thrm[tfres_act[["BY"]]$year == 2019],  
           "elecgen_thrm", showplot = set_showplot)))
   } else { 
     #### BAU ----
