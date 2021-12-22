@@ -148,7 +148,7 @@ if (set_cache_globalvar == FALSE) {
   
   ## GDP ----
   # 规上工业各行业GDP
-  global_indscale_gdp4sctr <- func_read_trans("7TP7UDE6", "工业GDP")
+  global_indscale_gdp4sctr <- func_read_trans("工业各行业GDP和能耗", "工业GDP")
   global_indscale_gdp <- data.frame(year = global_indscale_gdp4sctr$year)
   global_indscale_gdp$GDP <- 
     rowSums(global_indscale_gdp4sctr[names(global_indscale_gdp4sctr) 
@@ -160,7 +160,7 @@ if (set_cache_globalvar == FALSE) {
   comment(global_indscale_gdp) <- "规上工业总GDP"
   
   # 全市各产业GDP
-  global_gdp <- func_read_trans("2VHEE264", "GDP")
+  global_gdp <- func_read_trans("厦门GDP和人口", "GDP")
   global_gdp <- global_gdp[names(global_gdp) != "人均GDP"]
   names(global_gdp)[names(global_gdp) == "#第一产业"] <- "agrigdp"
   names(global_gdp)[names(global_gdp) == "#第二产业"] <- "secgdp"
@@ -182,7 +182,7 @@ if (set_cache_globalvar == FALSE) {
   global_gdp$comgdp <- global_gdp$GDP * global_gdp$comgdp_prop/100
   
   # 预测GDP相关项目变化
-  prj_global_gdp <- func_read_trans("95VTHFEB")[1:16, ]
+  prj_global_gdp <- func_read_trans("厦门市GDP预测")[1:16, ]
   names(prj_global_gdp)[2] <- "value"
   prj_global_gdp <- rbind(
     prj_global_gdp, 
@@ -224,7 +224,7 @@ if (set_cache_globalvar == FALSE) {
   prj_global_gdp$comgdp <- prj_global_gdp$GDP * prj_global_gdp$comgdp_prop/100
   
   ## Population ----
-  global_population <- func_read_trans("2VHEE264")
+  global_population <- func_read_trans("厦门GDP和人口")
   # 假设全市综合家庭规模为城镇家庭规模和农村家庭规模的加权平均值
   global_population$household_size <- 
     global_population$调查城镇家庭规模 * global_population$城镇化率/100 + 
@@ -252,7 +252,7 @@ if (set_cache_globalvar == FALSE) {
 if (set_cache_readdata == FALSE) {
   # Read data ----
   # 读取并构建排放因子数据
-  global_ori_emisfac_df <- func_read_data("8C8EDJVH")[global_nrg_class]
+  global_ori_emisfac_df <- func_read_data("排放因子")[global_nrg_class]
   global_emisfac_df <- rep(
     as.numeric(global_ori_emisfac_df), each = length(c(2000: 2019)))
   global_emisfac_df <- matrix(
@@ -271,7 +271,7 @@ if (set_cache_readdata == FALSE) {
   
   # 读取规上工业各行业能耗分能耗类型-行业数据
   global_indscale_nrgls_bynrg <- func_read_multitable(
-    "7TP7UDE6", 
+    "工业各行业GDP和能耗", 
     names_tbl = c(
       "煤", "煤制品", "汽油", "柴油", "燃料油", "液化石油气", "天然气", "电力"), 
     names_ls = c("rawcoal", "coalproduct", 
@@ -309,20 +309,20 @@ if (set_cache_readdata == FALSE) {
   
   # 农业柴油
   global_agri_diesel <- 
-    func_read_trans("4NJ97NS9")[, c("year", "农用柴油使用量")]
+    func_read_trans("碳排放峰值模型参数选择检验")[, c("year", "农用柴油使用量")]
   
   # 生活原煤
-  global_hh_coal <- func_read_trans("WJU7N3EL")
+  global_hh_coal <- func_read_trans("生活用煤")
   global_hh_coal$"生活用煤" <- global_hh_coal$"生活用煤"*10000
   comment(global_hh_coal$"生活用煤") <- "吨"
   
   # 读取统计年鉴的农业柴油
   global_agri_diesel <- 
-    func_read_trans("4NJ97NS9")[, c("year", "农用柴油使用量")]
+    func_read_trans("碳排放峰值模型参数选择检验")[, c("year", "农用柴油使用量")]
   comment(global_agri_diesel$"农用柴油使用量")
   
   # 读取航空煤油数据：含福州机场部分的煤油消费量之和
-  global_avnnrg <- func_read_trans("JXG6KGSA")
+  global_avnnrg <- func_read_trans("厦门市国内国际航空煤油消费量")
   # 补全包含福州机场消费量在内的总消费量
   global_avnnrg[which(global_avnnrg$year %in% c(2005: 2009)), "厦航煤油"] <- 
     global_avnnrg[which(global_avnnrg$year %in% c(2005: 2009)), "国内航班"] +
@@ -332,48 +332,48 @@ if (set_cache_readdata == FALSE) {
   
   # 读取航空客货运周转量
   global_avn_act <- 
-    func_read_trans("U737THYU")[c("year", "客运周转量", "货运周转量")]
+    func_read_trans("航空客货运量及周转量")[c("year", "客运周转量", "货运周转量")]
   names(global_avn_act) <- c("year", "avn_rpk", "avn_rftk")
   
   # 读取水运客货运周转量
   global_water_act <- 
-    func_read_trans("P6KQQFUP")[c("year", "客运周转量", "货运周转量")]
+    func_read_trans("水路客货运量及周转量")[c("year", "客运周转量", "货运周转量")]
   names(global_water_act) <- c("year", "water_rpk", "water_rftk")
   
   # 读取园林局LPG数据
-  global_ind_com_hh_lpg <- func_read_trans("SRYBIXUY")
+  global_ind_com_hh_lpg <- func_read_trans("测试用工业和服务业和生活LPG消费")
   global_ind_com_hh_lpg[c("工业", "服务业", "生活消费")] <- 
     global_ind_com_hh_lpg[c("工业", "服务业", "生活消费")]*10000
   global_ind_com_hh_lpg[c("工业", "服务业", "生活消费")] <- func_addnote(
     global_ind_com_hh_lpg[c("工业", "服务业", "生活消费")], c("吨", "吨", "吨"))
   
   # 读取园林局天然气数据
-  global_com_hh_gas <- func_read_trans("4ALKEGTV")
+  global_com_hh_gas <- func_read_trans("测试用市政园林局的生活和服务业天然气消费")
   global_com_hh_gas[c("服务业", "生活消费")] <- 
     global_com_hh_gas[c("服务业", "生活消费")]*10000
   global_com_hh_gas[c("服务业", "生活消费")] <- func_addnote(
     global_com_hh_gas[c("服务业", "生活消费")], c("万立方米", "万立方米"))
   
   # 读取交通天然气
-  global_trans_gas <- func_read_trans("IZM9FWIY", "天然气消费量")
+  global_trans_gas <- func_read_trans("营运性车辆活动水平和能耗", "天然气消费量")
   
   # 读取交通电力消费并合并地铁用电
   # 此处仅进入部分车型用电量
   # 问题：网约车用电量不低，但因无保有量数据，难以从私家车区分出来，暂不处理
   global_trans_elecsec <- 
-    func_read_trans("IZM9FWIY", "电力消费")
+    func_read_trans("营运性车辆活动水平和能耗", "电力消费")
   global_trans_elecsec$"地铁" <- 
     global_trans_elecsec$"地铁牵引用电" + global_trans_elecsec$"地铁其他用电"
   global_trans_elecsec <- global_trans_elecsec[c(
     "year", "常规公交", "BRT", "纯电动出租车","地铁")]
   
   # 读取用电数据
-  global_elecaggsec <- func_read_trans("2I4DKY2A", "全市电力消费情况表")
+  global_elecaggsec <- func_read_trans("厦门市电力数据", "全市电力消费情况表")
   global_elecfinesec <- 
-    func_read_trans("2I4DKY2A", "全市电力消费情况表分具体行业")
+    func_read_trans("厦门市电力数据", "全市电力消费情况表分具体行业")
   
   # 读取本地发电数据并计算清洁和非清洁发电比例
-  global_elecgen <- func_read_trans("2I4DKY2A", "全市发电量")
+  global_elecgen <- func_read_trans("厦门市电力数据", "全市发电量")
   global_elecgen$clean <- 
     global_elecgen$"#水电" + global_elecgen$"#垃圾发电" +
     global_elecgen$"#太阳能"
@@ -381,7 +381,7 @@ if (set_cache_readdata == FALSE) {
   global_elecgen$thrm_prop <- 1 - global_elecgen$clean_prop
   
   # 读取水运燃料油
-  global_trans_residual <- func_read_trans("68Z975NU")
+  global_trans_residual <- func_read_trans("测试用水运燃料油消耗量港口局数据推算")
   global_trans_residual[c("国内客运", "国内货运", "国际客运", "国际货运")] <- 
     global_trans_residual[c("国内客运", "国内货运", "国际客运", "国际货运")]*
     10000
@@ -391,7 +391,7 @@ if (set_cache_readdata == FALSE) {
       c("吨", "吨", "吨", "吨"))
   
   # 读取慧梅推算：交通水运部分（基于港口局数据）
-  global_water_railway_diesel <- func_read_trans("VZS39ZM8")
+  global_water_railway_diesel <- func_read_trans("测试用水运和铁路柴料油消耗量港口局数据推算")
   global_water_railway_diesel[c("水运国内客运", "水运国内货运", 
                                 "水运国际客运", "水运国际货运", "铁路")] <- 
     global_water_railway_diesel[c("水运国内客运", "水运国内货运", 
@@ -405,12 +405,12 @@ if (set_cache_readdata == FALSE) {
   
   # 读取慧梅推算：铁路（客运周转量*能耗强度）
   global_roadoper_diesel <- 
-    func_read_trans("IZM9FWIY", "柴油消费量")[
+    func_read_trans("营运性车辆活动水平和能耗", "柴油消费量")[
       c("year","常规公交","BRT","农村客车")]
   
   # 读取慧梅推算数据：营运非营运车辆柴油
   global_roadnonoper_diesel <- 
-    func_read_trans("Y3PGVSR7", "非营运性车辆柴油消费推算")
+    func_read_trans("非营运性车辆活动水平和能耗推算", "非营运性车辆柴油消费推算")
   global_roadnonoper_diesel[c("非营运客车", "货车")] <- 
     global_roadnonoper_diesel[c("非营运客车", "货车")]*10000
   global_roadnonoper_diesel[c("非营运客车", "货车")] <- 
@@ -418,13 +418,13 @@ if (set_cache_readdata == FALSE) {
                  rep("吨", 2))
   
   # 读取刘洋2021年10月5日更新的太阳能发电预测
-  global_solarelecgen_fut <- func_read_trans("JZS78EDU")
+  global_solarelecgen_fut <- func_read_trans("厦门市太阳能发电量预测数据更新")
   
   # 读取全省发电量
-  global_provelecgen <- func_read_trans("S3CNPRZE", "发电量")
+  global_provelecgen <- func_read_trans("福建省发电行业能源消费量和发电量", "发电量")
   
   # 读取外调电力折标煤系数
-  global_importthrm_cefac <- func_read_trans("2I4DKY2A", "XCP外调电力")
+  global_importthrm_cefac <- func_read_trans("厦门市电力数据", "XCP外调电力")
   global_importthrm_cefac <- 
     global_importthrm_cefac[c("year", "外调电力折标煤系数")]
   names(global_importthrm_cefac) <- c("year", "nrg_input")
@@ -576,7 +576,7 @@ if (set_cache_nrgbal == FALSE) {
   ## 3.2 Ind coal ----
   # 4 = 若谷煤合计-刚算的煤制品-生活用煤-发电用煤
   # 读取统计局物理量总量数据
-  by_checknrgaggfuel <- func_read_trans("LPLPNXCQ")
+  by_checknrgaggfuel <- func_read_trans("全市总量数据整理")
   by_checknrgaggfuel[
     c("煤炭消费量", "油品消费量", "天然气消费量", "调入电力")] <- 
     by_checknrgaggfuel[
@@ -589,7 +589,7 @@ if (set_cache_nrgbal == FALSE) {
       c("吨", "吨", "万立方米", "万千瓦时"))
   
   # 读取统计局标准量总量数据
-  by_checknrgaggfuelce <- func_read_trans("LPLPNXCQ", "XCP_煤油气电标准量")
+  by_checknrgaggfuelce <- func_read_trans("全市总量数据整理", "XCP_煤油气电标准量")
   by_checknrgaggfuelce[
     c("煤炭消费量", "油品消费量", "天然气消费量", "调入电力")] <- 
     by_checknrgaggfuelce[
@@ -677,7 +677,7 @@ if (set_cache_hiscalc == FALSE) {
   ### Activity level ----
   # 农业的播种面积
   # 读取《碳排放峰值模型参数选择检验》
-  agri_act[["BY"]] <- func_read_trans("4NJ97NS9")
+  agri_act[["BY"]] <- func_read_trans("碳排放峰值模型参数选择检验")
   agri_act[["BY"]] <- 
     agri_act[["BY"]][, c("year", "全年农作物总播种面积")]
   names(agri_act[["BY"]])[2] <- "agri"
@@ -791,7 +791,7 @@ if (set_cache_hiscalc == FALSE) {
   trans_act$BY <- func_branch(global_trans_subsector, c(2005: 2019))
   
   # 营运车辆里程数
-  by_trans_operation <- func_read_trans("IZM9FWIY", "里程数")
+  by_trans_operation <- func_read_trans("营运性车辆活动水平和能耗", "里程数")
   by_trans_operation <- 
     by_trans_operation[, c(
       "year", "常规公交", "BRT", "出租车", "农村客车", "地铁")]
@@ -801,7 +801,7 @@ if (set_cache_hiscalc == FALSE) {
   
   # 公路其他汽油：私家车保有量；纯电动私家车：保有量
   by_trans_nonoperation <- 
-    func_read_trans("Y3PGVSR7")[c("year", "#常规私家车", "#纯电动私家车")]
+    func_read_trans("非营运性车辆活动水平和能耗推算")[c("year", "#常规私家车", "#纯电动私家车")]
   names(by_trans_nonoperation) <- 
     c("year", "公路其他汽油", "纯电动私家车")
   # 且假设纯电动私家车在2019年之前均为0
@@ -849,7 +849,7 @@ if (set_cache_hiscalc == FALSE) {
   names(by_trans_nrgfuel_ori) <- c("gasoline", "diesel", "gas", "electricity")
   # 汽油消费量
   by_trans_nrgfuel_ori[[1]] <- 
-    func_read_trans("IZM9FWIY", "汽油消费量")[, c("year", "出租车合计")]
+    func_read_trans("营运性车辆活动水平和能耗", "汽油消费量")[, c("year", "出租车合计")]
   names(by_trans_nrgfuel_ori[[1]])<- c("year", "出租车")
   # 柴油消费量
   by_trans_nrgfuel_ori[[2]] <- global_roadoper_diesel
@@ -958,7 +958,7 @@ if (set_cache_hiscalc == FALSE) {
   ## Service -----
   ### Activity level ----
   # 服务业从业人口
-  com_act[["BY"]] <- func_read_trans("2VHEE264", "从业人口")
+  com_act[["BY"]] <- func_read_trans("厦门GDP和人口", "从业人口")
   com_act[["BY"]] <- com_act[["BY"]][, c("year", "第三产业")]
   names(com_act[["BY"]])[2] <- "com_employee"
   # 补全2015-2019年数据：假设线性外推
@@ -1005,12 +1005,12 @@ if (set_cache_hiscalc == FALSE) {
   # 家庭户数
   by_ori_household<- global_population[c("year", "household")]
   # 用液化石油气的户数
-  by_ori_lpguser <- func_read_trans("S32RZEF7", "瓶装液化气总用户数")
+  by_ori_lpguser <- func_read_trans("厦门市燃气用户数", "瓶装液化气总用户数")
   by_ori_lpguser <- by_ori_lpguser[, c("year", "民用")]
   names(by_ori_lpguser)[2] <- "lpg"
   by_ori_lpguser$lpg <- by_ori_lpguser$lpg/10000
   # 用管道天然气的用户数
-  by_ori_gasuser <- func_read_trans("S32RZEF7", "管道天然气总用户数")
+  by_ori_gasuser <- func_read_trans("厦门市燃气用户数", "管道天然气总用户数")
   by_ori_gasuser <- by_ori_gasuser[, c("year", "民用")]
   names(by_ori_gasuser)[2] <- "gas"
   by_ori_gasuser$gas <- by_ori_gasuser$gas/10000
@@ -1127,7 +1127,7 @@ if (set_cache_hiscalc == FALSE) {
   ### Energy intensity ----
   # 读取省电网发电能耗量
   global_provelecgen_nrgsum <- 
-    func_read_trans("S3CNPRZE")[c("year", "原煤", "柴油", "燃料油", "天然气")]
+    func_read_trans("福建省发电行业能源消费量和发电量")[c("year", "原煤", "柴油", "燃料油", "天然气")]
   names(global_provelecgen_nrgsum) <- 
     c("year", "rawcoal", "diesel", "residual", "gas")
   
