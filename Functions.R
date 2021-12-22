@@ -20,12 +20,12 @@ showtext_auto()
 # 说明：原始数据用Zotero管理，该函数读取原始数据并转化为所需格式
 func_read_data <- function(name_subdir, order_sht = 1) {
   if (.Platform$OS.type == "unix") {
-    data_dir <- "/Users/Kang/OneDrive/Zotero/storage"
+    data_dir <- "/Users/Kang/Documents/R/XiamenCarbonPeak/RawData"
   } else {
     data_dir <- "C:/Users/kangj/OneDrive/Zotero/storage/"
   }
-  data_name <- list.files(paste0(data_dir, "/", name_subdir, "/"))
-  path <- paste0(data_dir, "/", name_subdir, "/", data_name)
+  # data_name <- list.files(paste0(data_dir, "/", name_subdir, "/"))
+  path <- paste0(data_dir, "/", name_subdir, ".xlsx")
   data <- read.xlsx(path, sheet = order_sht)
   data
 }
