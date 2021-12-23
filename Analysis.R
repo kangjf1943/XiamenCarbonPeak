@@ -1,7 +1,10 @@
 # SETTING ----
 # 计算内容或口径相关设置
 # 设置要计算的情景
-set_scalcs <- c("BAU_KEEPCOAL", "BAU", "BAU_WLCMINUS_C2G", "BAU_WLC_C2G")
+set_scalcs <- 
+  c("BAU_KEEPCOAL", "BAU", 
+    "BAU_WLCMINUS", "BAU_WLC", 
+    "BAU_SLCPLUS", "BAU_SLC_DECOAL")
 # 目前可选的情景包括：
 # c("BAU_KEEPCOAL", "BAU", "BAU_WLCMINUS_C2G", "BAU_WLC_C2G",
 # "BAU_WLCMINUS", "BAU_WLC", "BAU_SLCPLUS", "BAU_SLC_DECOAL")
@@ -2679,7 +2682,7 @@ Sys.time() - global_starttime
   report_tab2[3:4, 2] <- "--"
   func_dataexp("表2_减排情景下厦门市能源与碳排放", mydata = report_tab2)
   
-  # 附表4：LEAP模型情景描述
+  # 附表5：LEAP模型情景描述
   report_apptab5 <- data.frame(
     新型行业行业比例年均增长量 = sapply(idx_output, function(x) {
       round((tail(x$"新兴行业增加值比例", 1) - 
@@ -2690,6 +2693,11 @@ Sys.time() - global_starttime
                 head(x$"纯电动私家车", 1))^(1/(2035-2019)) -1)*100)
     })
   )
+  report_apptab5 <- cbind(
+    情景 = rownames(report_apptab5), 
+    report_apptab5
+  )
+  rownames(report_apptab5) <- NULL
   func_dataexp("附表5_模型情景描述", mydata = report_apptab5)
   
   # 附表6：主要参数设置
@@ -2764,7 +2772,11 @@ Sys.time() - global_starttime
   func_dataexp("作图_各情景总排放量", 
                mydata = func_mrgcol(tot_emissum[set_scalcs], "co2", set_scalcs))
   
-  func_dataexp("作图_减排情景各部门排放量", mydata = tot_emissec[[set_starget]])
+  func_dataexp(paste0("作图_", set_starget, "情景各部门排放量"), 
+               mydata = tot_emissec[[set_starget]])
+  
+  func_dataexp(paste0("作图_", "BAU_WLC", "情景各部门排放量"), 
+               mydata = tot_emissec[["BAU_WLC"]])
   
   func_dataexp("刘洋_减排情景各年份能耗", mydata = tot_nrgsumce[[set_starget]])
   
