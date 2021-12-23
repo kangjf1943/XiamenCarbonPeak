@@ -1,6 +1,6 @@
 library(nsga2R)
 # 测试数据：各年份各参数设置
-x <- read.xlsx("Yuxianmodel.xlsx", "S2")
+x <- read.xlsx("RawData/Yuxianmodel.xlsx", "S2")
 # 重命名各列
 names(x) <- c("year", "pop", "gdp", "comprop", "coalprop", 
               "nrgintst", "imelecprop", "emisfacimelec")
