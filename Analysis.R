@@ -5,7 +5,7 @@ set_scalcs <- c("BAU_KEEPCOAL", "BAU", "BAU_WLCMINUS_C2G", "BAU_WLC_C2G")
 # 目前可选的情景包括：
 # c("BAU_KEEPCOAL", "BAU", "BAU_WLCMINUS_C2G", "BAU_WLC_C2G",
 # "BAU_WLCMINUS", "BAU_WLC", "BAU_SLCPLUS", "BAU_SLC_DECOAL")
-set_starget <- "BAU_WLCMINUS_C2G" # 规划的核心情景
+set_starget <- "BAU_WLCMINUS" # 规划的核心情景
 set_nrgplng_scope <- FALSE # 是否采用能源规划口径
 set_elecgensep <- TRUE # 是否将东亚电力从发电行业中独立
 
