@@ -19,9 +19,7 @@ showtext_auto()
 # 函数：读取来自Zotero的普通Excel数据
 # 说明：原始数据用Zotero管理，该函数读取原始数据并转化为所需格式
 func_read_data <- function(name_subdir, order_sht = 1) {
-  data_dir <- "/Users/Kang/Documents/R/XiamenCarbonPeak/RawData"
-  # data_name <- list.files(paste0(data_dir, "/", name_subdir, "/"))
-  path <- paste0(data_dir, "/", name_subdir, ".xlsx")
+  path <- paste0("RawData/", name_subdir, ".xlsx")
   data <- read.xlsx(path, sheet = order_sht)
   data
 }
@@ -54,9 +52,7 @@ func_read_trans <- function(name_subdir, order_sht = 1) {
 
 # 函数：读取特定单元格
 func_read <- function(name_subdir, name_sht, num_row, num_col) {
-  data_dir <- "C:/Users/kangj/Documents/OneDrive/Zotero/storage/"
-  data_name <- list.files(paste0(data_dir, "/", name_subdir, "/"))
-  path <- paste0(data_dir, "/", name_subdir, "/", data_name)
+  path <- paste0("RawData/", name_subdir, ".xlsx")
   data_ori <- read.xlsx(path, sheet = name_sht, 
                         rows = num_row, cols = num_col, 
                         colNames = FALSE)
