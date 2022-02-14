@@ -1,4 +1,5 @@
 # Packages and settings ----
+# 加载用于本程序的R包
 # 用于读写Excel文件
 library(openxlsx)
 # 用于作图
@@ -10,22 +11,24 @@ library(showtext)
 # 用于整理数据
 library(reshape2)
 
-# 设置环境为中文
-Sys.setlocale("LC_ALL", "chinese")
-# 为了MacOS上作图显示中文
+# 如果在Windows系统上需设置环境语言为中文
+if (grepl("windows", .Platform$OS.type, ignore.case = TRUE)) {
+  Sys.setlocale("LC_ALL", "chinese")
+}
+# 为了MacOS上作图正常显示中文
 showtext_auto()
 
 # Functions ----
-# 函数：读取来自Zotero的普通Excel数据
-# 说明：原始数据用Zotero管理，该函数读取原始数据并转化为所需格式
+# 函数：读取来自工程文件下RawData文件夹的后缀为“xlsx”普通Excel数据
+# 说明：该函数读取原始数据并转化为所需格式
 func_read_data <- function(name_subdir, order_sht = 1) {
   path <- paste0("RawData/", name_subdir, ".xlsx")
   data <- read.xlsx(path, sheet = order_sht)
   data
 }
 
-# 函数：读取并转化带4列文件头的Excel数据
-# 问题：如果Excel数据中“数据来源”有数据，而其他列无数据，就会导致列明出现“NA”
+# 函数：读取并转化带4列文件头的自定义标准Excel数据
+# 待办：如果Excel数据中“数据来源”有数据，而其他列无数据，就会导致列明出现“NA”
 func_read_trans <- function(name_subdir, order_sht = 1) {
   data_ori <- func_read_data(name_subdir, order_sht = order_sht)
   # 删去前两列，即数据来源和数据备注
@@ -50,15 +53,6 @@ func_read_trans <- function(name_subdir, order_sht = 1) {
   data_trans
 }
 
-# 函数：读取特定单元格
-func_read <- function(name_subdir, name_sht, num_row, num_col) {
-  path <- paste0("RawData/", name_subdir, ".xlsx")
-  data_ori <- read.xlsx(path, sheet = name_sht, 
-                        rows = num_row, cols = num_col, 
-                        colNames = FALSE)
-  data_ori[1, 1]
-}
-
 # 函数：读取多个工作表并输出为列表
 # 输入：待读取的工作表名称
 func_read_multitable <- function(name_subdir, names_tbl, names_ls) {
@@ -73,7 +67,8 @@ func_read_multitable <- function(name_subdir, names_tbl, names_ls) {
 # 函数：转化列表中所有数据为数字
 func_ls_asnumber <- function(ls) {
   for (i in c(1: length(ls))) {
-    ls[[i]] <- as.data.frame(lapply(ls[[i]], function(x){as.numeric(as.character(x))}))
+    ls[[i]] <- as.data.frame(
+      lapply(ls[[i]], function(x){as.numeric(as.character(x))}))
   }
   ls
 }
@@ -140,6 +135,7 @@ func_peakyear <- function(nrg_df, name_peak) {
 }
 
 # 函数：取一列数据最后一个有效数值
+# 说明：用途之一是取历史数据最近一年的数值作为预测基准年的值
 func_lastone <- function(numbers, zero.rm = TRUE) {
   # 是否去除零值
   if (zero.rm) {
@@ -160,6 +156,7 @@ func_lastone <- function(numbers, zero.rm = TRUE) {
 }
 
 # 函数：给数据框添加备注信息
+# 说明：对数据各列添加备注信息，如单位
 func_addnote <- function(data, note) {
   for (i in c(1: ncol(data))) {
     comment(data[, names(data)[i]]) <- note[i]
@@ -189,8 +186,8 @@ func_looknote_ls <- function(var_ls) {
 }
 
 # 函数：合并多个时间序列数据框
-# 说明：相当于以“year”为ID合并各数据框
-# 问题：如果被合并数据框包含同名列怎么办？
+# 说明：功能上相当于以“year”为ID合并各数据框，可以合并年份不同的几个时间序列数据
+# 待办：如果被合并数据框包含同名列怎么办？
 func_merge_2 <- function(ls_var) {
   # 如果输入列表为空则输出为NULL
   if (length(ls_var) == 0) {
@@ -232,7 +229,7 @@ comment(func_mrgcol) <- "合并多个年份不同数据框同名列并重命名�
 # 输入：两个时间序列数据框
 # 可选参数：计算方式可选为“sum”，“product”，“rate”和“difference”，默认为“product”
 # 注意：该函数计算的时候顺序很重要！
-# 问题：可增加一个可选参数，根据相同列名对应运算
+# 待办：可增加一个可选参数，根据相同列名对应运算
 func_cross <- function(df1, df2, method = "product") {
   # 判断是否包含“year”列
   if ("year" %in% names(df1) & "year" %in% names(df2) == FALSE) {
@@ -273,7 +270,8 @@ func_cross <- function(df1, df2, method = "product") {
 comment(func_cross) <- 
   "可选计算方式：“sum”，“product”，“rate”和“difference”，默认为“product”"
 
-# 函数：构建插值函数
+# 函数：构建线性插值函数
+# 说明：基于给定的年份和对应数值，通过线性插值自动补全中间的数值，可用于补全历史数据构建特定变量的未来时间序列
 func_interp_2 <- function(year, value, name_value = "value", showplot = TRUE) {
   total_df <- data.frame(year = c(year[1]: year[length(year)]))
   for (j in c(1:(length(year) - 1))) {
@@ -345,7 +343,7 @@ func_curve_1 <- function(baseyear, basevalue, maxyear, endyear,  init_rate,
 }
 
 # 函数：平滑插值
-# 问题：仍在测试
+# 待办：仍在测试
 func_smooth <- function(year, value, name_value = "value") {
   # 步骤1：拆分成几段并计算每段斜率
   # 假设第一个斜率为0，方便后面比较
@@ -488,7 +486,7 @@ func_compprice <- function(ori_df, name_gdpindex, baseyear) {
 }
 
 # 函数：转化能源类型
-# 问题：原煤折标煤系数应该为0.7143，但为了和统计局标准量一致，改为0.61
+# 待办：原煤折标煤系数应该为0.7143，但为了和统计局标准量一致，改为0.61
 func_alter <- function(nrg_in, name_in, name_out) {
   # 输入折标煤系数
   factors <- 
@@ -612,7 +610,9 @@ func_sgen <- function(basescenario, measures) {
     set <- 0:(2^n-1)
     rst <- matrix(0, ncol = n, nrow = 2^n)
     for (i in 1:n){
-      rst[, i] = ifelse((set-rowSums(rst*rep(c(2^((n-1):0)), each=2^n)))/(2^(n-i))>=1, 1, 0)
+      rst[, i] = 
+        ifelse((set-rowSums(rst*rep(c(2^((n-1):0)), each=2^n)))/(2^(n-i))>=1, 
+               1, 0)
     }
     rst
   }
@@ -638,7 +638,8 @@ func_branch <- function(sectors, years) {
   actlvl <- as.data.frame(actlvl)
   names(actlvl) <- sectors
   actlvl <- cbind(data.frame(year = years), actlvl)
-  actlvl <- as.data.frame(sapply(actlvl, function(x){as.numeric(as.character(x))}))
+  actlvl <- 
+    as.data.frame(sapply(actlvl, function(x){as.numeric(as.character(x))}))
   actlvl
 }
 
@@ -715,8 +716,9 @@ func_nrg_sum <- function(df.nrg.intst , df.actlvl, name.actlvl) {
       total_df[, i] <- df.nrg.intst [, i] * df.actlvl[, name.actlvl]
     }
     total_df$year <- intersect_year
-    total_df <- total_df[c("year", 
-                           names(total_df)[names(total_df) %in% "year" == FALSE])]
+    total_df <- 
+      total_df[c("year",
+                 names(total_df)[names(total_df) %in% "year" == FALSE])]
     total_df
   }
 }
@@ -754,7 +756,8 @@ func_emissum <- function(nrgsum_df, emisfac_df, agg = TRUE) {
     if (agg == TRUE) {
       emissum_df_ori$temp <- 0
       emissum_df <- data.frame(year = emissum_df_ori$year)
-      emissum_df_ori[-1] <- sapply(emissum_df_ori[-1], function(x){as.numeric(as.character(x))})
+      emissum_df_ori[-1] <- 
+        sapply(emissum_df_ori[-1], function(x){as.numeric(as.character(x))})
       emissum_df$co2 <- rowSums(emissum_df_ori[, -1])
     } else {
       emissum_df <- emissum_df_ori
@@ -810,7 +813,8 @@ func_ls2df <- function(ls) {
   # 合并列表各元素数据框
   df <- Reduce(rbind, ls)
   # 将各列转化为数字类型
-  df[names_column] <- lapply(df[names_column], function(x){as.numeric(as.character(x))})
+  df[names_column] <- 
+    lapply(df[names_column], function(x){as.numeric(as.character(x))})
   # 按照年份合并
   df <- aggregate(df[, names_column], by = list(df$year), sum)
   names(df)[1] <- "year"
@@ -904,12 +908,14 @@ func_history_project_df <- function(var_his, var_proj,
   } else {
     plot_ls <- vector("list")
     for (i in c(1: length(names_varhis))) {
-      plot_ls[[i]] <- invisible(func_history_project(var_his, names_varhis[i], 
-                                                     var_proj, names_varproj[i]))
+      plot_ls[[i]] <- 
+        invisible(func_history_project(var_his, names_varhis[i], 
+                                       var_proj, names_varproj[i]))
     }
-    plot_arrange <- invisible(ggarrange(plotlist = plot_ls, 
-                                        nrow = 3, ncol = 2, 
-                                        common.legend = TRUE, labels = commontitle))
+    plot_arrange <- 
+      invisible(ggarrange(plotlist = plot_ls, 
+                          nrow = 3, ncol = 2, 
+                          common.legend = TRUE, labels = commontitle))
     plot_arrange
   }
 }
@@ -1028,7 +1034,8 @@ func_show_trend <- function(var_df, commontitle = NULL) {
   for (i in c(1: length(unique(names_unit$note)))) {
     var_df_ls[[i]] <- 
       var_df[, c("year", 
-                 names_unit$colnames[names_unit$note == unique(names_unit$note)[i]])]
+                 names_unit$colnames[names_unit$note == 
+                                       unique(names_unit$note)[i]])]
     var_df_ls[[i]] <- melt(var_df_ls[[i]], id = "year")
     var_df_ls[[i]] <- var_df_ls[[i]][is.na(var_df_ls[[i]]$value) == FALSE,]
     plot_ls[[i]] <- ggplot(var_df_ls[[i]]) + 
@@ -1091,7 +1098,8 @@ func_idxouput <- function(var_ls, baseyear = 2019, ...) {
   ), ]
   # 规定输出的小数位数
   var_ls_long[names(var_ls_long) %in% c("year", "scenario") == FALSE] <- 
-    round(var_ls_long[names(var_ls_long) %in% c("year", "scenario") == FALSE], ...)
+    round(var_ls_long[names(var_ls_long) %in% 
+                        c("year", "scenario") == FALSE], ...)
   var_ls_long
 }
 
@@ -1112,7 +1120,8 @@ func_resultcalc <- function(name_scenario) {
   tot_elecsumce <- func_cross(
     importthrm_cefac, 
     func_cross(tfres_act[[name_scenario]][c("year", "importthrm")], 
-               tfres_act[[name_scenario]][c("year", "importclean")], method = "sum"), 
+               tfres_act[[name_scenario]][c("year", "importclean")], 
+               method = "sum"), 
     method = "product")
   
   # 计算本地发电标准煤量
@@ -1135,9 +1144,12 @@ func_resultcalc <- function(name_scenario) {
   
   # 各部门电力消费占比
   tot_elecsec <- 
-    func_mrgcol(list(agri_nrgfuel[[name_scenario]], ind_nrgfuel[[name_scenario]], 
-                     const_nrgfuel[[name_scenario]], trans_nrgfuel[[name_scenario]], 
-                     com_nrgfuel[[name_scenario]], hh_nrgfuel[[name_scenario]]), 
+    func_mrgcol(list(agri_nrgfuel[[name_scenario]], 
+                     ind_nrgfuel[[name_scenario]], 
+                     const_nrgfuel[[name_scenario]], 
+                     trans_nrgfuel[[name_scenario]], 
+                     com_nrgfuel[[name_scenario]], 
+                     hh_nrgfuel[[name_scenario]]), 
                 "electricity", namesnew = global_sectors[1:6])
   tot_elecpropsec <- 
     func_nrg_intst(tot_elecsec, tfres_act[[name_scenario]], "elecuse")
@@ -1182,9 +1194,12 @@ func_resultcalc <- function(name_scenario) {
   # 计算分能源能耗
   # 除了电力外其他能耗物理量及标准煤
   tot_nrgfuel <- 
-    func_ls2df(list(agri_nrgfuel[[name_scenario]], ind_nrgfuel[[name_scenario]], 
-                    const_nrgfuel[[name_scenario]], trans_nrgfuel[[name_scenario]], 
-                    com_nrgfuel[[name_scenario]], hh_nrgfuel[[name_scenario]], 
+    func_ls2df(list(agri_nrgfuel[[name_scenario]], 
+                    ind_nrgfuel[[name_scenario]], 
+                    const_nrgfuel[[name_scenario]], 
+                    trans_nrgfuel[[name_scenario]], 
+                    com_nrgfuel[[name_scenario]], 
+                    hh_nrgfuel[[name_scenario]], 
                     tf_nrgfuel[[name_scenario]]))
   tot_nrgfuelce <- func_toce(tot_nrgfuel)
   
@@ -1211,15 +1226,18 @@ func_resultcalc <- function(name_scenario) {
   ## Total emission
   # 各部门用电量
   tot_elecsec <- 
-    func_mrgcol(list(agri_nrgfuel[[name_scenario]], ind_nrgfuel[[name_scenario]], 
+    func_mrgcol(list(agri_nrgfuel[[name_scenario]], 
+                     ind_nrgfuel[[name_scenario]], 
                      const_nrgfuel[[name_scenario]], trans_nrgfuel[[name_scenario]], 
-                     com_nrgfuel[[name_scenario]], hh_nrgfuel[[name_scenario]]), 
+                     com_nrgfuel[[name_scenario]], 
+                     hh_nrgfuel[[name_scenario]]), 
                 "electricity", namesnew = global_sectors[1:6])
   tot_elecpropsec <- 
     func_nrg_intst(tot_elecsec, tfres_act[[name_scenario]], "elecuse")
   # 电力总排放
   tot_elecemis <- 
-    func_cross(tf_diremissum[[name_scenario]], res_diremissum[[name_scenario]], "sum")
+    func_cross(tf_diremissum[[name_scenario]], 
+               res_diremissum[[name_scenario]], "sum")
   # 分配电力排放到各个终端部门
   tot_elecemisbysec <- 
     func_nrg_sum(tot_elecpropsec, tot_elecemis, "co2")
